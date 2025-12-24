@@ -11,11 +11,8 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
   return (
     <header className="header">
       <div className="header-brand">
-        <Logo size={22} />
-        <div className="brand-text">
-          <h1>Ursly</h1>
-          <span className="brand-tagline">VFS</span>
-        </div>
+        <Logo size={20} />
+        <span className="brand-name">Ursly</span>
       </div>
 
       <nav className="header-tabs">
@@ -24,8 +21,8 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
           onClick={() => onTabChange('files')}
         >
           <svg
-            width="16"
-            height="16"
+            width="14"
+            height="14"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -40,8 +37,8 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
           onClick={() => onTabChange('metrics')}
         >
           <svg
-            width="16"
-            height="16"
+            width="14"
+            height="14"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -53,11 +50,8 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
         </button>
       </nav>
 
-      <div className="header-info">
-        <div className="status-indicator online">
-          <span className="status-dot"></span>
-          <span>Connected</span>
-        </div>
+      <div className="header-status">
+        <span className="status-dot"></span>
       </div>
     </header>
   );
