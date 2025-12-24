@@ -1,0 +1,400 @@
+/**
+ * VFS File Card Styles
+ * 
+ * Following VFS brand guidelines with modern glassmorphism effects.
+ */
+
+/* CSS Variables for VFS branding */
+:root {
+  /* VFS Primary Colors */
+  --vfs-primary: var(--primary, #0a84ff);
+  --vfs-primary-dark: #00a3cc;
+  --vfs-secondary: #7b2cbf;
+  --vfs-accent: #ff6b35;
+
+  /* Tier Status Colors */
+  --vfs-tier-hot: #10b981;
+  --vfs-tier-warm: #f59e0b;
+  --vfs-tier-cold: #3b82f6;
+  --vfs-tier-archive: #6b7280;
+
+  /* Backgrounds */
+  --vfs-card-bg: rgba(30, 30, 40, 0.8);
+  --vfs-card-bg-hover: rgba(40, 40, 55, 0.9);
+  --vfs-card-bg-selected: rgba(var(--primary-rgb, 10, 132, 255), 0.15);
+  --vfs-card-border: rgba(255, 255, 255, 0.1);
+  --vfs-card-border-selected: var(--vfs-primary);
+
+  /* Text */
+  --vfs-text-primary: #f3f4f6;
+  --vfs-text-secondary: #9ca3af;
+  --vfs-text-muted: #6b7280;
+
+  /* Menu */
+  --vfs-menu-bg: rgba(25, 25, 35, 0.95);
+  --vfs-menu-hover: rgba(255, 255, 255, 0.1);
+  --vfs-menu-danger: #ef4444;
+}
+
+/* ============================================================
+   Grid View Card
+   ============================================================ */
+
+.vfs-file-card.grid-view {
+  display: flex;
+  flex-direction: column;
+  width: 140px;
+  background: var(--vfs-card-bg);
+  border: 1px solid var(--vfs-card-border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  user-select: none;
+  will-change: background-color, border-color;
+  contain: layout style;
+}
+
+.vfs-file-card.grid-view:hover {
+  background: var(--vfs-card-bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.vfs-file-card.grid-view.selected {
+  background: var(--vfs-card-bg-selected);
+  border-color: var(--vfs-card-border-selected);
+  box-shadow: 0 0 0 2px var(--vfs-primary);
+}
+
+.vfs-file-card .card-thumbnail {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.vfs-file-card .card-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vfs-file-card .file-icon-large {
+  font-size: 48px;
+}
+
+.vfs-file-card .card-thumbnail .tier-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.vfs-file-card .card-content {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vfs-file-card .file-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vfs-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vfs-file-card .file-meta {
+  font-size: 10px;
+  color: var(--vfs-text-secondary);
+}
+
+.vfs-file-card .card-actions {
+  display: flex;
+  gap: 4px;
+  padding: 0 10px 10px;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+  pointer-events: none;
+}
+
+.vfs-file-card.grid-view:hover .card-actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ============================================================
+   List View Card
+   ============================================================ */
+
+.vfs-file-card.list-view {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: transparent;
+  border-bottom: 1px solid var(--vfs-card-border);
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  gap: 12px;
+  will-change: background-color;
+  contain: layout style;
+}
+
+.vfs-file-card.list-view:hover {
+  background: var(--vfs-card-bg-hover);
+}
+
+.vfs-file-card.list-view.selected {
+  background: var(--vfs-card-bg-selected);
+}
+
+.vfs-file-card.list-view .file-icon {
+  font-size: 20px;
+  width: 28px;
+  text-align: center;
+}
+
+.vfs-file-card.list-view .file-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vfs-file-card.list-view .file-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vfs-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vfs-file-card.list-view .file-meta {
+  font-size: 11px;
+  color: var(--vfs-text-secondary);
+}
+
+.vfs-file-card.list-view .file-date {
+  width: 100px;
+  font-size: 11px;
+  color: var(--vfs-text-muted);
+}
+
+.vfs-file-card.list-view .file-tier {
+  width: 60px;
+}
+
+.vfs-file-card.list-view .file-tier .tier-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.vfs-file-card.list-view .file-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.1s ease,
+    visibility 0.1s ease;
+  pointer-events: none;
+}
+
+.vfs-file-card.list-view:hover .file-actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ============================================================
+   Action Buttons
+   ============================================================ */
+
+.action-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: background-color 0.1s ease;
+  flex-shrink: 0;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.action-btn.warm:hover {
+  background: var(--vfs-tier-hot);
+}
+
+.action-btn.transcode:hover {
+  background: var(--vfs-primary);
+}
+
+/* ============================================================
+   Progress Overlay
+   ============================================================ */
+
+.progress-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.warm {
+  background: linear-gradient(90deg, var(--vfs-tier-warm), var(--vfs-tier-hot));
+}
+
+.progress-fill.transcode {
+  background: linear-gradient(90deg, var(--vfs-primary), var(--vfs-secondary));
+}
+
+.progress-text {
+  font-size: 10px;
+  color: white;
+  text-align: center;
+}
+
+/* ============================================================
+   Context Menu
+   ============================================================ */
+
+.file-actions-menu {
+  position: fixed;
+  z-index: 10000;
+  min-width: 220px;
+  background: var(--vfs-menu-bg);
+  border: 1px solid var(--vfs-card-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.file-actions-menu .menu-header {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.file-actions-menu .menu-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vfs-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-actions-menu .menu-subtitle {
+  font-size: 11px;
+  color: var(--vfs-text-muted);
+}
+
+.file-actions-menu .menu-divider {
+  height: 1px;
+  background: var(--vfs-card-border);
+  margin: 4px 0;
+}
+
+.file-actions-menu .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  color: var(--vfs-text-primary);
+  font-size: 13px;
+  text-align: left;
+}
+
+.file-actions-menu .menu-item:hover {
+  background: var(--vfs-menu-hover);
+}
+
+.file-actions-menu .menu-item.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.file-actions-menu .menu-item.danger {
+  color: var(--vfs-menu-danger);
+}
+
+.file-actions-menu .menu-item.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.file-actions-menu .menu-icon {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+}
+
+.file-actions-menu .menu-label {
+  flex: 1;
+}
+
+.file-actions-menu .menu-shortcut {
+  font-size: 11px;
+  color: var(--vfs-text-muted);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}

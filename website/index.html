@@ -3,37 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ursly - AI Media Asset Orchestration for Creative Teams</title>
-  <meta name="description" content="AI-powered media asset orchestration with role-based access control. Built for creative teams, production studios, and media companies.">
+  
+  <!-- Primary Meta Tags -->
+  <title>Ursly - Open Source LLM Orchestrator for M&E Studios | Self-Hosted AI</title>
+  <meta name="title" content="Ursly - Open Source LLM Orchestrator for M&E Studios | Self-Hosted AI">
+  <meta name="description" content="Run AI on your existing GPU workstations. Open source LLM orchestrator with enterprise RBAC for video production, game development, and creative teams. MIT Licensed.">
+  <meta name="keywords" content="LLM orchestrator, AI video production, self-hosted AI, Ollama, Whisper transcription, RBAC, media asset management, open source AI, GPU inference, creative AI tools">
+  <meta name="author" content="Ursly">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ursly.io">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ursly.io/">
+  <meta property="og:title" content="Ursly - Open Source LLM Orchestrator for Creative Teams">
+  <meta property="og:description" content="Run AI on your existing GPU workstations. Enterprise access control without the enterprise price tag. 100% open source, MIT licensed.">
+  <meta property="og:image" content="https://ursly.io/og-image.png">
+  <meta property="og:site_name" content="Ursly">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://ursly.io/">
+  <meta name="twitter:title" content="Ursly - Open Source LLM Orchestrator for Creative Teams">
+  <meta name="twitter:description" content="Run AI on your existing GPU workstations. Enterprise access control without the enterprise price tag. 100% open source.">
+  <meta name="twitter:image" content="https://ursly.io/og-image.png">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='url(%23g)'/><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%2300d4ff'/><stop offset='100%25' stop-color='%23ff00ea'/></linearGradient></defs><text y='.9em' x='50' text-anchor='middle' font-size='65' font-weight='bold' fill='%23000'>U</text></svg>">
+  <meta name="theme-color" content="#08080c">
+  <meta name="color-scheme" content="dark">
+  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Ursly",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, macOS, Windows, Docker",
+    "description": "Open source LLM orchestrator for media and entertainment studios. Run AI agents on your GPU workstations with enterprise-grade access control.",
+    "url": "https://ursly.io",
+    "downloadUrl": "https://github.com/stonyp90/ursly",
+    "license": "https://opensource.org/licenses/MIT",
+    "author": {
+      "@type": "Organization",
+      "name": "Ursly",
+      "url": "https://ursly.io"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Role-Based Access Control (RBAC)",
+      "Local LLM Inference via Ollama",
+      "Whisper Transcription",
+      "Adobe Premiere Pro Integration",
+      "Real-time WebSocket Updates",
+      "Multi-tenant Architecture",
+      "Docker & Kubernetes Ready"
+    ]
+  }
+  </script>
 </head>
 <body>
+  <!-- Skip to main content link for accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
   <!-- Navigation -->
-  <nav class="nav">
+  <nav class="nav" role="navigation" aria-label="Main navigation">
     <div class="nav-container">
-      <a href="#" class="logo">
-        <span class="logo-icon">U</span>
+      <a href="#" class="logo" aria-label="Ursly - Home">
+        <span class="logo-icon" aria-hidden="true">U</span>
         <span class="logo-text">URSLY</span>
       </a>
-      <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#security">Security</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#integrations">Integrations</a>
-        <a href="#deployment">Deployment</a>
-        <a href="https://github.com/stonyp90/ursly" class="btn-nav" target="_blank" rel="noopener">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      <div class="nav-links" role="menubar">
+        <a href="#features" role="menuitem">Features</a>
+        <a href="#security" role="menuitem">Security</a>
+        <a href="#how-it-works" role="menuitem">How It Works</a>
+        <a href="#integrations" role="menuitem">Integrations</a>
+        <a href="#deployment" role="menuitem">Deployment</a>
+        <a href="https://github.com/stonyp90/ursly" class="btn-nav" target="_blank" rel="noopener noreferrer" aria-label="View Ursly on GitHub">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
           GitHub
         </a>
-        <a href="https://app.ursly.io" class="btn-nav-app" target="_blank" rel="noopener">
+        <a href="https://app.ursly.io" class="btn-nav-app" target="_blank" rel="noopener noreferrer" aria-label="Try Ursly Demo - Opens in new tab">
           Try Demo
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
       </div>
-      <button class="mobile-menu-btn" aria-label="Toggle menu">
+      <button class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-menu">
         <span></span>
         <span></span>
         <span></span>
@@ -42,34 +109,36 @@
   </nav>
 
   <!-- Mobile Menu -->
-  <div class="mobile-menu">
-    <a href="#features">Features</a>
-    <a href="#security">Security</a>
-    <a href="#how-it-works">How It Works</a>
-    <a href="#integrations">Integrations</a>
-    <a href="#deployment">Deployment</a>
-    <a href="https://github.com/stonyp90/ursly" target="_blank" rel="noopener">GitHub</a>
-    <a href="https://app.ursly.io" class="mobile-app-link" target="_blank" rel="noopener">Try Demo</a>
+  <div id="mobile-menu" class="mobile-menu" role="menu" aria-label="Mobile navigation">
+    <a href="#features" role="menuitem">Features</a>
+    <a href="#security" role="menuitem">Security</a>
+    <a href="#how-it-works" role="menuitem">How It Works</a>
+    <a href="#integrations" role="menuitem">Integrations</a>
+    <a href="#deployment" role="menuitem">Deployment</a>
+    <a href="https://github.com/stonyp90/ursly" target="_blank" rel="noopener noreferrer" role="menuitem">GitHub</a>
+    <a href="https://app.ursly.io" class="mobile-app-link" target="_blank" rel="noopener noreferrer" role="menuitem">Try Demo</a>
   </div>
+  
+  <!-- Main Content -->
+  <main id="main-content">
 
   <!-- Hero Section -->
-  <section class="hero">
+  <section class="hero" itemscope itemtype="https://schema.org/WebPage">
     <div class="hero-bg"></div>
     <div class="hero-grid"></div>
     <div class="hero-content">
       <div class="badge-container">
         <span class="badge">M&E + GAMING</span>
-        <span class="badge badge-secondary">Open Source</span>
+        <span class="badge badge-secondary">MIT Licensed</span>
       </div>
-      <h1 class="hero-title">
+      <h1 class="hero-title" itemprop="headline">
         <span class="gradient-text">Open Source</span>
         <span class="gradient-text-secondary">LLM</span><br>
         Orchestrator
       </h1>
-      <p class="hero-description">
-        Run AI on your existing GPU workstations and cloud instances. 
-        Built for M&E studios and game developers who already have the hardware. 
-        Enterprise access control without the enterprise price tag.
+      <p class="hero-description" itemprop="description">
+        Run AI on your existing GPU workstations and cloud instances. Share media assets seamlessly across AWS, Google Cloud, Azure, or on-premise storage with our cloud-agnostic Rust vFS. 
+        Built for M&E studios and game developers. Enterprise access control without the enterprise price tag.
       </p>
       <div class="hero-actions">
         <a href="#getting-started" class="btn-primary">
@@ -168,6 +237,100 @@
               <p>Run AI on your servers, footage never leaves</p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cloud vFS Section -->
+  <section class="cloud-vfs">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">// UNIVERSAL FILE SYSTEM</span>
+        <h2 class="section-title">Media Assets, Seamlessly Unified</h2>
+        <p class="section-description">
+          Our OS-agnostic Rust vFS abstracts away cloud complexity. Access your media from AWS, Google Cloud, Azure, on-premise storage, or local drives through a single, unified interface.
+        </p>
+      </div>
+
+      <div class="vfs-grid">
+        <div class="vfs-card vfs-primary">
+          <div class="vfs-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3>Cloud-Agnostic</h3>
+          <p>AWS S3, Google Cloud Storage, Azure Blob, or on-premise NAS. Choose your backend. We handle the abstraction.</p>
+          <ul class="vfs-features">
+            <li>AWS S3 with S3 Transfer Acceleration</li>
+            <li>Google Cloud Storage multi-region</li>
+            <li>Azure Blob Storage with tiering</li>
+            <li>On-premise SMB/NFS support</li>
+          </ul>
+        </div>
+
+        <div class="vfs-card">
+          <div class="vfs-icon vfs-icon-secondary">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2-15H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2z"/></svg>
+          </div>
+          <h3>Unified Namespace</h3>
+          <p>Single mount point for all your storage backends. No more path juggling or provider-specific syntax.</p>
+          <ul class="vfs-features">
+            <li>POSIX-compliant operations</li>
+            <li>Transparent cloud routing</li>
+            <li>Automatic failover</li>
+            <li>Cross-cloud replication</li>
+          </ul>
+        </div>
+
+        <div class="vfs-card">
+          <div class="vfs-icon vfs-icon-success">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3>Media Optimization</h3>
+          <p>Automatic transcoding, compression, and intelligent tiering keeps your assets ready for any workflow.</p>
+          <ul class="vfs-features">
+            <li>On-the-fly transcoding</li>
+            <li>Smart compression</li>
+            <li>Hot/cold tier management</li>
+            <li>Bandwidth optimization</li>
+          </ul>
+        </div>
+
+        <div class="vfs-card">
+          <div class="vfs-icon vfs-icon-accent">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"/></svg>
+          </div>
+          <h3>Enterprise-Ready</h3>
+          <p>Role-based access, encryption, audit logs, and compliance tracking for every file operation.</p>
+          <ul class="vfs-features">
+            <li>Granular RBAC</li>
+            <li>End-to-end encryption</li>
+            <li>Compliance audits</li>
+            <li>Data sovereignty</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="vfs-diagram">
+        <div class="diagram-container">
+          <div class="diagram-title">Unified Storage Architecture</div>
+          <div class="diagram-flow">
+            <div class="flow-box flow-app">
+              <span>Ursly App</span>
+            </div>
+            <div class="flow-arrow"></div>
+            <div class="flow-box flow-vfs">
+              <span>Rust vFS Layer</span>
+            </div>
+            <div class="flow-arrow"></div>
+            <div class="flow-group">
+              <div class="flow-box flow-storage">AWS S3</div>
+              <div class="flow-box flow-storage">Google Cloud</div>
+              <div class="flow-box flow-storage">Azure Blob</div>
+              <div class="flow-box flow-storage">On-Premise</div>
+            </div>
+          </div>
+          <p class="diagram-subtitle">One API, infinite storage possibilities</p>
         </div>
       </div>
     </div>
@@ -834,18 +997,18 @@ open http://localhost:4200</code>
   </section>
 
   <!-- CTA Section -->
-  <section class="cta">
+  <section class="cta" aria-labelledby="cta-heading">
     <div class="container">
       <div class="cta-content">
-        <h2>Ready to Automate Your Media Workflows?</h2>
-        <p>Join creative teams already using Ursly for AI-powered production.</p>
+        <h2 id="cta-heading">Ready to Own Your AI Infrastructure?</h2>
+        <p>Stop paying per-token. Run unlimited AI workflows on hardware you already own.</p>
         <div class="cta-actions">
-          <a href="https://github.com/stonyp90/ursly" class="btn-primary" target="_blank" rel="noopener">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          <a href="https://github.com/stonyp90/ursly" class="btn-primary" target="_blank" rel="noopener noreferrer" aria-label="Star Ursly on GitHub">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
             Star on GitHub
           </a>
-          <a href="https://discord.gg/cree8" class="btn-secondary" target="_blank" rel="noopener">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
+          <a href="https://discord.gg/cree8" class="btn-secondary" target="_blank" rel="noopener noreferrer" aria-label="Join Ursly Discord community">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
             Join Discord
           </a>
         </div>
@@ -853,8 +1016,10 @@ open http://localhost:4200</code>
     </div>
   </section>
 
+  </main>
+  
   <!-- Footer -->
-  <footer class="footer">
+  <footer class="footer" role="contentinfo">
     <div class="container">
       <div class="footer-content">
         <div class="footer-brand">
@@ -888,11 +1053,13 @@ open http://localhost:4200</code>
   </footer>
 
   <script>
-    // Mobile menu toggle
+    // Mobile menu toggle with accessibility
     const mobileBtn = document.querySelector('.mobile-menu-btn');
     const mobileMenu = document.querySelector('.mobile-menu');
     
     mobileBtn.addEventListener('click', () => {
+      const isExpanded = mobileBtn.getAttribute('aria-expanded') === 'true';
+      mobileBtn.setAttribute('aria-expanded', !isExpanded);
       mobileBtn.classList.toggle('active');
       mobileMenu.classList.toggle('active');
     });
@@ -900,29 +1067,54 @@ open http://localhost:4200</code>
     // Close mobile menu on link click
     document.querySelectorAll('.mobile-menu a').forEach(link => {
       link.addEventListener('click', () => {
+        mobileBtn.setAttribute('aria-expanded', 'false');
         mobileBtn.classList.remove('active');
         mobileMenu.classList.remove('active');
       });
     });
 
-    // Smooth scroll
+    // Smooth scroll with accessibility support
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
+        const targetId = this.getAttribute('href');
+        if (targetId === '#') return;
+        
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
+        const target = document.querySelector(targetId);
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Set focus for accessibility
+          target.setAttribute('tabindex', '-1');
+          target.focus({ preventScroll: true });
         }
       });
     });
 
-    // Nav background on scroll
+    // Nav background on scroll with throttle
     const nav = document.querySelector('.nav');
+    let ticking = false;
+    
     window.addEventListener('scroll', () => {
-      if (window.scrollY > 50) {
-        nav.classList.add('scrolled');
-      } else {
-        nav.classList.remove('scrolled');
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (window.scrollY > 50) {
+            nav.classList.add('scrolled');
+          } else {
+            nav.classList.remove('scrolled');
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // Keyboard navigation for mobile menu
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+        mobileBtn.setAttribute('aria-expanded', 'false');
+        mobileBtn.classList.remove('active');
+        mobileMenu.classList.remove('active');
+        mobileBtn.focus();
       }
     });
   </script>

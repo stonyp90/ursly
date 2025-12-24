@@ -166,6 +166,7 @@ services:
       - AGENT_TOKEN_SECRET=${AGENT_TOKEN_SECRET:-your-secret-key-change-in-production}
       - AGENT_TOKEN_EXPIRY=300
       - OLLAMA_URL=http://ollama:11434
+      - CORS_ORIGIN=http://localhost:4200,http://localhost:1420,http://localhost:3000,tauri://localhost,http://tauri.localhost
     ports:
       - "3000:3000"
     depends_on:

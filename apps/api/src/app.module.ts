@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { EntitlementsModule } from './entitlements/entitlements.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { FileMetadataModule } from './file-metadata/file-metadata.module';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     TasksModule,
     AuditModule,
     HealthModule,
+    FileMetadataModule, // VFS file tags, favorites, ratings
   ],
 })
 export class AppModule {}
-

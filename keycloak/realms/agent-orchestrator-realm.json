@@ -45,6 +45,8 @@
       "implicitFlowEnabled": false,
       "protocol": "openid-connect",
       "redirectUris": [
+        "tauri://localhost/*",
+        "http://tauri.localhost/*",
         "http://localhost/*",
         "http://localhost:3000/*",
         "http://localhost:4200/*",
@@ -60,6 +62,8 @@
         "https://www.ursly.io/*"
       ],
       "webOrigins": [
+        "tauri://localhost",
+        "http://tauri.localhost",
         "http://localhost",
         "http://localhost:3000",
         "http://localhost:4200",
@@ -77,7 +81,7 @@
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:4200/*##http://localhost:1420/*##https://app.ursly.io/*"
+        "post.logout.redirect.uris": "tauri://localhost/*##http://tauri.localhost/*##http://localhost:4200/*##http://localhost:1420/*##https://app.ursly.io/*"
       }
     },
     {

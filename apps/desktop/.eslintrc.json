@@ -1,0 +1,18 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "src-tauri/**"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "parserOptions": {
+        "project": ["apps/desktop/tsconfig.json"]
+      },
+      "rules": {
+        "@typescript-eslint/no-unused-vars": [
+          "warn",
+          { "argsIgnorePattern": "^_" }
+        ]
+      }
+    }
+  ]
+}

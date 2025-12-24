@@ -1,15 +1,40 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# compiled output
-dist
-tmp
+# ============================================================================
+# Compiled Output / Build Artifacts
+# ============================================================================
+dist/
+tmp/
 /out-tsc
 *.js.map
+build/
+*.tsbuildinfo
+.next/
+.cache/
 
-# dependencies
-node_modules
+# ============================================================================
+# Dependencies
+# ============================================================================
+node_modules/
+.pnp/
+.pnp.js
 
-# IDEs and editors
+# ============================================================================
+# Environment & Secrets
+# ============================================================================
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+*.crt
+!*.example.pem
+!*.example.key
+
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
 /.idea
 .project
 .classpath
@@ -17,6 +42,9 @@ node_modules
 *.launch
 .settings/
 *.sublime-workspace
+*.swp
+*.swo
+*~
 
 # IDE - VSCode
 .vscode/*
@@ -29,37 +57,37 @@ node_modules
 .cursor/*
 !.cursor/rules
 
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
-# System Files
-.DS_Store
-Thumbs.db
-
-# Environment
-.env
-.env.local
-.env.*.local
-*.local
-
-# Nx
+# ============================================================================
+# Nx / Monorepo
+# ============================================================================
 .nx/cache
 .nx/workspace-data
+.nx/installation
 
+# ============================================================================
 # Tauri / Rust
+# ============================================================================
 apps/desktop/src-tauri/target/
 **/*.rs.bk
 Cargo.lock
 !apps/desktop/src-tauri/Cargo.lock
 
-# Terraform
+# ============================================================================
+# Desktop Builds / Installers
+# ============================================================================
+desktop-builds/
+*.dmg
+*.msi
+*.exe
+*.deb
+*.rpm
+*.AppImage
+*.app
+*.pkg
+
+# ============================================================================
+# Terraform / Infrastructure
+# ============================================================================
 *.tfstate
 *.tfstate.*
 *.tfvars
@@ -73,19 +101,77 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
+# ============================================================================
 # Logs
-logs
+# ============================================================================
+logs/
 *.log
-pids
+pids/
 *.pid
 *.seed
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
-# Test coverage
+# ============================================================================
+# Test Coverage
+# ============================================================================
 coverage/
 *.lcov
 .nyc_output
+test-results/
+playwright-report/
 
-# Build artifacts
-build/
-*.tsbuildinfo
+# ============================================================================
+# System Files
+# ============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============================================================================
+# Misc
+# ============================================================================
+/.sass-cache
+/connect.lock
+/libpeerconnection.log
+testem.log
+/typings
+
+# ============================================================================
+# Cache & Temp Files
+# ============================================================================
+*.cache
+.eslintcache
+.stylelintcache
+.prettiercache
+.parcel-cache
+
+# ============================================================================
+# VFS / Media Processing Cache
+# ============================================================================
+.vfs-cache/
+.thumbnail-cache/
+.hls-output/
+*.m3u8
+*.ts
+!libs/**/*.ts
+!apps/**/*.ts
+!integrations/**/*.ts
+
+# ============================================================================
+# Secrets (additional patterns)
+# ============================================================================
+secrets/
+credentials/
+*.secret
+*.secrets
+service-account*.json
+!*example*.json
 

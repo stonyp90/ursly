@@ -1,0 +1,68 @@
+/**
+ * Ursly Logo Styles
+ * Uses global CSS variables for consistent theming
+ */
+
+/* =========================================
+   LOGO SVG ELEMENTS
+   ========================================= */
+.ursly-logo {
+  display: block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* Logo letter "U" - uses CSS variable for color */
+.ursly-logo .logo-letter {
+  stroke: var(--logo-text-color, #ffffff);
+}
+
+/* Accent dot */
+.ursly-logo .logo-accent {
+  fill: var(--logo-text-color, #ffffff);
+  opacity: 0.9;
+}
+
+/* =========================================
+   LOGO ICON (NO BACKGROUND)
+   ========================================= */
+.ursly-logo-icon {
+  display: block;
+  flex-shrink: 0;
+  vertical-align: middle;
+  color: var(--logo-gradient-mid, var(--vfs-primary, #8b5cf6));
+}
+
+/* =========================================
+   LOGO WITH TEXT
+   ========================================= */
+.logo-with-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  justify-content: center;
+}
+
+.logo-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vfs-text-primary, var(--text-primary, #f5f5f7));
+  line-height: 1.2;
+  margin: 0;
+}
+
+.logo-tagline {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--vfs-text-secondary, var(--text-secondary, #8e8e93));
+  text-transform: uppercase;
+  line-height: 1.3;
+  margin: 0;
+}

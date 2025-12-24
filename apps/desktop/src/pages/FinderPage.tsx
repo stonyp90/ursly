@@ -1,0 +1,3517 @@
+/**
+ * macOS Finder-inspired Virtual File System Browser
+ * Supports multiple view modes and hybrid storage backends
+ */
+import React, { useState, useEffect, useRef } from 'react';
+import { listen } from '@tauri-apps/api/event';
+import { StorageService, VfsService } from '../services/storage.service';
+import { DialogService } from '../services/dialog.service';
+import type {
+  StorageSource,
+  FileMetadata,
+  WarmProgress,
+  GlobalFavorite,
+} from '../types/storage';
+import { Breadcrumbs, type BreadcrumbItem } from '../components/Breadcrumbs';
+import {
+  IconStar,
+  IconHome,
+  IconDesktop,
+  IconDocuments,
+  IconDownloads,
+  IconPictures,
+  IconMusic,
+  IconVolumes,
+  IconCloud,
+  IconNetwork,
+  IconDatabase,
+  IconTag,
+  IconFolder,
+  getFileIcon as getFileIconComponent,
+} from '../components/CyberpunkIcons';
+import { InfoModal } from '../components/InfoModal';
+import { AddStorageModal } from '../components/AddStorageModal';
+import {
+  KeyboardShortcutHelper,
+  useKeyboardShortcutHelper,
+} from '../components/KeyboardShortcutHelper';
+import { useToast } from '../components/Toast';
+import { ShortcutSettings } from '../components/ShortcutSettings';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import '../styles/finder.css';
+
+type ViewMode = 'icon' | 'list';
+
+interface ContextMenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+  targetFile?: FileMetadata;
+}
+
+export function FinderPage() {
+  const [sources, setSources] = useState<StorageSource[]>([]);
+  const [selectedSource, setSelectedSource] = useState<StorageSource | null>(
+    null,
+  );
+  const [currentPath, setCurrentPath] = useState('');
+  const [files, setFiles] = useState<FileMetadata[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<ViewMode>('icon');
+  const [loading, setLoading] = useState(false);
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [showAddStorage, setShowAddStorage] = useState(false);
+  const [showHiddenFiles, setShowHiddenFiles] = useState(false);
+  const [warmProgress, setWarmProgress] = useState<
+    Record<string, WarmProgress>
+  >({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [fileOperation, setFileOperation] = useState<{
+    type: string;
+    inProgress: boolean;
+  } | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    visible: false,
+    x: 0,
+    y: 0,
+  });
+  const [clipboardHasFiles, setClipboardHasFiles] = useState(false);
+  const [nativeClipboardCount, setNativeClipboardCount] = useState(0);
+  const [cutFilePaths, setCutFilePaths] = useState<Set<string>>(new Set());
+  const [favorites, setFavorites] = useState<GlobalFavorite[]>([]);
+  const [allTags, setAllTags] = useState<{ name: string; color?: string }[]>(
+    [],
+  );
+  const [filterByTag, setFilterByTag] = useState<string | null>(null);
+
+  // Info modal state
+  const [infoModal, setInfoModal] = useState<{
+    visible: boolean;
+    file: FileMetadata | null;
+  }>({
+    visible: false,
+    file: null,
+  });
+
+  // Navigation history
+  const [navigationHistory, setNavigationHistory] = useState<string[]>(['']);
+  const [historyIndex, setHistoryIndex] = useState(0);
+
+  // Inline renaming state
+  const [renamingFile, setRenamingFile] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  // Drag and drop state
+  const [draggedFiles, setDraggedFiles] = useState<string[]>([]);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [dragSourceId, setDragSourceId] = useState<string | null>(null);
+
+  // Keyboard shortcut helper
+  const shortcutHelper = useKeyboardShortcutHelper();
+
+  // Toast notifications for action feedback
+  const toast = useToast();
+
+  // Configurable keyboard shortcuts
+  const shortcuts = useKeyboardShortcuts();
+  const [showShortcutSettings, setShowShortcutSettings] = useState(false);
+
+  // Initialize
+  useEffect(() => {
+    initAndLoadSources();
+
+    const unlisten = listen<WarmProgress>('warm-progress', (event) => {
+      setWarmProgress((prev) => ({
+        ...prev,
+        [event.payload.filePath]: event.payload,
+      }));
+    });
+
+    // Keyboard shortcuts
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      const isMeta = e.metaKey || e.ctrlKey;
+
+      // Escape - cancel rename, clear cut state, deselect, or close modals
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (renamingFile) {
+          cancelRename();
+          return;
+        }
+        // If we have cut files pending, cancel the cut operation (macOS Finder behavior)
+        if (cutFilePaths.size > 0) {
+          setCutFilePaths(new Set());
+          setIsCutOperation(false);
+          // Clear VFS clipboard to cancel cut
+          StorageService.clearClipboard().catch(console.error);
+          return;
+        }
+        setSelectedFiles(new Set());
+        setContextMenu({ visible: false, x: 0, y: 0, targetFile: undefined });
+        return;
+      }
+
+      // Navigation shortcuts (work even without source)
+      if (isMeta && e.key === '[') {
+        e.preventDefault();
+        goBack();
+        return;
+      } else if (isMeta && e.key === ']') {
+        e.preventDefault();
+        goForward();
+        return;
+      } else if (isMeta && e.key === 'ArrowUp') {
+        e.preventDefault();
+        goUp();
+        return;
+      }
+
+      if (!selectedSource) return;
+
+      // Select All - Cmd/Ctrl+A
+      if (shortcuts.matchesShortcut(e, 'select-all')) {
+        e.preventDefault();
+        setSelectedFiles(new Set(files.map((f) => f.path)));
+        toast.showActionToast(
+          `Selected ${files.length} items`,
+          shortcuts.formatShortcut('select-all'),
+        );
+        return;
+      }
+
+      // New Folder - Cmd/Ctrl+Shift+N
+      if (shortcuts.matchesShortcut(e, 'new-folder')) {
+        e.preventDefault();
+        toast.showActionToast(
+          'New Folder',
+          shortcuts.formatShortcut('new-folder'),
+        );
+        handleNewFolder();
+        return;
+      }
+
+      // Asset Details - Cmd/Ctrl+I
+      if (
+        shortcuts.matchesShortcut(e, 'get-info') &&
+        selectedFiles.size === 1
+      ) {
+        e.preventDefault();
+        const selectedPath = Array.from(selectedFiles)[0];
+        const selectedFile = files.find((f) => f.path === selectedPath);
+        if (selectedFile) {
+          toast.showActionToast(
+            'Asset Details',
+            shortcuts.formatShortcut('get-info'),
+          );
+          setInfoModal({ visible: true, file: selectedFile });
+        }
+        return;
+      }
+
+      // Rename - F2 (Windows) or Enter when already selected (we'll use F2 for all OS)
+      if (e.key === 'F2' && selectedFiles.size === 1) {
+        e.preventDefault();
+        const selectedPath = Array.from(selectedFiles)[0];
+        const selectedFile = files.find((f) => f.path === selectedPath);
+        if (selectedFile) {
+          handleRename(selectedFile);
+        }
+        return;
+      }
+
+      // Quick Look / Preview - Space
+      if (e.key === ' ' && selectedFiles.size === 1) {
+        e.preventDefault();
+        const selectedPath = Array.from(selectedFiles)[0];
+        const selectedFile = files.find((f) => f.path === selectedPath);
+        if (selectedFile) {
+          setInfoModal({ visible: true, file: selectedFile });
+        }
+        return;
+      }
+
+      // Refresh - Cmd/Ctrl+R or F5
+      if ((isMeta && e.key === 'r') || e.key === 'F5') {
+        e.preventDefault();
+        if (selectedSource) {
+          toast.showActionToast('Refreshing...', isMeta ? '⌘R' : 'F5');
+          loadFilesList(selectedSource.id, currentPath);
+        }
+        return;
+      }
+
+      // Duplicate - Cmd/Ctrl+D
+      if (
+        shortcuts.matchesShortcut(e, 'duplicate') &&
+        selectedFiles.size === 1
+      ) {
+        e.preventDefault();
+        const selectedPath = Array.from(selectedFiles)[0];
+        const selectedFile = files.find((f) => f.path === selectedPath);
+        if (selectedFile) {
+          toast.showActionToast(
+            'Duplicating...',
+            shortcuts.formatShortcut('duplicate'),
+          );
+          handleDuplicate(selectedFile);
+        }
+        return;
+      }
+
+      // File operation shortcuts
+      if (shortcuts.matchesShortcut(e, 'copy') && selectedFiles.size > 0) {
+        e.preventDefault();
+        toast.showActionToast(
+          `Copied ${selectedFiles.size} item(s)`,
+          shortcuts.formatShortcut('copy'),
+        );
+        await handleCopy();
+      } else if (
+        shortcuts.matchesShortcut(e, 'cut') &&
+        selectedFiles.size > 0
+      ) {
+        e.preventDefault();
+        toast.showActionToast(
+          `Cut ${selectedFiles.size} item(s)`,
+          shortcuts.formatShortcut('cut'),
+        );
+        await handleCut();
+      } else if (shortcuts.matchesShortcut(e, 'paste')) {
+        e.preventDefault();
+        toast.showActionToast('Paste', shortcuts.formatShortcut('paste'));
+        await handlePaste();
+      } else if (
+        shortcuts.matchesShortcut(e, 'delete') &&
+        selectedFiles.size > 0
+      ) {
+        e.preventDefault();
+        await handleDelete();
+      } else if (
+        shortcuts.matchesShortcut(e, 'open') &&
+        selectedFiles.size === 1
+      ) {
+        // Enter to open folder or file
+        e.preventDefault();
+        const selectedPath = Array.from(selectedFiles)[0];
+        const selectedFile = files.find((f) => f.path === selectedPath);
+        if (selectedFile) {
+          handleFileDoubleClick(selectedFile);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      unlisten.then((fn) => fn());
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [
+    selectedSource,
+    selectedFiles,
+    currentPath,
+    files,
+    cutFilePaths,
+    renamingFile,
+  ]);
+
+  // Refresh clipboard state when window gains focus (detect native clipboard changes)
+  useEffect(() => {
+    const handleFocus = () => {
+      refreshClipboardState();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    // Initial clipboard check
+    refreshClipboardState();
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  const initAndLoadSources = async () => {
+    try {
+      // Initialize VFS first
+      await StorageService.init();
+      await loadSourcesList();
+
+      // Load OS preferences for hidden files, etc.
+      try {
+        const osPrefs = await VfsService.getOsPreferences();
+        setShowHiddenFiles(osPrefs.show_hidden_files);
+      } catch (prefsErr) {
+        // Ignore - use defaults if OS preferences not available
+        console.debug('Could not load OS preferences:', prefsErr);
+      }
+    } catch (err) {
+      console.error('Failed to initialize VFS:', err);
+    }
+  };
+
+  // Load files when path changes (source changes are handled by selectSource)
+  // This useEffect handles navigation within a source (folder changes)
+  const prevSourceIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (selectedSource?.id) {
+      // Only load if path changed within the same source
+      // Source changes are handled directly by selectSource to avoid race conditions
+      if (prevSourceIdRef.current === selectedSource.id) {
+        loadFilesList(selectedSource.id, currentPath);
+      }
+      prevSourceIdRef.current = selectedSource.id;
+    }
+  }, [selectedSource?.id, currentPath]);
+
+  const loadSourcesList = async () => {
+    try {
+      const list = await StorageService.listSources();
+      setSources(list);
+      // Only auto-select first source if nothing is selected
+      if (list.length > 0 && !selectedSource) {
+        const firstSource = list[0];
+        setSelectedSource(firstSource);
+        // Explicitly load files for initial source
+        // (since useEffect won't trigger - prevSourceIdRef is null initially)
+        prevSourceIdRef.current = firstSource.id;
+        await loadFilesList(firstSource.id, '');
+      }
+    } catch (err) {
+      console.error('Failed to load sources:', err);
+    }
+  };
+
+  const loadFilesList = async (sourceId: string, path: string) => {
+    console.log('[VFS] Loading files:', sourceId, path);
+    setLoading(true);
+    try {
+      const list = await StorageService.listFiles(sourceId, path);
+      console.log('[VFS] Loaded', list.length, 'files');
+      setFiles(list);
+    } catch (err) {
+      console.error('[VFS] Failed to load files:', err);
+      setFiles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load global favorites from localStorage
+  const loadGlobalFavorites = () => {
+    try {
+      const stored = localStorage.getItem('ursly-global-favorites');
+      if (stored) {
+        const parsed = JSON.parse(stored) as GlobalFavorite[];
+        setFavorites(parsed);
+      }
+    } catch (err) {
+      console.error('Failed to load global favorites:', err);
+      setFavorites([]);
+    }
+  };
+
+  // Save global favorites to localStorage
+  const saveGlobalFavorites = (favs: GlobalFavorite[]) => {
+    try {
+      localStorage.setItem('ursly-global-favorites', JSON.stringify(favs));
+    } catch (err) {
+      console.error('Failed to save global favorites:', err);
+    }
+  };
+
+  // Add a file/folder to global favorites
+  const addToGlobalFavorites = (file: FileMetadata, source: StorageSource) => {
+    const newFavorite: GlobalFavorite = {
+      id: `${source.id}:${file.path}`,
+      name: file.name,
+      path: file.path,
+      sourceId: source.id,
+      sourceName: source.name,
+      isDirectory: file.mimeType === 'folder' || file.path.endsWith('/'),
+      addedAt: new Date().toISOString(),
+      order: favorites.length,
+    };
+
+    // Check if already exists
+    if (favorites.some((f) => f.id === newFavorite.id)) {
+      return;
+    }
+
+    const updated = [...favorites, newFavorite];
+    setFavorites(updated);
+    saveGlobalFavorites(updated);
+  };
+
+  // Remove from global favorites
+  const removeFromGlobalFavorites = (favoriteId: string) => {
+    const updated = favorites.filter((f) => f.id !== favoriteId);
+    setFavorites(updated);
+    saveGlobalFavorites(updated);
+  };
+
+  const loadTags = async (sourceId: string) => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const tagList = await invoke<{ name: string; color?: string }[]>(
+        'vfs_list_all_tags',
+        { sourceId },
+      );
+      setAllTags(tagList);
+    } catch (err) {
+      console.error('Failed to load tags:', err);
+      setAllTags([]);
+    }
+  };
+
+  // Load global favorites on mount
+  useEffect(() => {
+    loadGlobalFavorites();
+  }, []);
+
+  // Load tags when source changes
+  useEffect(() => {
+    if (selectedSource) {
+      loadTags(selectedSource.id);
+    }
+  }, [selectedSource]);
+
+  // Select a source (storage location) and navigate to its root
+  const selectSource = async (source: StorageSource) => {
+    // Skip if same source already selected
+    if (selectedSource?.id === source.id) return;
+
+    console.log('[VFS] Selecting source:', source.id, source.name);
+
+    // Clear state first
+    setSelectedFiles(new Set());
+    setFiles([]); // Clear files immediately to show loading
+    setCutFilePaths(new Set());
+
+    // Reset navigation history when switching sources
+    setNavigationHistory(['']);
+    setHistoryIndex(0);
+
+    // Update source and path
+    setSelectedSource(source);
+    setCurrentPath('');
+
+    // Explicitly load files for the new source (don't rely on useEffect)
+    // This ensures files load immediately even if currentPath was already ''
+    await loadFilesList(source.id, '');
+  };
+
+  // Navigate to a path and update history
+  const navigateTo = (path: string, addToHistory = true) => {
+    // Normalize path
+    const normalizedPath = path === '/' ? '' : path;
+
+    // Don't navigate if already at this path
+    if (normalizedPath === currentPath) return;
+
+    setCurrentPath(normalizedPath);
+    setSelectedFiles(new Set());
+
+    // Add to history if this is a new navigation (not back/forward)
+    if (addToHistory) {
+      setNavigationHistory((prev) => {
+        // Remove any forward history
+        const newHistory = prev.slice(0, historyIndex + 1);
+        // Add new path
+        newHistory.push(normalizedPath);
+        // Keep history manageable (max 50 entries)
+        if (newHistory.length > 50) newHistory.shift();
+        return newHistory;
+      });
+      setHistoryIndex((prev) => Math.min(prev + 1, 49));
+    }
+  };
+
+  // Go back in navigation history
+  const goBack = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      const path = navigationHistory[newIndex] || '';
+      setCurrentPath(path);
+      setSelectedFiles(new Set());
+    }
+  };
+
+  // Go forward in navigation history
+  const goForward = () => {
+    if (historyIndex < navigationHistory.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      const path = navigationHistory[newIndex] || '';
+      setCurrentPath(path);
+      setSelectedFiles(new Set());
+    }
+  };
+
+  // Go up one directory level
+  const goUp = () => {
+    if (!currentPath) return;
+
+    // Handle different path formats
+    let parentPath = '';
+
+    if (currentPath.includes('/')) {
+      const parts = currentPath.split('/').filter(Boolean);
+      parts.pop();
+      parentPath = parts.length > 0 ? '/' + parts.join('/') : '';
+    } else if (currentPath.includes('\\')) {
+      const parts = currentPath.split('\\').filter(Boolean);
+      parts.pop();
+      parentPath = parts.length > 0 ? parts.join('\\') : '';
+    }
+
+    navigateTo(parentPath);
+  };
+
+  // Check if we can go back/forward
+  const canGoBack = historyIndex > 0;
+  const canGoForward = historyIndex < navigationHistory.length - 1;
+  const canGoUp = currentPath !== '';
+
+  const handleFileClick = (file: FileMetadata, e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey) {
+      setSelectedFiles((prev) => {
+        const next = new Set(prev);
+        if (next.has(file.path)) next.delete(file.path);
+        else next.add(file.path);
+        return next;
+      });
+    } else if (e.shiftKey && selectedFiles.size > 0) {
+      // Range selection
+      const allPaths = files.map((f) => f.path);
+      const lastSelected = Array.from(selectedFiles).pop()!;
+      const lastIdx = allPaths.indexOf(lastSelected);
+      const currentIdx = allPaths.indexOf(file.path);
+      const [start, end] = [
+        Math.min(lastIdx, currentIdx),
+        Math.max(lastIdx, currentIdx),
+      ];
+      const range = allPaths.slice(start, end + 1);
+      setSelectedFiles(new Set(range));
+    } else {
+      setSelectedFiles(new Set([file.path]));
+    }
+  };
+
+  const handleFileDoubleClick = async (file: FileMetadata) => {
+    const isFolder =
+      file.mimeType === 'folder' || file.path.endsWith('/') || file.isDirectory;
+
+    if (isFolder) {
+      // Build the full path for the folder
+      let targetPath = file.path;
+
+      // Remove trailing slash if present
+      if (targetPath.endsWith('/')) {
+        targetPath = targetPath.slice(0, -1);
+      }
+
+      // If the path is relative (doesn't start with / or drive letter), make it absolute
+      if (
+        currentPath &&
+        !targetPath.startsWith('/') &&
+        !targetPath.match(/^[A-Za-z]:\\/)
+      ) {
+        targetPath = currentPath + '/' + file.name;
+      }
+
+      console.log('[VFS] Navigating to folder:', targetPath);
+      navigateTo(targetPath);
+    } else {
+      // Open file with default application
+      await handleOpenFile(file);
+    }
+  };
+
+  // Open file with default application
+  const handleOpenFile = async (file: FileMetadata) => {
+    if (!selectedSource) return;
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('vfs_open_file', {
+        sourceId: selectedSource.id,
+        filePath: file.path,
+      });
+    } catch (err) {
+      console.error('Failed to open file:', err);
+      DialogService.error(`Failed to open file: ${err}`, 'Open Error');
+    }
+  };
+
+  // Open file with specific application
+  const handleOpenFileWith = async (file: FileMetadata, appPath: string) => {
+    if (!selectedSource) return;
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('vfs_open_file_with', {
+        sourceId: selectedSource.id,
+        filePath: file.path,
+        appPath,
+      });
+    } catch (err) {
+      console.error('Failed to open file with app:', err);
+      DialogService.error(`Failed to open file: ${err}`, 'Open Error');
+    }
+  };
+
+  // Get available apps for a file
+  const [availableApps, setAvailableApps] = useState<
+    { name: string; path: string }[]
+  >([]);
+  const [appsLoading, setAppsLoading] = useState(false);
+  const [showOpenWith, setShowOpenWith] = useState(false);
+
+  const loadAppsForFile = async (file: FileMetadata) => {
+    setAppsLoading(true);
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const apps = await invoke<{ name: string; path: string }[]>(
+        'vfs_get_apps_for_file',
+        {
+          filePath: file.path,
+        },
+      );
+      setAvailableApps(apps);
+    } catch (err) {
+      console.error('Failed to get apps:', err);
+      setAvailableApps([]);
+    } finally {
+      setAppsLoading(false);
+    }
+  };
+
+  const handleWarm = async (file: FileMetadata) => {
+    if (!selectedSource) return;
+    try {
+      await StorageService.warmFile({
+        sourceId: selectedSource.id,
+        filePath: file.path,
+        priority: 'high',
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleTranscode = async (file: FileMetadata) => {
+    if (!selectedSource) return;
+    try {
+      await StorageService.transcodeVideo({
+        sourceId: selectedSource.id,
+        filePath: file.path,
+        format: 'hls',
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // =========================================================================
+  // Clipboard Operations - macOS Finder-like behavior
+  // =========================================================================
+
+  // Centralized function to refresh clipboard state
+  const refreshClipboardState = async () => {
+    try {
+      // Check VFS clipboard
+      const hasVfsFiles = await StorageService.hasClipboardFiles();
+      setClipboardHasFiles(hasVfsFiles);
+
+      // Check native clipboard for files from Finder
+      const nativeFiles = await StorageService.readNativeClipboard();
+      setNativeClipboardCount(nativeFiles.length);
+
+      // If VFS clipboard is empty but we have cut files displayed, clear them
+      // (Backend clears clipboard after cut-paste, so cutFilePaths should sync)
+      if (!hasVfsFiles && cutFilePaths.size > 0) {
+        setCutFilePaths(new Set());
+      }
+    } catch (err) {
+      console.error('Failed to refresh clipboard state:', err);
+    }
+  };
+
+  // Track if current clipboard operation was a cut
+  const [isCutOperation, setIsCutOperation] = useState(false);
+
+  const handleCopy = async () => {
+    if (!selectedSource || selectedFiles.size === 0) return;
+
+    setFileOperation({ type: 'Copying to clipboard...', inProgress: true });
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const paths = Array.from(selectedFiles);
+
+      // Copy to VFS clipboard AND export to native clipboard for Finder/Explorer
+      await invoke('vfs_clipboard_copy_for_native', {
+        sourceId: selectedSource.id,
+        paths,
+      });
+
+      // macOS behavior: Copy clears previous cut state
+      setCutFilePaths(new Set());
+      setIsCutOperation(false);
+      setClipboardHasFiles(true);
+
+      // Brief visual feedback
+      setFileOperation({
+        type: `${paths.length} item(s) copied`,
+        inProgress: false,
+      });
+      setTimeout(() => setFileOperation(null), 1500);
+    } catch (err) {
+      console.error('Copy failed:', err);
+      setFileOperation(null);
+    }
+  };
+
+  const handleCut = async () => {
+    if (!selectedSource || selectedFiles.size === 0) return;
+
+    setFileOperation({ type: 'Preparing to move...', inProgress: true });
+
+    try {
+      const paths = Array.from(selectedFiles);
+      await StorageService.cutFiles(selectedSource.id, paths);
+
+      // Mark files as cut (show with reduced opacity - macOS style)
+      setCutFilePaths(new Set(paths));
+      setIsCutOperation(true);
+      setClipboardHasFiles(true);
+
+      // Brief visual feedback
+      setFileOperation({
+        type: `${paths.length} item(s) ready to move`,
+        inProgress: false,
+      });
+      setTimeout(() => setFileOperation(null), 1500);
+    } catch (err) {
+      console.error('Cut failed:', err);
+      setFileOperation(null);
+    }
+  };
+
+  const handlePaste = async (targetPath?: string) => {
+    if (!selectedSource) return;
+
+    const destination = targetPath || currentPath || '/';
+    const operationType = isCutOperation ? 'Moving' : 'Pasting';
+
+    setFileOperation({ type: `${operationType}...`, inProgress: true });
+
+    try {
+      // First check if we have files in VFS clipboard
+      let hasFiles = await StorageService.hasClipboardFiles();
+
+      // If not, check native clipboard (files copied from Finder)
+      if (!hasFiles) {
+        const nativeFiles = await StorageService.readNativeClipboard();
+        if (nativeFiles.length > 0) {
+          // Import native files to our clipboard (as copy, not cut)
+          await StorageService.copyNativeToClipboard(nativeFiles);
+          hasFiles = true;
+          setIsCutOperation(false); // Native files are always copied, not cut
+        }
+      }
+
+      if (!hasFiles) {
+        setFileOperation(null);
+        return;
+      }
+
+      const result = await StorageService.pasteFiles(
+        selectedSource.id,
+        destination,
+      );
+
+      // Always refresh UI after paste attempt
+      await loadFilesList(selectedSource.id, currentPath);
+
+      if (result.files_pasted > 0) {
+        // macOS behavior: After cut-paste, source files are deleted and clipboard is cleared
+        // After copy-paste, clipboard remains (can paste again)
+        if (isCutOperation) {
+          // Backend already cleared clipboard for cut operations
+          setCutFilePaths(new Set());
+          setClipboardHasFiles(false);
+          setIsCutOperation(false);
+          setFileOperation({
+            type: `${result.files_pasted} item(s) moved`,
+            inProgress: false,
+          });
+        } else {
+          // For copy, clipboard persists - can paste again
+          setFileOperation({
+            type: `${result.files_pasted} item(s) pasted`,
+            inProgress: false,
+          });
+        }
+
+        // Visual feedback timeout
+        setTimeout(() => setFileOperation(null), 1500);
+      } else if (result.errors && result.errors.length > 0) {
+        // Show error
+        setFileOperation({
+          type: `Paste failed: ${result.errors[0]}`,
+          inProgress: false,
+        });
+        setTimeout(() => setFileOperation(null), 3000);
+      } else {
+        setFileOperation(null);
+      }
+
+      // Refresh clipboard state to sync with backend
+      await refreshClipboardState();
+    } catch (err) {
+      console.error('Paste failed:', err);
+      setFileOperation({ type: `Paste failed: ${err}`, inProgress: false });
+      setTimeout(() => setFileOperation(null), 3000);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedSource || selectedFiles.size === 0) return;
+
+    const paths = Array.from(selectedFiles);
+    const confirmDelete = window.confirm(
+      `Delete ${paths.length} file(s)? This cannot be undone.`,
+    );
+    if (!confirmDelete) return;
+
+    setFileOperation({
+      inProgress: true,
+      type: `Deleting ${paths.length} item(s)`,
+    });
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      let successCount = 0;
+      const failedPaths: string[] = [];
+
+      for (const path of paths) {
+        try {
+          // Normalize the path - ensure it doesn't have double slashes
+          const normalizedPath = path.replace(/\/+/g, '/');
+
+          console.log(
+            `[VFS Delete] Deleting: sourceId=${selectedSource.id}, path=${normalizedPath}`,
+          );
+
+          const result = await invoke('vfs_delete_recursive', {
+            sourceId: selectedSource.id,
+            path: normalizedPath,
+          });
+
+          console.log(`[VFS Delete] Result:`, result);
+          successCount++;
+        } catch (err) {
+          console.error(`[VFS Delete] Failed to delete ${path}:`, err);
+          failedPaths.push(path);
+        }
+      }
+
+      // Clear selection
+      setSelectedFiles(new Set());
+
+      // Refresh file list
+      await loadFilesList(selectedSource.id, currentPath);
+
+      // Show error if some deletions failed
+      if (failedPaths.length > 0) {
+        DialogService.error(
+          `Failed to delete ${failedPaths.length} item(s):\n${failedPaths.join('\n')}`,
+          'Delete Error',
+        );
+      }
+    } catch (err) {
+      console.error('[VFS Delete] Delete operation failed:', err);
+      DialogService.error(`Delete failed: ${err}`, 'Delete Error');
+    } finally {
+      setFileOperation(null);
+    }
+  };
+
+  // Rename file/folder
+  // Start inline rename (like macOS Finder)
+  const handleRename = (file: FileMetadata) => {
+    // Get file name without extension for pre-selection
+    const name = file.name;
+    const dotIndex = name.lastIndexOf('.');
+    const isFolder = file.mimeType === 'folder' || file.path.endsWith('/');
+
+    setRenamingFile(file.path);
+    setRenameValue(name);
+    setSelectedFiles(new Set([file.path]));
+
+    // Focus and select the name (without extension for files)
+    setTimeout(() => {
+      if (renameInputRef.current) {
+        renameInputRef.current.focus();
+        if (!isFolder && dotIndex > 0) {
+          renameInputRef.current.setSelectionRange(0, dotIndex);
+        } else {
+          renameInputRef.current.select();
+        }
+      }
+    }, 10);
+  };
+
+  // Commit the rename
+  const commitRename = async () => {
+    if (!selectedSource || !renamingFile) return;
+
+    const file = files.find((f) => f.path === renamingFile);
+    if (!file) {
+      setRenamingFile(null);
+      return;
+    }
+
+    const newName = renameValue.trim();
+    if (!newName || newName === file.name) {
+      setRenamingFile(null);
+      return;
+    }
+
+    // Validate name
+    if (newName.includes('/') || newName.includes('\\')) {
+      DialogService.warning(
+        'File names cannot contain slashes',
+        'Invalid Name',
+      );
+      return;
+    }
+
+    setFileOperation({ type: 'Renaming...', inProgress: true });
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      // Construct the new path
+      const pathParts = file.path.split('/');
+      pathParts.pop();
+      const newPath =
+        pathParts.length > 0
+          ? `${pathParts.join('/')}/${newName}`
+          : `/${newName}`;
+
+      await invoke('vfs_rename', {
+        sourceId: selectedSource.id,
+        from: file.path,
+        to: newPath,
+      });
+
+      setRenamingFile(null);
+
+      // Refresh and select the renamed file
+      await loadFilesList(selectedSource.id, currentPath);
+      setSelectedFiles(new Set([newPath]));
+    } catch (err) {
+      console.error('Rename failed:', err);
+      DialogService.error(`Rename failed: ${err}`, 'Rename Error');
+    } finally {
+      setFileOperation(null);
+    }
+  };
+
+  // Cancel rename
+  const cancelRename = () => {
+    setRenamingFile(null);
+    setRenameValue('');
+  };
+
+  // Handle rename input keydown
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitRename();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelRename();
+    }
+  };
+
+  // Create new folder with inline naming (like macOS Finder)
+  // Optional targetPath for creating inside a specific folder
+  const handleNewFolder = async (targetPath?: string) => {
+    if (!selectedSource) return;
+
+    setFileOperation({ type: 'Creating folder...', inProgress: true });
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      // Determine the parent directory
+      const parentPath = targetPath || currentPath;
+
+      // Find a unique name
+      let folderName = 'untitled folder';
+      let counter = 1;
+      const existingNames = new Set(files.map((f) => f.name.toLowerCase()));
+
+      while (existingNames.has(folderName.toLowerCase())) {
+        counter++;
+        folderName = `untitled folder ${counter}`;
+      }
+
+      const newPath =
+        parentPath === '/' || parentPath === ''
+          ? `/${folderName}`
+          : `${parentPath.replace(/\/$/, '')}/${folderName}`;
+
+      await invoke('vfs_mkdir', {
+        sourceId: selectedSource.id,
+        path: newPath,
+      });
+
+      // Refresh file list and wait for it to complete
+      await loadFilesList(selectedSource.id, currentPath);
+
+      // Use a longer delay to ensure React re-renders with new files
+      // Then start inline rename
+      setTimeout(() => {
+        setRenamingFile(newPath);
+        setRenameValue(folderName);
+        setSelectedFiles(new Set([newPath]));
+
+        setTimeout(() => {
+          if (renameInputRef.current) {
+            renameInputRef.current.focus();
+            renameInputRef.current.select();
+          }
+        }, 50);
+      }, 150);
+    } catch (err) {
+      console.error('Create folder failed:', err);
+      DialogService.error(`Create folder failed: ${err}`, 'Folder Error');
+    } finally {
+      setFileOperation(null);
+    }
+  };
+
+  // Duplicate file/folder - Cmd+D
+  const handleDuplicate = async (file: FileMetadata) => {
+    if (!selectedSource) return;
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      // Generate copy name (e.g., "file.txt" -> "file copy.txt" or "file copy 2.txt")
+      const ext = file.name.includes('.')
+        ? '.' + file.name.split('.').pop()
+        : '';
+      const baseName = file.name.includes('.')
+        ? file.name.substring(0, file.name.lastIndexOf('.'))
+        : file.name;
+
+      // Check for existing copies to generate unique name
+      const copyPattern = new RegExp(
+        `^${baseName} copy( \\d+)?${ext.replace('.', '\\.')}$`,
+      );
+      const existingCopies = files.filter((f) => copyPattern.test(f.name));
+
+      const copyNum = existingCopies.length > 0 ? existingCopies.length + 1 : 0;
+      const newName =
+        copyNum > 0
+          ? `${baseName} copy ${copyNum}${ext}`
+          : `${baseName} copy${ext}`;
+
+      const pathParts = file.path.split('/');
+      pathParts.pop();
+      const newPath =
+        pathParts.length > 0
+          ? `${pathParts.join('/')}/${newName}`
+          : `/${newName}`;
+
+      await invoke('vfs_copy', {
+        sourceId: selectedSource.id,
+        request: {
+          from: file.path,
+          to: newPath,
+          recursive: true,
+        },
+      });
+
+      // Refresh file list
+      await loadFilesList(selectedSource.id, currentPath);
+    } catch (err) {
+      console.error('Duplicate failed:', err);
+      DialogService.error(`Duplicate failed: ${err}`, 'Duplicate Error');
+    }
+  };
+
+  // ============================================================================
+  // Drag and Drop Handlers - Native FS-like behavior
+  // ============================================================================
+
+  // Start dragging file(s)
+  const handleDragStart = (e: React.DragEvent, file: FileMetadata) => {
+    // If dragging a non-selected file, select only that file
+    const filesToDrag = selectedFiles.has(file.path)
+      ? Array.from(selectedFiles)
+      : [file.path];
+
+    console.log(
+      '[VFS DnD] Drag start:',
+      filesToDrag,
+      'from source:',
+      selectedSource?.id,
+    );
+
+    setDraggedFiles(filesToDrag);
+    setDragSourceId(selectedSource?.id || null);
+
+    // Set drag data for native drop targets (Finder/Explorer)
+    e.dataTransfer.effectAllowed = 'copyMove';
+    e.dataTransfer.setData('text/plain', filesToDrag.join('\n'));
+    e.dataTransfer.setData(
+      'application/x-vfs-files',
+      JSON.stringify({
+        sourceId: selectedSource?.id,
+        paths: filesToDrag,
+      }),
+    );
+
+    // Create custom drag image showing file count (uses CSS from finder.css)
+    const dragImage = document.createElement('div');
+    dragImage.className = 'drag-ghost';
+    dragImage.innerHTML = `
+      ${filesToDrag.length > 1 ? `<span class="drag-count">${filesToDrag.length}</span>` : ''}
+      <span class="drag-label">${filesToDrag.length === 1 ? file.name : `${filesToDrag.length} items`}</span>
+    `;
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 20, 20);
+
+    // Clean up after a short delay (must stay in DOM for setDragImage to work)
+    requestAnimationFrame(() => {
+      setTimeout(() => dragImage.remove(), 0);
+    });
+  };
+
+  // Drag over a folder or content area
+  const handleDragOver = (
+    e: React.DragEvent,
+    targetPath?: string,
+    isFolder?: boolean,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Determine drop effect
+    const isMove = e.shiftKey || dragSourceId === selectedSource?.id;
+    e.dataTransfer.dropEffect = isMove ? 'move' : 'copy';
+
+    setIsDraggingOver(true);
+
+    // Only set folder as drop target (not individual files)
+    if (isFolder && targetPath !== undefined) {
+      setDropTarget(targetPath);
+    } else if (targetPath === undefined) {
+      // Dragging over empty area in the content view
+      setDropTarget(null);
+    }
+  };
+
+  // Drag leaves the drop zone
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Only clear drop target when truly leaving (not entering a child element)
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    const currentTarget = e.currentTarget as HTMLElement;
+
+    // Check if we're leaving to an element outside the current target
+    if (!relatedTarget || !currentTarget.contains(relatedTarget)) {
+      setDropTarget(null);
+      setIsDraggingOver(false);
+    }
+  };
+
+  // Drop files onto target
+  const handleDrop = async (
+    e: React.DragEvent,
+    targetPath: string = currentPath,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    console.log('[VFS DnD] Drop event, target:', targetPath);
+
+    setDropTarget(null);
+    setIsDraggingOver(false);
+
+    if (!selectedSource) {
+      console.warn('[VFS DnD] No selected source');
+      return;
+    }
+
+    // Use the internal draggedFiles state first (more reliable than dataTransfer)
+    // dataTransfer.getData() can be unreliable in some browsers during drop
+    const filesToMove = draggedFiles.length > 0 ? draggedFiles : [];
+    const sourceId = dragSourceId || selectedSource.id;
+
+    // Also try to get from dataTransfer as fallback
+    const vfsData = e.dataTransfer.getData('application/x-vfs-files');
+
+    if (filesToMove.length > 0 || vfsData) {
+      // VFS internal drag
+      try {
+        const paths =
+          filesToMove.length > 0
+            ? filesToMove
+            : (JSON.parse(vfsData) as { sourceId: string; paths: string[] })
+                .paths;
+
+        console.log(
+          '[VFS DnD] Moving/copying paths:',
+          paths,
+          'to:',
+          targetPath,
+        );
+
+        // Default to move within same source, copy between sources
+        const isMove = sourceId === selectedSource.id;
+        const { invoke } = await import('@tauri-apps/api/core');
+
+        for (const path of paths) {
+          // Don't drop onto self or parent
+          if (path === targetPath || targetPath.startsWith(path + '/')) {
+            console.log('[VFS DnD] Skipping self/parent drop:', path);
+            continue;
+          }
+
+          const fileName = path.split('/').pop() || '';
+          // Handle empty targetPath (root)
+          const normalizedTarget = targetPath === '' ? '/' : targetPath;
+          const destPath =
+            normalizedTarget === '/'
+              ? `/${fileName}`
+              : `${normalizedTarget}/${fileName}`;
+
+          console.log(
+            '[VFS DnD] Operation:',
+            isMove ? 'move' : 'copy',
+            'from:',
+            path,
+            'to:',
+            destPath,
+          );
+
+          if (sourceId === selectedSource.id) {
+            // Same source: move within the source
+            if (isMove) {
+              await invoke('vfs_move', {
+                sourceId,
+                request: { from: path, to: destPath },
+              });
+            } else {
+              await invoke('vfs_copy', {
+                sourceId,
+                request: { from: path, to: destPath, recursive: true },
+              });
+            }
+          } else {
+            // Different source: cross-storage transfer
+            if (isMove) {
+              await invoke('vfs_move_to_source', {
+                fromSourceId: sourceId,
+                fromPath: path,
+                toSourceId: selectedSource.id,
+                toPath: destPath,
+              });
+            } else {
+              await invoke('vfs_copy_to_source', {
+                fromSourceId: sourceId,
+                fromPath: path,
+                toSourceId: selectedSource.id,
+                toPath: destPath,
+              });
+            }
+          }
+        }
+
+        // Clear cut state if files were moved
+        if (isMove && cutFilePaths.size > 0) {
+          setCutFilePaths(new Set());
+        }
+
+        // Refresh file list
+        console.log('[VFS DnD] Refreshing files');
+        await loadFilesList(selectedSource.id, currentPath);
+      } catch (err) {
+        console.error('[VFS DnD] Drop failed:', err);
+        DialogService.error(`Drop failed: ${err}`, 'Drop Error');
+      }
+    } else if (e.dataTransfer.files.length > 0) {
+      // Native file drop - import from filesystem
+      console.log(
+        '[VFS DnD] Native file drop:',
+        e.dataTransfer.files.length,
+        'files',
+      );
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+
+        for (const file of Array.from(e.dataTransfer.files)) {
+          // Use Tauri's file path if available
+          const filePath = (file as unknown as { path?: string }).path;
+          if (filePath) {
+            const fileName = filePath.split('/').pop() || file.name;
+            const normalizedTarget = targetPath === '' ? '/' : targetPath;
+            const destPath =
+              normalizedTarget === '/'
+                ? `/${fileName}`
+                : `${normalizedTarget}/${fileName}`;
+
+            console.log('[VFS DnD] Native import:', filePath, 'to:', destPath);
+
+            await invoke('vfs_copy_to_source', {
+              fromSourceId: 'native',
+              fromPath: filePath,
+              toSourceId: selectedSource.id,
+              toPath: destPath,
+            });
+          }
+        }
+
+        // Refresh
+        await loadFilesList(selectedSource.id, currentPath);
+      } catch (err) {
+        console.error('[VFS DnD] Import from native failed:', err);
+        DialogService.error(`Import failed: ${err}`, 'Import Error');
+      }
+    } else {
+      console.log('[VFS DnD] No files to drop');
+    }
+
+    // Clean up drag state
+    setDraggedFiles([]);
+    setDragSourceId(null);
+  };
+
+  // Drag ends (cleanup)
+  const handleDragEnd = () => {
+    setDraggedFiles([]);
+    setDragSourceId(null);
+    setDropTarget(null);
+    setIsDraggingOver(false);
+  };
+
+  // Drop onto sidebar source (cross-storage transfer)
+  const handleDropOnSource = async (
+    e: React.DragEvent,
+    targetSource: StorageSource,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const vfsData = e.dataTransfer.getData('application/x-vfs-files');
+    if (!vfsData) return;
+
+    try {
+      const { sourceId, paths } = JSON.parse(vfsData) as {
+        sourceId: string;
+        paths: string[];
+      };
+      const isMove = e.shiftKey;
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      for (const path of paths) {
+        const fileName = path.split('/').pop() || '';
+        const destPath = `/${fileName}`;
+
+        if (isMove) {
+          await invoke('vfs_move_to_source', {
+            fromSourceId: sourceId,
+            fromPath: path,
+            toSourceId: targetSource.id,
+            toPath: destPath,
+          });
+        } else {
+          await invoke('vfs_copy_to_source', {
+            fromSourceId: sourceId,
+            fromPath: path,
+            toSourceId: targetSource.id,
+            toPath: destPath,
+          });
+        }
+      }
+
+      // Optionally switch to target source
+      // setSelectedSource(targetSource);
+      // await loadFilesList(targetSource.id, '/');
+    } catch (err) {
+      console.error('Cross-storage drop failed:', err);
+      DialogService.error(`Transfer failed: ${err}`, 'Transfer Error');
+    }
+
+    setDraggedFiles([]);
+    setDragSourceId(null);
+    setDropTarget(null);
+    setIsDraggingOver(false);
+  };
+
+  // Toggle favorite for a file
+  const handleToggleFavorite = async (filePath: string) => {
+    if (!selectedSource) return;
+
+    const file = files.find((f) => f.path === filePath);
+    if (!file) return;
+
+    const favoriteId = `${selectedSource.id}:${filePath}`;
+    const existingIndex = favorites.findIndex((f) => f.id === favoriteId);
+
+    if (existingIndex >= 0) {
+      // Remove from favorites
+      removeFromGlobalFavorites(favoriteId);
+    } else {
+      // Add to favorites
+      addToGlobalFavorites(file, selectedSource);
+    }
+  };
+
+  // Check if a file is in favorites
+  const isFileFavorite = (filePath: string): boolean => {
+    if (!selectedSource) return false;
+    const favoriteId = `${selectedSource.id}:${filePath}`;
+    return favorites.some((f) => f.id === favoriteId);
+  };
+
+  // Navigate to a favorite
+  const navigateToFavorite = async (favorite: GlobalFavorite) => {
+    // First, find and select the source
+    const source = sources.find((s) => s.id === favorite.sourceId);
+    if (source) {
+      setSelectedSource(source);
+    }
+
+    // Get directory of the favorite
+    const parts = favorite.path.split('/');
+    if (!favorite.isDirectory) {
+      parts.pop(); // Remove filename
+    }
+    const dirPath = parts.join('/') || '/';
+    setCurrentPath(dirPath);
+
+    // Select the file after navigation
+    if (!favorite.isDirectory) {
+      setTimeout(() => {
+        setSelectedFiles(new Set([favorite.path]));
+      }, 100);
+    }
+  };
+
+  // Handle adding a new storage source
+  const handleAddStorage = async (sourceConfig: Partial<StorageSource>) => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      // Register the new storage source with the backend
+      const newSource = await invoke<StorageSource>('vfs_add_source', {
+        source: sourceConfig,
+      });
+
+      // Add to sources list
+      setSources((prev) => [...prev, newSource]);
+
+      // Optionally select the new source
+      setSelectedSource(newSource);
+      setCurrentPath('/');
+    } catch (err) {
+      console.error('Failed to add storage:', err);
+      DialogService.error(`Failed to add storage: ${err}`, 'Storage Error');
+    }
+  };
+
+  // Context menu handlers
+  const handleContextMenu = async (
+    e: React.MouseEvent,
+    file?: FileMetadata,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent bubbling to parent containers
+
+    // If right-clicking on a file that's not selected, select it
+    if (file && !selectedFiles.has(file.path)) {
+      setSelectedFiles(new Set([file.path]));
+    }
+
+    // Check clipboard (both VFS and native)
+    try {
+      const hasVfsFiles = await StorageService.hasClipboardFiles();
+      const nativeFiles = await StorageService.readNativeClipboard();
+
+      setNativeClipboardCount(nativeFiles.length);
+      setClipboardHasFiles(hasVfsFiles || nativeFiles.length > 0);
+    } catch (err) {
+      console.error('Failed to check clipboard:', err);
+      setClipboardHasFiles(false);
+      setNativeClipboardCount(0);
+    }
+
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      targetFile: file,
+    });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu({ visible: false, x: 0, y: 0 });
+  };
+
+  // Close context menu on click anywhere
+  useEffect(() => {
+    const handleClick = () => closeContextMenu();
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
+
+  /**
+   * Build breadcrumbs that work across different storage types:
+   * - Local: /Users/tony/Documents -> [Home, Documents]
+   * - S3: bucket/prefix/key -> [bucket, prefix, key]
+   * - Network (SMB/NFS): //server/share/folder or /Volumes/Share/folder
+   */
+  const getBreadcrumbs = (): BreadcrumbItem[] => {
+    // SVG icon components using theme colors
+    const LocalIcon = () => (
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 16 16"
+        fill="currentColor"
+        className="breadcrumb-icon location"
+      >
+        <path d="M4.5 5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zM3 4.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z" />
+        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8.5v3a1.5 1.5 0 0 1 1.5 1.5h5.5a.5.5 0 0 1 0 1H10A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5H.5a.5.5 0 0 1 0-1H6A1.5 1.5 0 0 1 7.5 10V7H2a2 2 0 0 1-2-2V4zm1 0v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1zm6 7.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5z" />
+      </svg>
+    );
+    const CloudIcon = () => (
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 16 16"
+        fill="currentColor"
+        className="breadcrumb-icon location"
+      >
+        <path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z" />
+      </svg>
+    );
+    const NetworkIcon = () => (
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 16 16"
+        fill="currentColor"
+        className="breadcrumb-icon location"
+      >
+        <path d="M6.5 9a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-3zM5 8.5A1.5 1.5 0 0 1 6.5 7h3A1.5 1.5 0 0 1 11 8.5v2A1.5 1.5 0 0 1 9.5 12h-3A1.5 1.5 0 0 1 5 10.5v-2z" />
+        <path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zm11 0a.5.5 0 0 0 0-1h3A1.5 1.5 0 0 1 16 1.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 0-.5-.5h-3zM.5 11a.5.5 0 0 1 .5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 1 0 1h-3A1.5 1.5 0 0 1 0 14.5v-3a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v3a1.5 1.5 0 0 1-1.5 1.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 1 .5-.5z" />
+        <path d="M3 6.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5z" />
+      </svg>
+    );
+    const HybridIcon = () => (
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 16 16"
+        fill="currentColor"
+        className="breadcrumb-icon location"
+      >
+        <path d="M5 0a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1H5zm.5 14a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm2 0a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zM5 1.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zM5.5 3h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zm0 2h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zm0 2h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zm0 2h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1z" />
+      </svg>
+    );
+    const FolderIcon = () => (
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 16 16"
+        fill="currentColor"
+        className="breadcrumb-icon folder"
+      >
+        <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3H13.5a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H2.5a2 2 0 0 1-2-2V3.87z" />
+      </svg>
+    );
+
+    if (!selectedSource)
+      return [{ name: 'Root', path: '', icon: <LocalIcon /> }];
+
+    const storageType =
+      selectedSource.providerId || selectedSource.type || 'local';
+    const sourceName = selectedSource.name || 'Storage';
+
+    // Root breadcrumb with storage-specific icon
+    const getStorageIcon = (): React.ReactNode => {
+      switch (storageType) {
+        case 'aws-s3':
+        case 's3':
+        case 's3-compatible':
+        case 'gcs':
+        case 'azure-blob':
+          return <CloudIcon />;
+        case 'smb':
+        case 'nfs':
+        case 'nas':
+          return <NetworkIcon />;
+        case 'fsx-ontap':
+          return <HybridIcon />;
+        case 'sftp':
+        case 'webdav':
+          return <NetworkIcon />;
+        default:
+          return <LocalIcon />;
+      }
+    };
+
+    const crumbs: BreadcrumbItem[] = [
+      {
+        name: sourceName,
+        path: '',
+        icon: getStorageIcon(),
+      },
+    ];
+
+    if (!currentPath || currentPath === '/' || currentPath === '') {
+      return crumbs;
+    }
+
+    // Parse path based on storage type
+    let pathParts: string[] = [];
+
+    if (
+      storageType === 'aws-s3' ||
+      storageType === 's3' ||
+      storageType === 'gcs' ||
+      storageType === 'azure-blob'
+    ) {
+      // Object storage: bucket/prefix/key format (no leading slash)
+      pathParts = currentPath.replace(/^\/+/, '').split('/').filter(Boolean);
+    } else if (storageType === 'smb' || storageType === 'nfs') {
+      // Network paths: handle //server/share or UNC paths
+      const cleanPath = currentPath.replace(/^\/\//, '').replace(/^\\\\/, '');
+      pathParts = cleanPath.split(/[/\\]/).filter(Boolean);
+    } else {
+      // Local/default: standard Unix path
+      pathParts = currentPath.split('/').filter(Boolean);
+    }
+
+    // Build accumulated paths for navigation
+    let accumulated = '';
+    const pathSeparator =
+      storageType === 'smb' && currentPath.startsWith('\\\\') ? '\\' : '/';
+
+    for (const part of pathParts) {
+      accumulated = accumulated
+        ? `${accumulated}${pathSeparator}${part}`
+        : `/${part}`;
+      crumbs.push({
+        name: part,
+        path: accumulated,
+        icon: <FolderIcon />,
+      });
+    }
+
+    return crumbs;
+  };
+
+  // Check if current storage is mounted/local (files directly accessible)
+  // Transcode and Download features only make sense for remote/cloud storage
+  const isMountedStorage = (): boolean => {
+    if (!selectedSource) return true; // Default to true if no source
+    const category = selectedSource.category;
+    // Local, network, and hybrid with mount points are considered mounted
+    return (
+      category === 'local' || category === 'network' || category === 'block'
+    );
+  };
+
+  // Parse search query for DAM/MAM search operators
+  // Supports: tag:keyword, type:video, tier:hot, name:filename
+  const parseSearchQuery = (
+    query: string,
+  ): {
+    textSearch: string;
+    tagFilter?: string;
+    typeFilter?: string;
+    tierFilter?: string;
+  } => {
+    let textSearch = query;
+    let tagFilter: string | undefined;
+    let typeFilter: string | undefined;
+    let tierFilter: string | undefined;
+
+    // Extract tag: operator
+    const tagMatch = query.match(/tag:(\S+)/i);
+    if (tagMatch) {
+      tagFilter = tagMatch[1].toLowerCase();
+      textSearch = textSearch.replace(tagMatch[0], '').trim();
+    }
+
+    // Extract type: operator
+    const typeMatch = query.match(/type:(\S+)/i);
+    if (typeMatch) {
+      typeFilter = typeMatch[1].toLowerCase();
+      textSearch = textSearch.replace(typeMatch[0], '').trim();
+    }
+
+    // Extract tier: operator
+    const tierMatch = query.match(/tier:(\S+)/i);
+    if (tierMatch) {
+      tierFilter = tierMatch[1].toLowerCase();
+      textSearch = textSearch.replace(tierMatch[0], '').trim();
+    }
+
+    return { textSearch, tagFilter, typeFilter, tierFilter };
+  };
+
+  // Filter files based on search query, tags, and hidden files toggle
+  const filteredFiles = files.filter((f) => {
+    const {
+      textSearch,
+      tagFilter: searchTagFilter,
+      typeFilter,
+      tierFilter,
+    } = parseSearchQuery(searchQuery);
+
+    // Filter by text search (name)
+    if (
+      textSearch &&
+      !f.name.toLowerCase().includes(textSearch.toLowerCase())
+    ) {
+      return false;
+    }
+
+    // Filter by tag: operator in search
+    if (searchTagFilter) {
+      const fileTags = (f.tags || []).map((t) => t.toLowerCase());
+      if (!fileTags.some((t) => t.includes(searchTagFilter))) {
+        return false;
+      }
+    }
+
+    // Filter by sidebar tag filter
+    if (filterByTag && !(f.tags || []).includes(filterByTag)) {
+      return false;
+    }
+
+    // Filter by type: operator (video, image, audio, document)
+    if (typeFilter) {
+      const mimeType = f.mimeType?.toLowerCase() || '';
+      const isMatch =
+        (typeFilter === 'video' && mimeType.startsWith('video/')) ||
+        (typeFilter === 'image' && mimeType.startsWith('image/')) ||
+        (typeFilter === 'audio' && mimeType.startsWith('audio/')) ||
+        (typeFilter === 'document' &&
+          (mimeType.includes('pdf') ||
+            mimeType.includes('document') ||
+            mimeType.includes('text/'))) ||
+        (typeFilter === 'folder' && mimeType === 'folder');
+      if (!isMatch) return false;
+    }
+
+    // Filter by tier: operator
+    if (tierFilter && f.tierStatus?.toLowerCase() !== tierFilter) {
+      return false;
+    }
+
+    // Filter hidden files unless showHiddenFiles is enabled
+    const isHidden = f.isHidden ?? f.name.startsWith('.');
+    if (!showHiddenFiles && isHidden) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const selectedFile =
+    selectedFiles.size === 1
+      ? files.find((f) => f.path === Array.from(selectedFiles)[0])
+      : null;
+
+  return (
+    <div className="finder">
+      {/* Toolbar */}
+      <div className="finder-toolbar">
+        <div className="toolbar-nav">
+          {/* Back button */}
+          <button
+            className="toolbar-btn nav"
+            onClick={goBack}
+            disabled={!canGoBack}
+            title="Go Back (⌘[)"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          {/* Forward button */}
+          <button
+            className="toolbar-btn nav"
+            onClick={goForward}
+            disabled={!canGoForward}
+            title="Go Forward (⌘])"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+          {/* Up button */}
+          <button
+            className="toolbar-btn nav"
+            onClick={goUp}
+            disabled={!canGoUp}
+            title="Go Up (⌘↑)"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M18 15l-6-6-6 6" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="toolbar-center">
+          <Breadcrumbs
+            items={getBreadcrumbs()}
+            onNavigate={navigateTo}
+            maxVisible={5}
+            showIcons={true}
+          />
+        </div>
+
+        <div className="toolbar-right">
+          <div className="view-switcher">
+            <button
+              className={`view-btn ${viewMode === 'icon' ? 'active' : ''}`}
+              onClick={() => setViewMode('icon')}
+              title="Grid View"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <rect x="1" y="1" width="6" height="6" rx="1.5" />
+                <rect x="9" y="1" width="6" height="6" rx="1.5" />
+                <rect x="1" y="9" width="6" height="6" rx="1.5" />
+                <rect x="9" y="9" width="6" height="6" rx="1.5" />
+              </svg>
+            </button>
+            <button
+              className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+              title="List View"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <rect x="1" y="2" width="14" height="2.5" rx="1" />
+                <rect x="1" y="6.75" width="14" height="2.5" rx="1" />
+                <rect x="1" y="11.5" width="14" height="2.5" rx="1" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="search-box">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search (tag: type: tier:)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              title="Search by name, or use operators: tag:keyword type:video tier:hot"
+            />
+          </div>
+
+          {/* Toggle hidden files */}
+          <button
+            className={`toolbar-btn ${showHiddenFiles ? 'active' : ''}`}
+            onClick={() => setShowHiddenFiles(!showHiddenFiles)}
+            title={showHiddenFiles ? 'Hide Hidden Files' : 'Show Hidden Files'}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              width="16"
+              height="16"
+            >
+              {showHiddenFiles ? (
+                // Eye open
+                <>
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </>
+              ) : (
+                // Eye closed
+                <>
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                  <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                  <path d="M1 1l22 22" />
+                </>
+              )}
+            </svg>
+          </button>
+
+          <button
+            className={`toolbar-btn ${showInfoPanel ? 'active' : ''}`}
+            onClick={() => setShowInfoPanel(!showInfoPanel)}
+            title="Toggle Info Panel"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 3v18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="finder-body">
+        {/* Sidebar */}
+        <aside className="finder-sidebar">
+          <div
+            className={`sidebar-section ${dropTarget === 'favorites' ? 'drop-target' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDropTarget('favorites');
+              e.dataTransfer.dropEffect = 'link';
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                setDropTarget(null);
+              }
+            }}
+            onDrop={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDropTarget(null);
+
+              // Add dragged files to global favorites
+              if (selectedSource && draggedFiles.length > 0) {
+                for (const filePath of draggedFiles) {
+                  const file = files.find((f) => f.path === filePath);
+                  if (file) {
+                    addToGlobalFavorites(file, selectedSource);
+                  }
+                }
+              }
+
+              setDraggedFiles([]);
+              setDragSourceId(null);
+            }}
+          >
+            <div className="section-header">
+              <IconStar size={12} color="var(--vfs-warning)" glow={false} />
+              <span>Favorites</span>
+              {favorites.length > 0 && (
+                <span className="section-count">({favorites.length})</span>
+              )}
+            </div>
+            {favorites.length === 0 ? (
+              <div className="sidebar-empty">
+                <span className="empty-text">Drop files here</span>
+                <span className="empty-hint">Drag to add favorites</span>
+              </div>
+            ) : (
+              favorites.slice(0, 10).map((fav) => (
+                <button
+                  key={fav.id}
+                  className="sidebar-item"
+                  onClick={() => navigateToFavorite(fav)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeFromGlobalFavorites(fav.id);
+                  }}
+                  title={`${fav.sourceName}: ${fav.path}\nRight-click to remove`}
+                >
+                  <span className="item-icon">
+                    {fav.isDirectory ? (
+                      <IconFolder size={16} color="var(--finder-accent)" />
+                    ) : (
+                      <IconStar size={16} color="var(--vfs-warning)" />
+                    )}
+                  </span>
+                  <span className="item-name">{fav.name}</span>
+                </button>
+              ))
+            )}
+            {favorites.length > 10 && (
+              <div className="sidebar-item show-more">
+                <span className="item-icon">+</span>
+                <span>{favorites.length - 10} more</span>
+              </div>
+            )}
+          </div>
+
+          <div className="sidebar-section">
+            <div className="section-header">
+              <IconHome size={12} color="var(--vfs-primary)" glow={false} />
+              <span>Locations</span>
+            </div>
+            {sources
+              .filter((s) => s.category === 'local')
+              .map((source) => {
+                const LocationIcon = getLocationIcon(source.name);
+                const isDropTarget = dropTarget === `source:${source.id}`;
+                return (
+                  <button
+                    key={source.id}
+                    className={`sidebar-item ${selectedSource?.id === source.id ? 'active' : ''} ${isDropTarget ? 'drop-target' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      selectSource(source);
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (dragSourceId !== source.id) {
+                        setDropTarget(`source:${source.id}`);
+                      }
+                    }}
+                    onDragLeave={() => setDropTarget(null)}
+                    onDrop={(e) => handleDropOnSource(e, source)}
+                  >
+                    <span className="item-icon">
+                      <LocationIcon size={16} color="var(--vfs-primary)" />
+                    </span>
+                    <span>{source.name}</span>
+                    {source.status !== 'connected' && (
+                      <span className="offline-dot" />
+                    )}
+                  </button>
+                );
+              })}
+            {sources.filter((s) => s.category === 'local').length === 0 && (
+              <div className="sidebar-empty">
+                <span className="empty-text">No local storage</span>
+              </div>
+            )}
+          </div>
+
+          {/* Cloud Storage Section */}
+          {sources.filter((s) => s.category === 'cloud').length > 0 && (
+            <div className="sidebar-section">
+              <div className="section-header">
+                <IconCloud
+                  size={12}
+                  color="var(--vfs-secondary)"
+                  glow={false}
+                />
+                <span>Cloud</span>
+              </div>
+              {sources
+                .filter((s) => s.category === 'cloud')
+                .map((source) => {
+                  const isDropTarget = dropTarget === `source:${source.id}`;
+                  return (
+                    <button
+                      key={source.id}
+                      className={`sidebar-item ${selectedSource?.id === source.id ? 'active' : ''} ${isDropTarget ? 'drop-target' : ''}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectSource(source);
+                      }}
+                      title={getStorageDisplayLabel(source)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        if (dragSourceId !== source.id) {
+                          setDropTarget(`source:${source.id}`);
+                        }
+                      }}
+                      onDragLeave={() => setDropTarget(null)}
+                      onDrop={(e) => handleDropOnSource(e, source)}
+                    >
+                      <span className="item-icon">
+                        <IconCloud size={16} color="var(--vfs-secondary)" />
+                      </span>
+                      <span className="item-name">{source.name}</span>
+                      {source.status !== 'connected' && (
+                        <span className="offline-dot" />
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+          )}
+
+          {/* Network Shares Section */}
+          {sources.filter((s) => s.category === 'network').length > 0 && (
+            <div className="sidebar-section">
+              <div className="section-header">
+                <IconNetwork
+                  size={12}
+                  color="var(--vfs-tertiary)"
+                  glow={false}
+                />
+                <span>Network</span>
+              </div>
+              {sources
+                .filter((s) => s.category === 'network')
+                .map((source) => {
+                  const isDropTarget = dropTarget === `source:${source.id}`;
+                  return (
+                    <button
+                      key={source.id}
+                      className={`sidebar-item ${selectedSource?.id === source.id ? 'active' : ''} ${isDropTarget ? 'drop-target' : ''}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectSource(source);
+                      }}
+                      title={getStorageDisplayLabel(source)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        if (dragSourceId !== source.id) {
+                          setDropTarget(`source:${source.id}`);
+                        }
+                      }}
+                      onDragLeave={() => setDropTarget(null)}
+                      onDrop={(e) => handleDropOnSource(e, source)}
+                    >
+                      <span className="item-icon">
+                        <IconNetwork size={16} color="var(--vfs-tertiary)" />
+                      </span>
+                      <span className="item-name">{source.name}</span>
+                      {source.status !== 'connected' && (
+                        <span className="offline-dot" />
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+          )}
+
+          {/* Hybrid Storage Section */}
+          {sources.filter((s) => s.category === 'hybrid').length > 0 && (
+            <div className="sidebar-section">
+              <div className="section-header">
+                <IconDatabase
+                  size={12}
+                  color="var(--vfs-warning)"
+                  glow={false}
+                />
+                <span>Hybrid</span>
+              </div>
+              {sources
+                .filter((s) => s.category === 'hybrid')
+                .map((source) => {
+                  const isDropTarget = dropTarget === `source:${source.id}`;
+                  return (
+                    <button
+                      key={source.id}
+                      className={`sidebar-item ${selectedSource?.id === source.id ? 'active' : ''} ${isDropTarget ? 'drop-target' : ''}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectSource(source);
+                      }}
+                      title={getStorageDisplayLabel(source)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        if (dragSourceId !== source.id) {
+                          setDropTarget(`source:${source.id}`);
+                        }
+                      }}
+                      onDragLeave={() => setDropTarget(null)}
+                      onDrop={(e) => handleDropOnSource(e, source)}
+                    >
+                      <span className="item-icon">
+                        <IconDatabase size={16} color="var(--vfs-warning)" />
+                      </span>
+                      <span className="item-name">{source.name}</span>
+                      {source.status !== 'connected' && (
+                        <span className="offline-dot" />
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+          )}
+
+          {/* Add Storage Button */}
+          <div className="sidebar-section">
+            <button
+              className="add-storage-btn"
+              onClick={() => setShowAddStorage(true)}
+              title="Add Storage"
+            >
+              <span className="add-icon">+</span>
+              <span>Add Storage</span>
+            </button>
+          </div>
+
+          <div className="sidebar-section">
+            <div className="section-header">
+              <IconTag size={12} color="var(--vfs-tertiary)" glow={false} />
+              <span>Tags</span>
+              {allTags.length > 0 && (
+                <span className="section-count">({allTags.length})</span>
+              )}
+            </div>
+            {filterByTag && (
+              <button
+                className="sidebar-item active filter-active"
+                onClick={() => setFilterByTag(null)}
+              >
+                <span
+                  className="tag-dot"
+                  style={{
+                    background:
+                      allTags.find((t) => t.name === filterByTag)?.color ||
+                      'var(--vfs-primary)',
+                  }}
+                />
+                <span>{filterByTag}</span>
+                <span className="clear-filter">✕</span>
+              </button>
+            )}
+            {allTags.length === 0 ? (
+              <div className="sidebar-empty">
+                <span className="empty-text">No tags yet</span>
+              </div>
+            ) : (
+              allTags
+                .filter((t) => t.name !== filterByTag)
+                .slice(0, 8)
+                .map((tag) => (
+                  <button
+                    key={tag.name}
+                    className={`sidebar-item ${filterByTag === tag.name ? 'active' : ''}`}
+                    onClick={() => setFilterByTag(tag.name)}
+                  >
+                    <span
+                      className="tag-dot"
+                      style={{ background: tag.color || 'var(--vfs-primary)' }}
+                    />
+                    <span>{tag.name}</span>
+                  </button>
+                ))
+            )}
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main
+          className="finder-content"
+          onContextMenu={(e) => handleContextMenu(e)}
+          onDragOver={(e) => handleDragOver(e)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, currentPath)}
+        >
+          {loading ? (
+            <div className="empty-state">
+              <div className="spinner" />
+              <span className="empty-state-text">Loading...</span>
+            </div>
+          ) : files.length === 0 ? (
+            <div className="empty-state">
+              <IconFolder
+                size={48}
+                color="var(--finder-text-quaternary)"
+                glow={false}
+              />
+              <span className="empty-state-text">No files</span>
+              <span className="empty-state-hint">
+                Right-click to create or paste
+              </span>
+            </div>
+          ) : (
+            <>
+              {viewMode === 'icon' && (
+                <div
+                  className={`icon-view ${isDraggingOver && dropTarget === null ? 'drop-zone-active' : ''}`}
+                  onContextMenu={(e) => handleContextMenu(e)}
+                  onDragOver={(e) => handleDragOver(e)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, currentPath)}
+                >
+                  {filteredFiles.map((file, index) => {
+                    const isFolder =
+                      file.mimeType === 'folder' || file.path.endsWith('/');
+                    const isDropTarget = isFolder && dropTarget === file.path;
+                    const isDragging = draggedFiles.includes(file.path);
+                    const fileIsHidden =
+                      file.isHidden ?? file.name.startsWith('.');
+                    return (
+                      <div
+                        key={file.path}
+                        className={`file-item ${selectedFiles.has(file.path) ? 'selected' : ''} ${isFolder ? 'folder' : ''} ${isDropTarget ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${cutFilePaths.has(file.path) ? 'is-cut' : ''} ${fileIsHidden ? 'is-hidden' : ''}`}
+                        onClick={(e) => handleFileClick(file, e)}
+                        onDoubleClick={() => handleFileDoubleClick(file)}
+                        onContextMenu={(e) => handleContextMenu(e, file)}
+                        data-type={isFolder ? 'folder' : 'file'}
+                        tabIndex={0}
+                        // Drag and drop
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, file)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) =>
+                          handleDragOver(e, file.path, isFolder)
+                        }
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => {
+                          if (isFolder) {
+                            handleDrop(e, file.path);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleFileDoubleClick(file);
+                          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const nextEl = e.currentTarget
+                              .nextElementSibling as HTMLElement;
+                            if (nextEl) {
+                              nextEl.focus();
+                              const next = filteredFiles[index + 1];
+                              if (next) setSelectedFiles(new Set([next.path]));
+                            }
+                          }
+                          if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            const prevEl = e.currentTarget
+                              .previousElementSibling as HTMLElement;
+                            if (prevEl) {
+                              prevEl.focus();
+                              const prev = filteredFiles[index - 1];
+                              if (prev) setSelectedFiles(new Set([prev.path]));
+                            }
+                          }
+                        }}
+                      >
+                        <div className="file-icon">
+                          {file.thumbnail ? (
+                            <img src={file.thumbnail} alt="" />
+                          ) : (
+                            <span className="icon-placeholder">
+                              {getFileIcon(file, 48)}
+                            </span>
+                          )}
+                          {getTierIndicator(file, warmProgress[file.path])}
+                        </div>
+                        <div className="file-name">
+                          {renamingFile === file.path ? (
+                            <input
+                              ref={renameInputRef}
+                              type="text"
+                              className="rename-input"
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={handleRenameKeyDown}
+                              onBlur={commitRename}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          ) : (
+                            file.name
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {viewMode === 'list' && (
+                <div
+                  className={`list-view ${isDraggingOver && dropTarget === null ? 'drop-zone-active' : ''}`}
+                  onContextMenu={(e) => handleContextMenu(e)}
+                  onDragOver={(e) => handleDragOver(e)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, currentPath)}
+                >
+                  <div className="list-header">
+                    <div className="col-name">Name</div>
+                    <div className="col-date">Date Modified</div>
+                    <div className="col-size">Size</div>
+                    <div className="col-tier">Tier</div>
+                  </div>
+                  <div className="list-body">
+                    {filteredFiles.map((file, index) => {
+                      const isFolder =
+                        file.mimeType === 'folder' || file.path.endsWith('/');
+                      const isDropTarget = isFolder && dropTarget === file.path;
+                      const isDragging = draggedFiles.includes(file.path);
+                      const fileIsHidden =
+                        file.isHidden ?? file.name.startsWith('.');
+                      return (
+                        <div
+                          key={file.path}
+                          className={`list-row ${selectedFiles.has(file.path) ? 'selected' : ''} ${isFolder ? 'folder' : ''} ${isDropTarget ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${cutFilePaths.has(file.path) ? 'is-cut' : ''} ${fileIsHidden ? 'is-hidden' : ''}`}
+                          onClick={(e) => handleFileClick(file, e)}
+                          onDoubleClick={() => handleFileDoubleClick(file)}
+                          onContextMenu={(e) => handleContextMenu(e, file)}
+                          data-type={isFolder ? 'folder' : 'file'}
+                          tabIndex={0}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, file)}
+                          onDragEnd={handleDragEnd}
+                          onDragOver={(e) =>
+                            handleDragOver(e, file.path, isFolder)
+                          }
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => {
+                            if (isFolder) {
+                              handleDrop(e, file.path);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleFileDoubleClick(file);
+                            if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const nextEl = e.currentTarget
+                                .nextElementSibling as HTMLElement;
+                              if (nextEl) {
+                                nextEl.focus();
+                                const next = filteredFiles[index + 1];
+                                if (next)
+                                  setSelectedFiles(new Set([next.path]));
+                              }
+                            }
+                            if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              const prevEl = e.currentTarget
+                                .previousElementSibling as HTMLElement;
+                              if (prevEl) {
+                                prevEl.focus();
+                                const prev = filteredFiles[index - 1];
+                                if (prev)
+                                  setSelectedFiles(new Set([prev.path]));
+                              }
+                            }
+                          }}
+                        >
+                          <div className="col-name">
+                            <span className="row-icon">
+                              {getFileIcon(file, 18)}
+                            </span>
+                            {renamingFile === file.path ? (
+                              <input
+                                ref={renameInputRef}
+                                type="text"
+                                className="rename-input"
+                                value={renameValue}
+                                onChange={(e) => setRenameValue(e.target.value)}
+                                onKeyDown={handleRenameKeyDown}
+                                onBlur={commitRename}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              file.name
+                            )}
+                          </div>
+                          <div className="col-date">
+                            {new Date(file.lastModified).toLocaleDateString()}
+                          </div>
+                          <div className="col-size">
+                            {formatSize(file.size)}
+                          </div>
+                          <div className="col-tier">
+                            {getTierBadge(file, warmProgress[file.path])}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </main>
+
+        {/* Info Panel */}
+        {showInfoPanel && (
+          <aside className="finder-info">
+            {selectedFile ? (
+              <>
+                <div className="info-preview">
+                  {selectedFile.thumbnail ? (
+                    <img src={selectedFile.thumbnail} alt="" />
+                  ) : (
+                    <span className="info-icon">
+                      {getFileIcon(selectedFile, 64)}
+                    </span>
+                  )}
+                </div>
+                <h3 className="info-name">{selectedFile.name}</h3>
+                <div className="info-meta">
+                  {/* Basic Info */}
+                  <div className="meta-section">
+                    <div className="meta-section-title">General</div>
+                    <div className="meta-row">
+                      <span className="meta-label">Size</span>
+                      <span className="meta-value">
+                        {formatSize(selectedFile.size)}
+                      </span>
+                    </div>
+                    <div className="meta-row">
+                      <span className="meta-label">Modified</span>
+                      <span className="meta-value">
+                        {new Date(selectedFile.lastModified).toLocaleString()}
+                      </span>
+                    </div>
+                    {selectedFile.createdAt && (
+                      <div className="meta-row">
+                        <span className="meta-label">Created</span>
+                        <span className="meta-value">
+                          {new Date(selectedFile.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="meta-row">
+                      <span className="meta-label">Tier</span>
+                      <span className="meta-value">
+                        {getTierBadge(
+                          selectedFile,
+                          warmProgress[selectedFile.path],
+                        )}
+                      </span>
+                    </div>
+                    {selectedFile.container && (
+                      <div className="meta-row">
+                        <span className="meta-label">Container</span>
+                        <span className="meta-value">
+                          {selectedFile.container.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Video Info */}
+                  {(selectedFile.videoCodec || selectedFile.width) && (
+                    <div className="meta-section">
+                      <div className="meta-section-title">Video</div>
+                      {selectedFile.width && selectedFile.height && (
+                        <div className="meta-row">
+                          <span className="meta-label">Resolution</span>
+                          <span className="meta-value">
+                            {selectedFile.width} x {selectedFile.height}
+                          </span>
+                        </div>
+                      )}
+                      {selectedFile.videoCodec && (
+                        <div className="meta-row">
+                          <span className="meta-label">Codec</span>
+                          <span className="meta-value">
+                            {selectedFile.videoCodec.toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      {selectedFile.frameRate && (
+                        <div className="meta-row">
+                          <span className="meta-label">Frame Rate</span>
+                          <span className="meta-value">
+                            {selectedFile.frameRate} fps
+                          </span>
+                        </div>
+                      )}
+                      {selectedFile.videoBitrate && (
+                        <div className="meta-row">
+                          <span className="meta-label">Bitrate</span>
+                          <span className="meta-value">
+                            {selectedFile.videoBitrate} kbps
+                          </span>
+                        </div>
+                      )}
+                      {selectedFile.colorSpace && (
+                        <div className="meta-row">
+                          <span className="meta-label">Color</span>
+                          <span className="meta-value">
+                            {selectedFile.colorSpace}
+                          </span>
+                        </div>
+                      )}
+                      {selectedFile.hdrFormat && (
+                        <div className="meta-row">
+                          <span className="meta-label">HDR</span>
+                          <span className="meta-value highlight">
+                            {selectedFile.hdrFormat.toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Audio Info */}
+                  {(selectedFile.audioCodec || selectedFile.audioChannels) && (
+                    <div className="meta-section">
+                      <div className="meta-section-title">Audio</div>
+                      {selectedFile.audioCodec && (
+                        <div className="meta-row">
+                          <span className="meta-label">Codec</span>
+                          <span className="meta-value">
+                            {selectedFile.audioCodec.toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      {selectedFile.audioChannels && (
+                        <div className="meta-row">
+                          <span className="meta-label">Channels</span>
+                          <span className="meta-value">
+                            {selectedFile.audioChannels === 1
+                              ? 'Mono'
+                              : selectedFile.audioChannels === 2
+                                ? 'Stereo'
+                                : selectedFile.audioChannels === 6
+                                  ? '5.1 Surround'
+                                  : selectedFile.audioChannels === 8
+                                    ? '7.1 Surround'
+                                    : `${selectedFile.audioChannels} ch`}
+                          </span>
+                        </div>
+                      )}
+                      {selectedFile.audioSampleRate && (
+                        <div className="meta-row">
+                          <span className="meta-label">Sample Rate</span>
+                          <span className="meta-value">
+                            {selectedFile.audioSampleRate / 1000} kHz
+                          </span>
+                        </div>
+                      )}
+                      {selectedFile.audioBitrate && (
+                        <div className="meta-row">
+                          <span className="meta-label">Bitrate</span>
+                          <span className="meta-value">
+                            {selectedFile.audioBitrate} kbps
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Duration */}
+                  {selectedFile.duration && (
+                    <div className="meta-section">
+                      <div className="meta-section-title">Duration</div>
+                      <div className="meta-row">
+                        <span className="meta-label">Length</span>
+                        <span className="meta-value highlight">
+                          {Math.floor(selectedFile.duration / 3600) > 0
+                            ? `${Math.floor(selectedFile.duration / 3600)}h ${Math.floor((selectedFile.duration % 3600) / 60)}m ${Math.floor(selectedFile.duration % 60)}s`
+                            : `${Math.floor(selectedFile.duration / 60)}m ${Math.floor(selectedFile.duration % 60)}s`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  {selectedFile.tags && selectedFile.tags.length > 0 && (
+                    <div className="meta-section">
+                      <div className="meta-section-title">Tags</div>
+                      <div className="meta-tags">
+                        {selectedFile.tags.map((tag, i) => (
+                          <span key={i} className="meta-tag">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="info-actions">
+                  {/* Warm to Hot - only for cloud/remote storage */}
+                  {!isMountedStorage() &&
+                    selectedFile.canWarm &&
+                    !selectedFile.isWarmed && (
+                      <button
+                        className="action-btn warm"
+                        onClick={() => handleWarm(selectedFile)}
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M12 23a7.5 7.5 0 0 1-5.138-12.963C8.204 8.774 11.5 6.5 11 1.5c0 0 6.5 3.5 6.5 9a5.5 5.5 0 0 1-3 4.9v.1a5 5 0 0 0 5 5c0 3.866-3.134 2.5-7.5 2.5z" />
+                        </svg>
+                        Warm to Hot
+                      </button>
+                    )}
+                  {/* Transcode - only for cloud/remote storage */}
+                  {!isMountedStorage() && selectedFile.canTranscode && (
+                    <button
+                      className="action-btn secondary"
+                      onClick={() => handleTranscode(selectedFile)}
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                      Transcode
+                    </button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="info-empty">
+                <div className="info-empty-icon">
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4" />
+                    <path d="M12 8h.01" />
+                  </svg>
+                </div>
+                <p>No selection</p>
+                <p className="info-hint">{files.length} items</p>
+              </div>
+            )}
+          </aside>
+        )}
+      </div>
+
+      {/* Status Bar */}
+      <div className="finder-statusbar">
+        <span>
+          {filteredFiles.length} items
+          {selectedFiles.size > 0 && ` · ${selectedFiles.size} selected`}
+          {showHiddenFiles && ` · Hidden files visible`}
+        </span>
+        {selectedSource && (
+          <span className="statusbar-source">{selectedSource.name}</span>
+        )}
+      </div>
+
+      {/* Context Menu - Minimal Native-like Menu */}
+      {contextMenu.visible && (
+        <div
+          className="context-menu"
+          style={{
+            position: 'fixed',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            zIndex: 1000,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Open action for file/folder */}
+          {contextMenu.targetFile && (
+            <>
+              <button
+                className="context-item"
+                onClick={() => {
+                  if (contextMenu.targetFile) {
+                    if (
+                      contextMenu.targetFile.mimeType === 'folder' ||
+                      contextMenu.targetFile.path.endsWith('/')
+                    ) {
+                      navigateTo(contextMenu.targetFile.path);
+                    } else {
+                      handleOpenFile(contextMenu.targetFile);
+                    }
+                  }
+                  closeContextMenu();
+                }}
+              >
+                <svg
+                  className="context-icon"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.172a1.5 1.5 0 0 1 1.06.44l.708.706a.5.5 0 0 0 .354.147H13.5A1.5 1.5 0 0 1 15 4.793v7.707A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9z" />
+                </svg>
+                Open
+              </button>
+
+              {/* Open With submenu - only for files, not folders */}
+              {contextMenu.targetFile &&
+                !(
+                  contextMenu.targetFile.mimeType === 'folder' ||
+                  contextMenu.targetFile.path.endsWith('/')
+                ) && (
+                  <div
+                    className="context-item has-submenu"
+                    onMouseEnter={() => {
+                      if (contextMenu.targetFile) {
+                        loadAppsForFile(contextMenu.targetFile);
+                        setShowOpenWith(true);
+                      }
+                    }}
+                    onMouseLeave={() => setShowOpenWith(false)}
+                  >
+                    <svg
+                      className="context-icon"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                    >
+                      <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v8A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1h-3zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5z" />
+                    </svg>
+                    Open With
+                    <svg
+                      className="context-arrow"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                    >
+                      <path d="M6 12.796V3.204L11.481 8 6 12.796z" />
+                    </svg>
+                    {/* Open With submenu */}
+                    {showOpenWith && (
+                      <div className="context-submenu">
+                        {appsLoading ? (
+                          <div className="context-item disabled">
+                            Loading apps...
+                          </div>
+                        ) : availableApps.length > 0 ? (
+                          availableApps.map((app, index) => (
+                            <button
+                              key={index}
+                              className="context-item"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (contextMenu.targetFile) {
+                                  handleOpenFileWith(
+                                    contextMenu.targetFile,
+                                    app.path,
+                                  );
+                                }
+                                closeContextMenu();
+                              }}
+                            >
+                              {app.name}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="context-item disabled">
+                            No apps found
+                          </div>
+                        )}
+                        <div className="context-divider" />
+                        <button
+                          className="context-item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // TODO: Open native "Open With" dialog
+                            closeContextMenu();
+                          }}
+                        >
+                          Other...
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              <div className="context-divider" />
+            </>
+          )}
+
+          {/* Clipboard actions */}
+          {selectedFiles.size > 0 && (
+            <>
+              <button
+                className="context-item"
+                onClick={() => {
+                  handleCopy();
+                  closeContextMenu();
+                }}
+              >
+                <svg
+                  className="context-icon"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6z" />
+                  <path d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z" />
+                </svg>
+                Copy
+                <span className="context-shortcut">⌘C</span>
+              </button>
+              <button
+                className="context-item"
+                onClick={() => {
+                  handleCut();
+                  closeContextMenu();
+                }}
+              >
+                <svg
+                  className="context-icon"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61 3.5 3.5zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0zm7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z" />
+                </svg>
+                Cut
+                <span className="context-shortcut">⌘X</span>
+              </button>
+            </>
+          )}
+
+          <button
+            className={`context-item ${!(clipboardHasFiles || nativeClipboardCount > 0) ? 'disabled' : ''}`}
+            onClick={() => {
+              if (clipboardHasFiles || nativeClipboardCount > 0) {
+                handlePaste();
+              }
+              closeContextMenu();
+            }}
+            disabled={!(clipboardHasFiles || nativeClipboardCount > 0)}
+          >
+            <svg
+              className="context-icon"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+            >
+              <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1zM3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z" />
+            </svg>
+            {isCutOperation
+              ? 'Move Item'
+              : nativeClipboardCount > 0
+                ? `Paste ${nativeClipboardCount} items`
+                : 'Paste'}
+            <span className="context-shortcut">⌘V</span>
+          </button>
+
+          {/* Paste into folder */}
+          {contextMenu.targetFile &&
+            (contextMenu.targetFile.mimeType === 'folder' ||
+              contextMenu.targetFile.path.endsWith('/')) &&
+            (clipboardHasFiles || nativeClipboardCount > 0) && (
+              <button
+                className="context-item"
+                onClick={() => {
+                  if (contextMenu.targetFile) {
+                    handlePaste(contextMenu.targetFile.path);
+                  }
+                  closeContextMenu();
+                }}
+              >
+                <svg
+                  className="context-icon"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3H13.5a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H2.5a2 2 0 0 1-2-2V3.87z" />
+                </svg>
+                {isCutOperation ? 'Move into folder' : 'Paste into folder'}
+              </button>
+            )}
+
+          {selectedFiles.size > 0 && (
+            <>
+              <div className="context-divider" />
+
+              {selectedFiles.size === 1 && contextMenu.targetFile && (
+                <>
+                  <button
+                    className="context-item"
+                    onClick={() => {
+                      if (contextMenu.targetFile)
+                        handleRename(contextMenu.targetFile);
+                      closeContextMenu();
+                    }}
+                  >
+                    <svg
+                      className="context-icon"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                    >
+                      <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5z" />
+                    </svg>
+                    Rename
+                  </button>
+                  <button
+                    className="context-item"
+                    onClick={() => {
+                      if (contextMenu.targetFile)
+                        handleDuplicate(contextMenu.targetFile);
+                      closeContextMenu();
+                    }}
+                  >
+                    <svg
+                      className="context-icon"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                    >
+                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                      <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
+                    </svg>
+                    Duplicate
+                  </button>
+                </>
+              )}
+
+              <div className="context-divider" />
+
+              <button
+                className="context-item danger"
+                onClick={() => {
+                  handleDelete();
+                  closeContextMenu();
+                }}
+              >
+                <svg
+                  className="context-icon"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                  <path
+                    fillRule="evenodd"
+                    d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
+                  />
+                </svg>
+                Move to Trash
+              </button>
+            </>
+          )}
+
+          <div className="context-divider" />
+
+          {/* New Folder - only on empty space or when right-clicking a folder */}
+          {(!contextMenu.targetFile ||
+            contextMenu.targetFile.mimeType === 'folder' ||
+            contextMenu.targetFile.path.endsWith('/')) && (
+            <button
+              className="context-item"
+              onClick={() => {
+                // If right-clicked on a folder, create inside it; otherwise use current path
+                const targetPath = contextMenu.targetFile?.path;
+                handleNewFolder(targetPath);
+                closeContextMenu();
+              }}
+            >
+              <svg
+                className="context-icon"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="m.5 3 .04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2zm5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672z" />
+                <path d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z" />
+              </svg>
+              New Folder
+            </button>
+          )}
+
+          {contextMenu.targetFile && (
+            <button
+              className="context-item"
+              onClick={() => {
+                if (contextMenu.targetFile) {
+                  setInfoModal({ visible: true, file: contextMenu.targetFile });
+                }
+                closeContextMenu();
+              }}
+            >
+              <svg
+                className="context-icon"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+              </svg>
+              Asset Details
+            </button>
+          )}
+
+          {/* Tier actions - only for cloud/remote storage with cold/archive files */}
+          {!isMountedStorage() &&
+            contextMenu.targetFile &&
+            (contextMenu.targetFile.tierStatus === 'cold' ||
+              contextMenu.targetFile.tierStatus === 'nearline' ||
+              contextMenu.targetFile.tierStatus === 'archive' ||
+              (contextMenu.targetFile.canWarm &&
+                !contextMenu.targetFile.isWarmed)) && (
+              <>
+                <div className="context-divider" />
+                <button
+                  className="context-item"
+                  onClick={async () => {
+                    if (!selectedSource || !contextMenu.targetFile) {
+                      closeContextMenu();
+                      return;
+                    }
+
+                    try {
+                      const { invoke } = await import('@tauri-apps/api/core');
+                      await invoke('vfs_change_tier', {
+                        sourceId: selectedSource.id,
+                        paths: [contextMenu.targetFile.path],
+                        targetTier: 'hot',
+                      });
+
+                      // Refresh the file list
+                      await loadFilesList(selectedSource.id, currentPath);
+                    } catch (err) {
+                      console.error('Hydration failed:', err);
+                      DialogService.error(
+                        `Failed to fetch file: ${err}`,
+                        'Fetch Error',
+                      );
+                    }
+                    closeContextMenu();
+                  }}
+                >
+                  <svg
+                    className="context-icon"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                  </svg>
+                  Make Available Offline
+                </button>
+              </>
+            )}
+        </div>
+      )}
+
+      {/* Info Modal */}
+      {infoModal.visible && infoModal.file && (
+        <InfoModal
+          file={infoModal.file}
+          onClose={() => setInfoModal({ visible: false, file: null })}
+          onToggleFavorite={(file) => handleToggleFavorite(file.path)}
+          isFavorite={isFileFavorite(infoModal.file.path)}
+          onAddTag={(file, tag) => {
+            // Update file tags
+            setFiles((prev) =>
+              prev.map((f) =>
+                f.id === file.id ? { ...f, tags: [...(f.tags || []), tag] } : f,
+              ),
+            );
+            // Update modal file
+            setInfoModal((prev) =>
+              prev.file
+                ? {
+                    ...prev,
+                    file: {
+                      ...prev.file,
+                      tags: [...(prev.file.tags || []), tag],
+                    },
+                  }
+                : prev,
+            );
+            // Add to global tags if new
+            if (!allTags.some((t) => t.name === tag)) {
+              setAllTags((prev) => [...prev, { name: tag }]);
+            }
+          }}
+          onRemoveTag={(file, tag) => {
+            // Update file tags
+            setFiles((prev) =>
+              prev.map((f) =>
+                f.id === file.id
+                  ? { ...f, tags: (f.tags || []).filter((t) => t !== tag) }
+                  : f,
+              ),
+            );
+            // Update modal file
+            setInfoModal((prev) =>
+              prev.file
+                ? {
+                    ...prev,
+                    file: {
+                      ...prev.file,
+                      tags: (prev.file.tags || []).filter((t) => t !== tag),
+                    },
+                  }
+                : prev,
+            );
+          }}
+          onSetColorLabel={(file, color) => {
+            // Update file color label
+            setFiles((prev) =>
+              prev.map((f) =>
+                f.id === file.id ? { ...f, colorLabel: color || undefined } : f,
+              ),
+            );
+            // Update modal file
+            setInfoModal((prev) =>
+              prev.file
+                ? {
+                    ...prev,
+                    file: { ...prev.file, colorLabel: color || undefined },
+                  }
+                : prev,
+            );
+          }}
+          onUpdateComments={(file, comments) => {
+            // Update file comments
+            setFiles((prev) =>
+              prev.map((f) => (f.id === file.id ? { ...f, comments } : f)),
+            );
+            // Update modal file
+            setInfoModal((prev) =>
+              prev.file ? { ...prev, file: { ...prev.file, comments } } : prev,
+            );
+          }}
+        />
+      )}
+
+      {/* Add Storage Modal */}
+      <AddStorageModal
+        isOpen={showAddStorage}
+        onClose={() => setShowAddStorage(false)}
+        onAdd={handleAddStorage}
+      />
+
+      {/* File Operation Progress */}
+      {fileOperation?.inProgress && (
+        <div className="file-operation-toast">
+          <div className="operation-spinner" />
+          <span>{fileOperation.type}...</span>
+        </div>
+      )}
+
+      {/* Keyboard Shortcut Helper */}
+      <KeyboardShortcutHelper
+        isOpen={shortcutHelper.isOpen}
+        onClose={shortcutHelper.close}
+      />
+
+      {/* Keyboard Shortcut Settings */}
+      <ShortcutSettings
+        isOpen={showShortcutSettings}
+        onClose={() => setShowShortcutSettings(false)}
+      />
+
+      {/* Keyboard Shortcut Hint - bottom right corner */}
+      <button
+        className="shortcut-hint-button"
+        onClick={() => setShowShortcutSettings(true)}
+        title="Customize keyboard shortcuts"
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z" />
+          <path d="M11.5 4a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V5h-2.5a.5.5 0 0 1 0-1h3zm-7 8a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 1 0V11h2.5a.5.5 0 0 1 0 1h-3z" />
+        </svg>
+        <span>?</span>
+      </button>
+    </div>
+  );
+}
+
+// Helper functions
+
+// Get cyberpunk icon component based on folder name
+function getLocationIcon(name: string) {
+  const lowerName = name.toLowerCase();
+  if (lowerName === 'home' || lowerName.includes('user')) return IconHome;
+  if (lowerName === 'desktop') return IconDesktop;
+  if (lowerName === 'documents' || lowerName === 'docs') return IconDocuments;
+  if (lowerName === 'downloads') return IconDownloads;
+  if (lowerName === 'pictures' || lowerName === 'photos') return IconPictures;
+  if (lowerName === 'music' || lowerName === 'audio') return IconMusic;
+  if (lowerName === 'volumes' || lowerName === 'drives') return IconVolumes;
+  return IconFolder;
+}
+
+/**
+ * Get storage display label with naming conventions
+ * Follows standard naming patterns:
+ * - SMB/CIFS: \\server\share or //server/share
+ * - NFS: server:/export
+ * - S3: s3://bucket/prefix
+ * - Cloud: provider://container
+ */
+function getStorageDisplayLabel(source: StorageSource): string {
+  const { providerId, name, config } = source;
+
+  // For named sources, just return the name
+  if (name && !name.includes('/') && !name.includes('\\')) {
+    return name;
+  }
+
+  // Format based on provider type
+  switch (providerId) {
+    case 'smb':
+    case 'cifs': {
+      const server = config?.server as string;
+      const share = config?.share as string;
+      if (server && share) {
+        // Windows UNC format
+        return `\\\\${server}\\${share}`;
+      }
+      return name;
+    }
+    case 'nfs': {
+      const server = config?.server as string;
+      const exportPath = config?.export as string;
+      if (server && exportPath) {
+        // NFS format: server:/export
+        return `${server}:${exportPath}`;
+      }
+      return name;
+    }
+    case 'aws-s3':
+    case 's3-compatible': {
+      const bucket = config?.bucket as string;
+      const prefix = config?.prefix as string;
+      if (bucket) {
+        // S3 URI format
+        return prefix ? `s3://${bucket}/${prefix}` : `s3://${bucket}`;
+      }
+      return name;
+    }
+    case 'gcs': {
+      const bucket = config?.bucket as string;
+      if (bucket) {
+        return `gs://${bucket}`;
+      }
+      return name;
+    }
+    case 'azure-blob': {
+      const account = config?.accountName as string;
+      const container = config?.container as string;
+      if (account && container) {
+        return `azure://${account}/${container}`;
+      }
+      return name;
+    }
+    case 'sftp': {
+      const host = config?.host as string;
+      const path = config?.remotePath as string;
+      if (host) {
+        return `sftp://${host}${path || '/'}`;
+      }
+      return name;
+    }
+    case 'webdav': {
+      const url = config?.url as string;
+      if (url) {
+        return url.replace(/^https?:\/\//, 'dav://');
+      }
+      return name;
+    }
+    default:
+      return name;
+  }
+}
+
+function getFileIcon(file: FileMetadata, size = 48): React.ReactNode {
+  const isFolder = file.mimeType === 'folder' || file.path.endsWith('/');
+
+  if (isFolder) {
+    // Use simple folder icon - cleaner at all sizes
+    return (
+      <IconFolder
+        size={size}
+        color="currentColor"
+        glow={false}
+        className="folder-icon"
+      />
+    );
+  }
+
+  // Use the helper function to get the appropriate icon component
+  const IconComponent = getFileIconComponent(file.name, file.mimeType);
+  return <IconComponent size={size} glow={false} />;
+}
+
+function getTierIndicator(
+  file: FileMetadata,
+  progress?: WarmProgress,
+): React.ReactNode {
+  // Show progress indicator during warming
+  if (progress && progress.status === 'warming') {
+    return (
+      <div className="tier-progress">
+        <div
+          className="progress-ring"
+          style={{ '--progress': progress.progress } as React.CSSProperties}
+        />
+      </div>
+    );
+  }
+
+  // Only show tier indicators for non-hot tiers (cold, nearline, archive)
+  // Hot/local files don't need an indicator - that's the default state
+  if (file.tierStatus === 'cold')
+    return <span className="tier-dot cold" title="Cold Storage" />;
+  if (file.tierStatus === 'nearline')
+    return <span className="tier-dot nearline" title="Nearline Storage" />;
+  if (file.tierStatus === 'archive')
+    return <span className="tier-dot archive" title="Archive Storage" />;
+
+  // No indicator for hot/local files - they're immediately accessible
+  return null;
+}
+
+function getTierBadge(
+  file: FileMetadata,
+  progress?: WarmProgress,
+): React.ReactNode {
+  if (progress && progress.status === 'warming') {
+    return (
+      <span className="tier-badge warming">
+        {progress.progress.toFixed(0)}%
+      </span>
+    );
+  }
+  if (file.isWarmed) return <span className="tier-badge hot">Hot</span>;
+  if (file.tierStatus === 'cold')
+    return <span className="tier-badge cold">Cold</span>;
+  if (file.tierStatus === 'archive')
+    return <span className="tier-badge archive">Archive</span>;
+  return <span className="tier-badge">-</span>;
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}

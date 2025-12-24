@@ -59,8 +59,15 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
-      - name: Build web app (nx)
+      - name: Build web app for desktop (nx)
         run: npx nx build web --configuration=production
+        env:
+          # Use desktop-specific Keycloak client for Tauri app
+          VITE_KEYCLOAK_CLIENT_ID: agent-desktop
+          VITE_API_URL: https://api.ursly.io
+          VITE_WS_URL: wss://api.ursly.io
+          VITE_KEYCLOAK_URL: https://auth.ursly.io
+          VITE_KEYCLOAK_REALM: agent-orchestrator
 
       - name: Install Tauri CLI
         working-directory: apps/desktop

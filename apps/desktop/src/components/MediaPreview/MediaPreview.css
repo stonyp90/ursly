@@ -1,0 +1,430 @@
+/**
+ * Media Preview Styles
+ * Theme-aware styles for MediaPreviewModal and HlsVideoPlayer components.
+ */
+
+/* ============================================================
+   Modal Overlay
+   ============================================================ */
+
+.media-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.media-preview-modal {
+  position: relative;
+  width: 90vw;
+  max-width: 1400px;
+  height: 90vh;
+  max-height: 900px;
+  display: flex;
+  flex-direction: column;
+  background: var(--finder-bg-secondary, var(--surface, #2c2c2e));
+  border: 1px solid var(--finder-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-xl, 0 16px 40px rgba(0, 0, 0, 0.35));
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--finder-surface, var(--surface-elevated, #3a3a3c));
+  border-bottom: 1px solid var(--finder-border, rgba(255, 255, 255, 0.1));
+}
+
+.preview-header .header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.preview-header .file-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--finder-text-primary, var(--text-primary, #f5f5f7));
+}
+
+.preview-header .file-meta {
+  font-size: 12px;
+  color: var(--finder-text-secondary, var(--text-secondary, #a1a1a6));
+}
+
+.preview-header .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preview-header .header-actions button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: var(--finder-hover, rgba(255, 255, 255, 0.06));
+  color: var(--finder-text-primary, var(--text-primary, #f5f5f7));
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.preview-header .header-actions button:hover {
+  background: var(--finder-selection);
+}
+
+.preview-header .header-actions button.active {
+  background: var(--finder-accent, var(--primary, #0a84ff));
+  color: #fff;
+}
+
+.preview-header .header-actions .btn-close {
+  background: var(--finder-hover, rgba(255, 255, 255, 0.06));
+}
+
+.preview-header .header-actions .btn-close:hover {
+  background: rgba(255, 69, 58, 0.2);
+  color: var(--finder-danger, #ff453a);
+}
+
+.preview-header .zoom-level {
+  font-size: 12px;
+  color: var(--finder-text-tertiary, var(--text-muted, #8e8e93));
+  min-width: 50px;
+  text-align: center;
+}
+
+/* ============================================================
+   Content Area
+   ============================================================ */
+
+.preview-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  background: var(--finder-bg, var(--background, #1c1c1e));
+}
+
+.preview-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--finder-text-secondary, var(--text-secondary, #a1a1a6));
+  z-index: 10;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--finder-border, rgba(255, 255, 255, 0.1));
+  border-top-color: var(--finder-accent, var(--primary, #0a84ff));
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   Preview Placeholder
+   ============================================================ */
+
+.preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px;
+  text-align: center;
+}
+
+.preview-placeholder .placeholder-icon {
+  font-size: 56px;
+  opacity: 0.5;
+}
+
+.preview-placeholder p {
+  font-size: 14px;
+  color: var(--finder-text-secondary, var(--text-secondary, #a1a1a6));
+}
+
+.preview-placeholder .btn-transcode {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: var(--finder-accent, var(--primary, #0a84ff));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preview-placeholder .btn-transcode:hover {
+  filter: brightness(1.1);
+}
+
+/* ============================================================
+   Image Viewer
+   ============================================================ */
+
+.image-viewer {
+  max-width: 100%;
+  max-height: 100%;
+  transition: transform 0.2s ease;
+  cursor: grab;
+}
+
+.image-viewer:active {
+  cursor: grabbing;
+}
+
+.image-viewer img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* ============================================================
+   Audio Player
+   ============================================================ */
+
+.audio-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px;
+}
+
+.audio-player .audio-icon {
+  font-size: 64px;
+  opacity: 0.6;
+}
+
+.audio-player p {
+  font-size: 16px;
+  color: var(--finder-text-primary, var(--text-primary, #f5f5f7));
+}
+
+.audio-player audio {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* ============================================================
+   Document Preview
+   ============================================================ */
+
+.document-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px;
+}
+
+.document-preview .document-icon {
+  font-size: 64px;
+  opacity: 0.6;
+}
+
+.document-preview p {
+  font-size: 15px;
+  color: var(--finder-text-primary, var(--text-primary, #f5f5f7));
+}
+
+.document-preview .btn-download {
+  padding: 10px 20px;
+  border: 1px solid var(--finder-border, rgba(255, 255, 255, 0.15));
+  border-radius: 6px;
+  background: var(--finder-hover, rgba(255, 255, 255, 0.06));
+  color: var(--finder-text-primary, var(--text-primary, #f5f5f7));
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.document-preview .btn-download:hover {
+  background: var(--finder-selection);
+  border-color: rgba(var(--primary-rgb, 10, 132, 255), 0.3);
+}
+
+/* ============================================================
+   HLS Video Player
+   ============================================================ */
+
+.hls-video-player {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hls-video-player .video-element {
+  max-width: 100%;
+  max-height: 100%;
+  outline: none;
+}
+
+.hls-video-player .video-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--finder-text-primary);
+}
+
+.hls-video-player .quality-selector {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.hls-video-player .quality-selector select {
+  padding: 6px 10px;
+  border: 1px solid var(--finder-border, rgba(255, 255, 255, 0.15));
+  border-radius: 6px;
+  background: var(--finder-bg-secondary, rgba(0, 0, 0, 0.7));
+  color: var(--finder-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+}
+
+.hls-video-player .quality-selector select:hover {
+  border-color: var(--finder-accent, var(--primary, #0a84ff));
+}
+
+.video-player-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px;
+  color: var(--finder-danger, #ff453a);
+}
+
+.video-player-error .error-icon {
+  font-size: 48px;
+}
+
+/* ============================================================
+   Thumbnail Timeline
+   ============================================================ */
+
+.thumbnail-timeline {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--finder-surface, var(--surface-elevated, #3a3a3c));
+  border-top: 1px solid var(--finder-border, rgba(255, 255, 255, 0.1));
+  overflow-x: auto;
+}
+
+.thumbnail-timeline .thumbnail-item {
+  flex-shrink: 0;
+  width: 72px;
+  height: 40px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  background: none;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.thumbnail-timeline .thumbnail-item:hover {
+  border-color: var(--finder-text-quaternary, rgba(255, 255, 255, 0.2));
+}
+
+.thumbnail-timeline .thumbnail-item.active {
+  border-color: var(--finder-accent, var(--primary, #0a84ff));
+}
+
+.thumbnail-timeline .thumbnail-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ============================================================
+   Info Panel
+   ============================================================ */
+
+.info-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  background: var(--finder-bg-secondary, var(--surface, #2c2c2e));
+  border-left: 1px solid var(--finder-border, rgba(255, 255, 255, 0.1));
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.info-panel h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--finder-text-primary, var(--text-primary, #f5f5f7));
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--finder-border, rgba(255, 255, 255, 0.08));
+}
+
+.info-panel dl {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 8px;
+}
+
+.info-panel dt {
+  font-size: 11px;
+  color: var(--finder-text-tertiary, var(--text-muted, #8e8e93));
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.info-panel dd {
+  font-size: 12px;
+  color: var(--finder-text-primary, var(--text-primary, #f5f5f7));
+  word-break: break-all;
+}

@@ -1,248 +1,206 @@
-# Ursly.io Agent Orchestrator
+# Ursly.io
 
-[![Website](https://img.shields.io/badge/Website-ursly.io-blue?logo=google-chrome&logoColor=white)](https://ursly.io)
-[![App](https://img.shields.io/badge/App-app.ursly.io-purple?logo=react&logoColor=white)](https://app.ursly.io)
-[![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289da?logo=discord&logoColor=white)](https://discord.gg/cree8)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-24.x-green?logo=node.js)](https://nodejs.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.75+-orange?logo=rust)](https://www.rust-lang.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-10.x-e0234e?logo=nestjs)](https://nestjs.com/)
 
-Ursly.io is an open-source platform for building and deploying **AI-powered agents** with automatic context management, clean architecture, and enterprise-grade security.
-
-**Website:** [ursly.io](https://ursly.io) | **Live App:** [app.ursly.io](https://app.ursly.io) | **Auth:** [auth.ursly.io](https://auth.ursly.io)
-
----
-
-## Features
-
-### Agent Management
-
-- Create & configure AI agents with tailored system prompts
-- Interactive chat interface with real-time token tracking
-- Lifecycle control (start, stop, pause)
-- Context window monitoring with automatic rotation
-- Model parameter tuning (temperature, top-p, max tokens)
-
-### Model Management
-
-- Ollama integration with direct model pulling
-- Multi-model support: LLaMA 3.x, Mistral, CodeLlama, Phi3, Gemma, Qwen
-- Model details: size, family, quantization, context window
-
-### Task Execution
-
-- AI task queue with configurable agents
-- Real-time progress via WebSocket streaming
-- Complete execution history with error tracking
-
-### Access Control
-
-- Granular permission management
-- Role-based access with customizable groups
-- Multi-organization support
-
-### Enterprise Authentication
-
-- Keycloak OIDC single sign-on
-- Session management with refresh tokens
-- Multi-organization contexts
+**AI Agent Orchestration Platform** — Build, deploy, and manage intelligent agents with automatic context management, enterprise security, and a **cloud-agnostic virtual file system** for seamless media asset management across any provider, OS, and storage type.
 
 ---
 
-## Repository Structure
+## What is Ursly.io?
 
-| Folder                       | Description                                       |
-| ---------------------------- | ------------------------------------------------- |
-| `apps/api`                   | NestJS REST API with clean architecture           |
-| `apps/web`                   | React frontend with MUI components                |
-| `apps/grpc`                  | gRPC service for Ollama integration               |
-| `apps/desktop`               | Tauri desktop app with GPU monitoring             |
-| `libs/agent-core`            | Core agent runtime with context window management |
-| `libs/audit-logger`          | Type-safe audit logging                           |
-| `libs/shared/types`          | Shared TypeScript types and Zod schemas           |
-| `libs/shared/access-control` | Permission and entitlement management             |
+Ursly.io is an open-source platform for orchestrating AI agents at scale. It provides:
+
+- **Agent Lifecycle Management** — Create agents with custom prompts, control execution, monitor context windows
+- **Multi-Model Support** — LLaMA 3.x, Mistral, CodeLlama, Phi3, Gemma, Qwen via Ollama
+- **Cloud-Agnostic Virtual File System** — OS-independent Rust vFS with unified access to AWS S3, Google Cloud Storage, Azure Blob Storage, on-premise NAS, and local storage—seamlessly share media assets across any cloud provider
+- **Enterprise Security** — RBAC, granular permissions, multi-org support with Keycloak OIDC
+- **Native Desktop App** — Tauri-powered with GPU monitoring and cyberpunk-themed file browser
 
 ---
 
-## Getting Started
+## Tech Stack
 
-### Prerequisites
+| Layer        | Technologies                                     |
+| ------------ | ------------------------------------------------ |
+| **Backend**  | NestJS · TypeScript · MongoDB · gRPC · WebSocket |
+| **Frontend** | React · MUI · Tailwind CSS · Vite                |
+| **Desktop**  | Tauri · Rust · Native GPU APIs                   |
+| **AI/ML**    | Ollama · LLaMA 3.x · Mistral · Phi3              |
+| **Auth**     | Keycloak · OIDC · JWT                            |
+| **Infra**    | Docker · Nx Monorepo                             |
 
-- [Node.js](https://nodejs.org/) v24+
-- [Docker](https://www.docker.com/) & Docker Compose
-- npm (included with Node.js)
+---
 
-### Quick Start
+## Quick Start
 
 ```bash
-# Clone the repository
 git clone https://github.com/stonyp90/ursly.git
 cd ursly
 
-# Copy environment configuration
 cp env.example .env
-# Edit .env with your configuration
-
-# Install dependencies
 npm install
-
-# Start infrastructure services
 docker-compose up -d
-
-# Start development servers
 npm run dev
 ```
 
-### Development Commands
-
-```bash
-# Start API only
-npm run start:api
-
-# Start Web UI only
-npm run start:web
-
-# Start all services in dev mode
-npm run dev
-
-# Run tests
-npm test
-
-# Run linting
-npm run lint
-
-# Build all packages
-npm run build
-```
-
-### Service Ports
-
-| Service  | Port  | Description                          |
-| -------- | ----- | ------------------------------------ |
-| Web UI   | 4200  | React frontend                       |
-| API      | 3000  | REST API with OpenAPI docs at `/api` |
-| gRPC     | 50051 | Ollama gRPC service                  |
-| Keycloak | 8080  | Identity provider                    |
-| MongoDB  | 27017 | Database                             |
-| Ollama   | 11434 | LLM inference                        |
+| Service | Port  |
+| ------- | ----- |
+| Web UI  | 4200  |
+| API     | 3000  |
+| gRPC    | 50051 |
 
 ---
 
 ## Architecture
 
 ```
-+-------------------------------------------------------------------------+
-|                    Web UI (React + MUI + Tailwind)                       |
-|              Desktop App (Tauri + Rust GPU Monitoring)                   |
-+-------------------------------------------------------------------------+
-|                           API Gateway                                    |
-|                  (NestJS + WebSocket + OpenAPI)                          |
-+----------------+----------------+-----------------------------------------+
-| Agent Service  |  Audit Service |     Entitlements Service              |
-| (Context Mgmt) | (MongoDB Log)  |   (RBAC + Permissions)                |
-+----------------+----------------+-----------------------------------------+
-|                         gRPC Service                                     |
-|                       (Ollama Bridge)                                    |
-+-------------------------------------------------------------------------+
-|                        Ollama (LLM Engine)                               |
-|         llama3.x | mistral | codellama | phi3 | gemma | qwen            |
-+----------------+--------------------------------------------+------------+
-|    Keycloak    |                  MongoDB                   |
-|   (Identity)   |                (Data Store)                |
-+----------------+--------------------------------------------+
+┌─────────────────────────────────────────────────────────────┐
+│              Web UI / Desktop App (Tauri + Rust)            │
+├─────────────────────────────────────────────────────────────┤
+│                    API Gateway (NestJS)                     │
+├──────────────┬──────────────┬───────────────────────────────┤
+│ Agent Engine │ Audit Logger │ Entitlements (RBAC)           │
+├──────────────┴──────────────┴───────────────────────────────┤
+│                  gRPC Service → Ollama                      │
+├─────────────────────────────────────────────────────────────┤
+│              Keycloak (Identity) │ MongoDB (Data)           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Libraries
+## Cloud-Agnostic Virtual File System
 
-### Agent Core
+Ursly's Rust-based vFS is **fully OS-agnostic** and works seamlessly across:
 
-Context window management with automatic rotation:
+| Storage Type             | Support   | Features                                       |
+| ------------------------ | --------- | ---------------------------------------------- |
+| **AWS S3**               | ✅ Native | Real-time sync, versioning, lifecycle policies |
+| **Google Cloud Storage** | ✅ Native | Multi-region redundancy, bucket policies       |
+| **Azure Blob Storage**   | ✅ Native | Hot/cool/archive tiers, managed identities     |
+| **On-Premise NAS**       | ✅ Native | SMB/NFS, local network optimization            |
+| **Local Storage**        | ✅ Native | Direct filesystem access with caching          |
 
-```typescript
-import { ContextWindowManager } from '@ursly/agent-core';
+**Key Capabilities:**
 
-const manager = new ContextWindowManager();
+- Unified namespace across all storage backends
+- Automatic failover and replication
+- Media asset transcoding on-the-fly
+- Compression and intelligent tiering
+- Role-based access per storage location
+- Zero vendor lock-in
 
-manager.createWindow('agent-123', {
-  maxTokens: 8192,
-  thresholdPercent: 80,
-  modelName: 'llama3',
-});
+---
 
-manager.addMessage('agent-123', {
-  role: 'user',
-  content: 'What is the capital of France?',
-});
+## Project Structure
 
-if (manager.shouldRotate('agent-123')) {
-  await manager.rotateWindow('agent-123');
-}
+```
+apps/
+  api/        # NestJS REST API
+  web/        # React frontend
+  grpc/       # Ollama gRPC bridge
+  desktop/    # Tauri desktop app
+
+libs/
+  agent-core/           # Context window management
+  audit-logger/         # Type-safe logging
+  shared/types/         # Zod schemas & types
+  shared/access-control # Permissions engine
+```
+
+---
+
+## Development
+
+```bash
+npm run dev          # Start all services
+npm test             # Run tests (150+ JS, 163 Rust)
+npm run lint         # Lint codebase
+npm run build        # Production build
+
+# Desktop
+cd apps/desktop
+npm run tauri dev    # Dev mode
+npm run tauri build  # Build release
 ```
 
 ---
 
 ## Deployment
 
-### Production Deployment (EC2)
+### API & Services
+
+Run locally or self-host anywhere that supports Docker:
 
 ```bash
-# Set required environment variables
-export EC2_HOST=your-ec2-ip
-
-# Run deployment
-./scripts/deploy-ec2.sh
+docker-compose up -d
 ```
 
-### Static Website Deployment (S3)
+### Website (S3 + CloudFront)
 
-```bash
-# Requires AWS CLI configured
-./scripts/deploy-website.sh
-```
+Deploy the website to AWS S3 + CloudFront for global CDN distribution:
 
----
+**Secure Setup (Recommended):**
 
-## Tech Stack
+1. **Configure AWS Credentials** (stored locally, not in git):
 
-| Category     | Technologies                                             |
-| ------------ | -------------------------------------------------------- |
-| **Backend**  | NestJS, TypeScript, Zod, MongoDB, gRPC, WebSocket        |
-| **Frontend** | React, MUI, React Router, Tailwind CSS                   |
-| **Desktop**  | Tauri, Rust, Native GPU APIs                             |
-| **Auth**     | Keycloak, OIDC, JWT, Passport                            |
-| **AI/ML**    | Ollama, LLaMA 3.x, Mistral, CodeLlama, Phi3, Gemma, Qwen |
-| **DevOps**   | Docker, Nx, Vite, Terraform, ESLint, Husky               |
+   ```bash
+   aws configure
+   # Follow prompts to enter AWS Access Key ID and Secret Access Key
+   # These are stored in ~/.aws/credentials
+   ```
+
+2. **Set Deployment Variables**:
+
+   ```bash
+   cd website
+
+   # Create .env.deploy with your S3 bucket and CloudFront distribution ID
+   # See DEPLOY_ENV_TEMPLATE.txt for template
+   cat > .env.deploy << 'EOF'
+   S3_BUCKET=your-ursly-bucket
+   CLOUDFRONT_DISTRIBUTION_ID=your-distribution-id
+   AWS_REGION=us-east-1
+   EOF
+   ```
+
+3. **Deploy**:
+   ```bash
+   chmod +x deploy.sh
+   ./deploy.sh
+   ```
+
+**Full Setup Instructions:**
+See [DEPLOYMENT_AWS.md](./DEPLOYMENT_AWS.md) for comprehensive AWS infrastructure setup, including:
+
+- IAM user creation
+- S3 bucket configuration
+- CloudFront distribution setup
+- GitHub Actions CI/CD workflow
+- Security best practices
+- Monitoring and rollback procedures
+
+⚠️ **Security Note**: Never commit `.env.deploy` file. AWS credentials should be stored locally in `~/.aws/credentials` or as GitHub Secrets for CI/CD.
 
 ---
 
 ## Contributing
 
-We welcome contributions from the community!
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes with tests
-4. Run `npm test` and `npm run lint`
-5. Submit a pull request
-
-### Code Standards
-
-- All new code requires unit tests
-- Follow existing code style (enforced by ESLint + Prettier)
-- Update documentation for new features
+1. Fork → Branch → Code → Test → PR
+2. All code requires tests
+3. Follow existing style (ESLint + Prettier)
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — See [LICENSE](LICENSE)
 
 ---
 
 <p align="center">
-  <b>Build the future of AI agents with Ursly.io</b>
+  <strong>Build the future of AI agents</strong>
 </p>

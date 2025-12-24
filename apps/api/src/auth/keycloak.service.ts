@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  Inject,
+  Optional,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { KeycloakUser } from '@ursly/shared/types';
@@ -8,11 +13,18 @@ export class KeycloakService {
   private readonly keycloakUrl: string;
   private readonly realm: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    @Optional() @Inject(ConfigService) private configService: ConfigService,
+  ) {
+    // Defensive: handle case where ConfigService might not be injected properly
     this.keycloakUrl =
-      this.configService.get<string>('KEYCLOAK_URL') || 'http://keycloak:8080';
+      this.configService?.get<string>('KEYCLOAK_URL') ||
+      process.env.KEYCLOAK_URL ||
+      'http://keycloak:8080';
     this.realm =
-      this.configService.get<string>('KEYCLOAK_REALM') || 'agent-orchestrator';
+      this.configService?.get<string>('KEYCLOAK_REALM') ||
+      process.env.KEYCLOAK_REALM ||
+      'agent-orchestrator';
   }
 
   async validateToken(token: string): Promise<KeycloakUser | null> {
@@ -35,10 +47,12 @@ export class KeycloakService {
   async introspectToken(token: string): Promise<any> {
     try {
       const introspectUrl = `${this.keycloakUrl}/realms/${this.realm}/protocol/openid-connect/token/introspect`;
-      const clientId = this.configService.get<string>('KEYCLOAK_CLIENT_ID');
-      const clientSecret = this.configService.get<string>(
-        'KEYCLOAK_CLIENT_SECRET',
-      );
+      const clientId =
+        this.configService?.get<string>('KEYCLOAK_CLIENT_ID') ||
+        process.env.KEYCLOAK_CLIENT_ID;
+      const clientSecret =
+        this.configService?.get<string>('KEYCLOAK_CLIENT_SECRET') ||
+        process.env.KEYCLOAK_CLIENT_SECRET;
 
       const response = await axios.post(
         introspectUrl,

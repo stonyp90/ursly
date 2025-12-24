@@ -69,9 +69,8 @@
                 <ul class="social-links">
                     <#list social.providers as p>
                         <li>
-                            <a id="social-${p.alias}" class="social-link social-link-${p.alias}" 
-                               type="button" href="${p.loginUrl}"
-                               onclick="showIdpConfirm(event, '${p.displayName!p.alias}', '${p.loginUrl}')">
+                            <div id="social-${p.alias}" class="social-link social-link-${p.alias} social-link-disabled" 
+                               title="Feature under development">
                                 <#if p.alias == "google">
                                     <svg width="20" height="20" viewBox="0 0 24 24">
                                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -102,7 +101,8 @@
                                     <span class="social-icon">${p.displayName!}</span>
                                     <span>${p.displayName!}</span>
                                 </#if>
-                            </a>
+                                <span class="coming-soon-badge">Coming Soon</span>
+                            </div>
                         </li>
                     </#list>
                 </ul>

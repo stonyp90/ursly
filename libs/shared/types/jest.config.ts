@@ -7,5 +7,4 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../../coverage/libs/shared/types',
-  passWithNoTests: true,
 };

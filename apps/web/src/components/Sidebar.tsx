@@ -9,10 +9,18 @@ const mainMenuItems = [
   { path: '/tasks', label: 'Tasks', icon: 'tasks' },
 ];
 
+const storageMenuItems = [
+  { path: '/storage', label: 'File System', icon: 'filesystem' },
+];
+
 // Metrics section - only available in Tauri desktop app
 const metricsMenuItems = [
   { path: '/metrics/gpu', label: 'GPU Metrics', icon: 'gpu' },
-  { path: '/metrics/timeline', label: 'Performance Timeline', icon: 'timeline' },
+  {
+    path: '/metrics/timeline',
+    label: 'Performance Timeline',
+    icon: 'timeline',
+  },
   { path: '/metrics/system', label: 'System Resources', icon: 'system' },
 ];
 
@@ -123,6 +131,13 @@ const icons: Record<string, JSX.Element> = {
       <path d="M6 20v-6" />
     </svg>
   ),
+  filesystem: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+      <line x1="12" y1="11" x2="12" y2="17" />
+      <line x1="9" y1="14" x2="15" y2="14" />
+    </svg>
+  ),
 };
 
 export function Sidebar() {
@@ -137,12 +152,14 @@ export function Sidebar() {
             <span className="logo-letter">U</span>
           </div>
           <div className="logo-text">
-            <span className="logo-brand">Ursly.io</span>
-            <span className="logo-subtitle">{currentOrg?.name || 'Agent Orchestrator'}</span>
+            <span className="logo-brand">URSLY</span>
+            <span className="logo-subtitle">
+              {currentOrg?.name || 'Ursly.io'}
+            </span>
           </div>
         </div>
       </div>
-      
+
       <nav className="sidebar-nav">
         <div className="nav-section">
           <span className="nav-section-title">Main</span>
@@ -157,7 +174,22 @@ export function Sidebar() {
             </Link>
           ))}
         </div>
-        
+
+        {/* Storage section */}
+        <div className="nav-section">
+          <span className="nav-section-title">Storage</span>
+          {storageMenuItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`sidebar-item ${location.pathname === item.path || location.pathname.startsWith(item.path) ? 'active' : ''}`}
+            >
+              <span className="sidebar-icon">{icons[item.icon]}</span>
+              <span className="sidebar-label">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+
         {/* Metrics section */}
         <div className="nav-section">
           <span className="nav-section-title">Metrics</span>
@@ -172,7 +204,7 @@ export function Sidebar() {
             </Link>
           ))}
         </div>
-        
+
         <div className="nav-section">
           <span className="nav-section-title">Access Control</span>
           {accessControlItems.map((item) => (
@@ -186,7 +218,7 @@ export function Sidebar() {
             </Link>
           ))}
         </div>
-        
+
         <div className="nav-section">
           <span className="nav-section-title">System</span>
           {systemMenuItems.map((item) => (
@@ -201,7 +233,7 @@ export function Sidebar() {
           ))}
         </div>
       </nav>
-      
+
       <div className="sidebar-footer">
         <div className="sidebar-version">
           <span>v1.0.0</span>

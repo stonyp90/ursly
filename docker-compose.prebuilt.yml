@@ -110,7 +110,7 @@ services:
       KEYCLOAK_CLIENT_ID: agent-api
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-change-me-in-production}
       OLLAMA_URL: http://ollama:11434
-      CORS_ORIGINS: https://app.ursly.io,https://api.ursly.io,http://localhost:4200
+      CORS_ORIGIN: https://app.ursly.io,https://api.ursly.io,http://localhost:4200,http://localhost:1420,http://localhost:3000,tauri://localhost,http://tauri.localhost
     networks:
       - ursly-network
     depends_on:

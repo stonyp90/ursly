@@ -213,7 +213,7 @@ services:
       # Ollama configuration
       OLLAMA_URL: http://ollama:11434
       # CORS configuration (includes Tauri desktop app origins)
-      CORS_ORIGIN: https://app.ursly.io,tauri://localhost,http://tauri.localhost
+      CORS_ORIGIN: https://app.ursly.io,https://api.ursly.io,http://localhost:4200,http://localhost:1420,http://localhost:3000,tauri://localhost,http://tauri.localhost
       # Novu notifications
       NOVU_API_KEY: ${NOVU_API_KEY:-}
     expose:

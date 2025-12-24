@@ -416,6 +416,116 @@ if (manager.shouldRotate('agent-123')) {
 
 ---
 
+## Virtual File System (VFS) Architecture
+
+The Ursly Desktop app provides a unified file management experience across three deployment modes:
+
+### Deployment Modes
+
+| Mode             | Description                  | Storage Access                         | Use Case                              |
+| ---------------- | ---------------------------- | -------------------------------------- | ------------------------------------- |
+| **Cloud GPU**    | Windows Server 2025 with GPU | FSx ONTAP mounted, NVMe cache          | Video editing, rendering, ML training |
+| **Workstation**  | Local machine with LucidLink | Local SSD + LucidLink mount            | Daily editing, local work             |
+| **Browser Only** | API-based access             | Elasticsearch metadata, API thumbnails | Review, approval, asset discovery     |
+
+### Storage Tiers (AWS Configuration)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           STORAGE TIER ARCHITECTURE                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
+│  │      HOT        │  │    NEARLINE     │  │      COLD       │             │
+│  │   FSx ONTAP     │  │    FSxN S3      │  │  S3 Glacier IR  │             │
+│  │  (NVMe/SSD)     │  │  (Fabric Pool)  │  │  (Instant Ret)  │             │
+│  │                 │  │                 │  │                 │             │
+│  │  - Sub-ms I/O   │  │  - Metadata     │  │  - Metadata     │             │
+│  │  - Full data    │  │    accessible   │  │    accessible   │             │
+│  │  - Edit ready   │  │  - Data in S3   │  │  - Low cost     │             │
+│  │  - $$$$         │  │  - $$           │  │  - $            │             │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘             │
+│           │                    │                    │                       │
+│           └────────────────────┼────────────────────┘                       │
+│                                │                                            │
+│                    ┌───────────▼───────────┐                                │
+│                    │    NVMe LOCAL CACHE   │                                │
+│                    │  (Windows Server 2025)│                                │
+│                    │  - LRU eviction       │                                │
+│                    │  - Read-ahead         │                                │
+│                    │  - Write-behind       │                                │
+│                    └───────────────────────┘                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Tier Characteristics
+
+| Tier         | Provider              | Retrieval Time   | Metadata     | Cost     |
+| ------------ | --------------------- | ---------------- | ------------ | -------- |
+| **Hot**      | FSx ONTAP             | Instant (sub-ms) | Full         | $$$$$    |
+| **Nearline** | FSxN S3 (Fabric Pool) | 1-5 seconds      | Full (local) | $$       |
+| **Cold**     | S3 Glacier Instant    | Instant          | Full (API)   | $        |
+| **Archive**  | S3 Glacier Deep       | 12-48 hours      | Full (API)   | Cheapest |
+
+### NVMe Cache Strategy
+
+```typescript
+// Windows Server 2025 NVMe optimization
+const cacheConfig: NvmeCacheConfig = {
+  cachePath: 'D:\\UrslyCache',
+  maxSizeBytes: 500 * 1024 * 1024 * 1024, // 500 GB
+  evictionPolicy: 'lru',
+  enableReadAhead: true,
+  readAheadBytes: 256 * 1024 * 1024,
+  enableWriteBehind: true,
+  accessRecencyWeight: 0.7,
+  accessFrequencyWeight: 0.3,
+};
+```
+
+### Browser-Only Mode (API Access)
+
+For users without local mounts, the API provides:
+
+| Feature             | Endpoint                     | Description                              |
+| ------------------- | ---------------------------- | ---------------------------------------- |
+| **Metadata Search** | `POST /api/vfs/search`       | Elasticsearch-backed full-text search    |
+| **Thumbnails**      | `GET /api/vfs/thumbnail/:id` | Generated thumbnails (photo, video, PDF) |
+| **Video Preview**   | `GET /api/vfs/stream/:id`    | HLS transcoded proxy for playback        |
+| **Download**        | `GET /api/vfs/download/:id`  | Presigned URL for full file download     |
+| **Tagging**         | `POST /api/vfs/tag`          | Apply tags across any storage tier       |
+
+### Unified Tagging System
+
+Tags are stored in Elasticsearch and apply across all storage sources:
+
+```typescript
+// Tag a file regardless of storage tier
+await api.tagFile({
+  sourceId: 'fsx-ontap-prod',
+  path: '/projects/commercial/final_v3.mov',
+  tags: ['approved', 'client-acme', '2024-q4'],
+});
+
+// Search by tag (searches metadata, not file content)
+const results = await api.search({
+  filters: { tags: ['approved', 'client-acme'] },
+  includeAggregations: true,
+});
+```
+
+### Future API Compatibility
+
+This architecture is designed for v2 API compatibility. The TypeScript interfaces in `apps/desktop/src/types/storage.ts` define:
+
+- `DeploymentMode` - Three deployment modes
+- `NvmeCacheConfig` - NVMe cache settings
+- `MetadataSourceConfig` - Elasticsearch configuration
+- `ApiSearchRequest` / `ApiFileListResponse` - Search API contracts
+- `ApiStreamResponse` - Video streaming API
+
+---
+
 ## Quick Start
 
 ```bash

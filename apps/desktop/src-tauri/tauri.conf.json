@@ -1,13 +1,13 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Ursly Desktop",
+  "productName": "Ursly",
   "version": "1.0.0",
   "identifier": "io.ursly.desktop",
   "build": {
-    "beforeDevCommand": "",
+    "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "",
-    "frontendDist": "../../../dist/apps/web"
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
   },
   "app": {
     "windows": [
@@ -23,7 +23,8 @@
         "transparent": false,
         "center": true,
         "zoomHotkeysEnabled": true,
-        "url": "index.html"
+        "url": "index.html",
+        "devtools": true
       }
     ],
     "security": {
@@ -45,8 +46,8 @@
       "icons/icon.ico"
     ],
     "category": "Utility",
-    "shortDescription": "GPU Metrics Monitor for AI Models",
-    "longDescription": "Desktop application for monitoring GPU metrics while running AI models with Ursly.io",
+    "shortDescription": "AI Agent Orchestrator",
+    "longDescription": "Ursly.io - AI Agent Orchestrator with GPU metrics monitoring",
     "copyright": "2024 Ursly.io",
     "publisher": "Ursly.io",
     "macOS": {

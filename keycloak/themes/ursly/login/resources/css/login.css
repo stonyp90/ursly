@@ -12,34 +12,34 @@
   --cyber-surface: #0e0e14;
   --cyber-surface-elevated: #14141c;
   --cyber-surface-overlay: #1a1a24;
-  
+
   /* Primary Accents */
   --cyber-cyan: #00f5ff;
   --cyber-cyan-dark: #00c4cc;
   --cyber-magenta: #ff00ea;
   --cyber-magenta-dark: #cc00bb;
-  
+
   /* Secondary Colors */
   --cyber-blue: #60a5fa;
   --cyber-purple: #a855f7;
   --cyber-pink: #f472b6;
-  
+
   /* Text */
   --cyber-text: #e8e8f0;
   --cyber-text-secondary: #a0a0b0;
   --cyber-text-muted: #6a6a7a;
   --cyber-text-dim: #4a4a5a;
-  
+
   /* Borders */
   --cyber-border: rgba(255, 255, 255, 0.08);
   --cyber-border-hover: rgba(0, 245, 255, 0.3);
   --cyber-border-focus: rgba(0, 245, 255, 0.5);
-  
+
   /* Status Colors */
   --cyber-success: #00ff88;
   --cyber-error: #ff3366;
   --cyber-warning: #f0ff00;
-  
+
   /* Glows */
   --glow-cyan: rgba(0, 245, 255, 0.3);
   --glow-cyan-strong: rgba(0, 245, 255, 0.5);
@@ -66,13 +66,31 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--cyber-bg);
-  background-image: 
-    radial-gradient(ellipse at 20% 20%, rgba(0, 245, 255, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(255, 0, 234, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.02) 0%, transparent 60%);
+  background-image:
+    radial-gradient(
+      ellipse at 20% 20%,
+      rgba(0, 245, 255, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 80% 80%,
+      rgba(255, 0, 234, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 50% 50%,
+      rgba(168, 85, 247, 0.02) 0%,
+      transparent 60%
+    );
   background-attachment: fixed;
   background-size: cover;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif !important;
 }
 
 .login-pf,
@@ -91,7 +109,7 @@ body::before {
   bottom: 0;
   width: 100%;
   height: 100%;
-  background: 
+  background:
     linear-gradient(90deg, rgba(0, 245, 255, 0.02) 1px, transparent 1px),
     linear-gradient(rgba(0, 245, 255, 0.02) 1px, transparent 1px);
   background-size: 60px 60px;
@@ -120,8 +138,13 @@ body::after {
 }
 
 @keyframes gridPulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Login page container */
@@ -160,9 +183,13 @@ body::after {
   display: block;
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, var(--cyber-cyan) 0%, var(--cyber-magenta) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--cyber-cyan) 0%,
+    var(--cyber-magenta) 100%
+  );
   border-radius: 4px;
-  box-shadow: 
+  box-shadow:
     0 0 30px var(--glow-cyan),
     0 0 60px var(--glow-magenta);
   margin-bottom: 8px;
@@ -172,7 +199,12 @@ body::after {
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 1.75rem !important;
   font-weight: 700 !important;
-  background: linear-gradient(135deg, var(--cyber-cyan) 0%, #fff 50%, var(--cyber-magenta) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--cyber-cyan) 0%,
+    #fff 50%,
+    var(--cyber-magenta) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -187,7 +219,7 @@ body::after {
   backdrop-filter: blur(20px);
   border: 1px solid var(--cyber-border) !important;
   border-radius: 4px !important;
-  box-shadow: 
+  box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.6),
     0 0 40px rgba(0, 245, 255, 0.05),
     inset 0 0 0 1px rgba(255, 255, 255, 0.03) !important;
@@ -280,9 +312,9 @@ label {
 
 /* Input fields */
 .pf-c-form-control,
-input[type="text"],
-input[type="password"],
-input[type="email"] {
+input[type='text'],
+input[type='password'],
+input[type='email'] {
   background: var(--cyber-surface) !important;
   border: 1px solid var(--cyber-border) !important;
   border-radius: 2px !important;
@@ -296,12 +328,12 @@ input[type="email"] {
 }
 
 .pf-c-form-control:focus,
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="email"]:focus {
+input[type='text']:focus,
+input[type='password']:focus,
+input[type='email']:focus {
   outline: none !important;
   border-color: var(--cyber-cyan) !important;
-  box-shadow: 
+  box-shadow:
     0 0 0 1px var(--cyber-cyan),
     0 0 20px var(--glow-cyan),
     inset 0 0 20px rgba(0, 245, 255, 0.05) !important;
@@ -309,9 +341,9 @@ input[type="email"]:focus {
 }
 
 .pf-c-form-control:hover,
-input[type="text"]:hover,
-input[type="password"]:hover,
-input[type="email"]:hover {
+input[type='text']:hover,
+input[type='password']:hover,
+input[type='email']:hover {
   border-color: var(--cyber-border-hover) !important;
 }
 
@@ -354,9 +386,13 @@ input::placeholder {
 /* Primary button - Cyberpunk */
 .pf-c-button.pf-m-primary,
 .btn-primary,
-input[type="submit"],
+input[type='submit'],
 #kc-login {
-  background: linear-gradient(135deg, var(--cyber-cyan) 0%, var(--cyber-magenta) 100%) !important;
+  background: linear-gradient(
+    135deg,
+    var(--cyber-cyan) 0%,
+    var(--cyber-magenta) 100%
+  ) !important;
   border: none !important;
   border-radius: 2px !important;
   color: var(--cyber-bg) !important;
@@ -369,7 +405,7 @@ input[type="submit"],
   cursor: pointer !important;
   transition: all 0.15s ease !important;
   width: 100% !important;
-  box-shadow: 
+  box-shadow:
     0 0 20px var(--glow-cyan),
     0 0 40px var(--glow-magenta) !important;
   margin-top: 8px !important;
@@ -379,21 +415,25 @@ input[type="submit"],
 
 .pf-c-button.pf-m-primary::before,
 .btn-primary::before,
-input[type="submit"]::before,
+input[type='submit']::before,
 #kc-login::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 50%
+  );
   opacity: 0;
   transition: opacity 0.15s ease;
 }
 
 .pf-c-button.pf-m-primary:hover,
 .btn-primary:hover,
-input[type="submit"]:hover,
+input[type='submit']:hover,
 #kc-login:hover {
-  box-shadow: 
+  box-shadow:
     0 0 30px var(--glow-cyan-strong),
     0 0 60px var(--glow-magenta-strong) !important;
   transform: translateY(-2px) !important;
@@ -443,7 +483,7 @@ a:hover,
 }
 
 .pf-c-check__input,
-input[type="checkbox"] {
+input[type='checkbox'] {
   appearance: none !important;
   -webkit-appearance: none !important;
   width: 18px !important;
@@ -457,14 +497,14 @@ input[type="checkbox"] {
 }
 
 .pf-c-check__input:checked,
-input[type="checkbox"]:checked {
+input[type='checkbox']:checked {
   background: var(--cyber-cyan) !important;
   border-color: var(--cyber-cyan) !important;
   box-shadow: 0 0 10px var(--glow-cyan);
 }
 
 .pf-c-check__input:checked::after,
-input[type="checkbox"]:checked::after {
+input[type='checkbox']:checked::after {
   content: '';
   position: absolute;
   top: 3px;
@@ -615,13 +655,104 @@ input[type="checkbox"]:checked::after {
   background: var(--cyber-surface-elevated) !important;
   border-color: var(--cyber-cyan) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 
+  box-shadow:
     0 0 15px var(--glow-cyan),
     0 4px 20px rgba(0, 0, 0, 0.3) !important;
 }
 
 .social-link:hover::before {
   opacity: 1;
+}
+
+/* Disabled social links - Feature under development */
+.social-link-disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+  position: relative !important;
+}
+
+.social-link-disabled svg {
+  filter: grayscale(100%) !important;
+  opacity: 0.6 !important;
+}
+
+.social-link-disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--cyber-border) !important;
+  background: var(--cyber-surface) !important;
+}
+
+.social-link-disabled:hover::before {
+  opacity: 0 !important;
+}
+
+/* Coming Soon badge */
+.coming-soon-badge {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: var(--cyber-cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 12px;
+  border-radius: 2px;
+  border: 1px solid var(--cyber-cyan);
+  white-space: nowrap;
+  box-shadow: 0 0 15px var(--glow-cyan);
+  z-index: 10;
+}
+
+.social-link-disabled:hover .coming-soon-badge {
+  display: block;
+  animation: badgeFadeIn 0.2s ease-out;
+}
+
+@keyframes badgeFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Tooltip for disabled state */
+.social-link-disabled::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cyber-surface-overlay);
+  color: var(--cyber-text-muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--cyber-border);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.social-link-disabled:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* Social divider styling */
@@ -636,7 +767,12 @@ input[type="checkbox"]:checked::after {
   content: '' !important;
   flex: 1 !important;
   height: 1px !important;
-  background: linear-gradient(90deg, transparent, var(--cyber-border), transparent) !important;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--cyber-border),
+    transparent
+  ) !important;
 }
 
 .social-divider span {
@@ -685,8 +821,8 @@ input[type="checkbox"]:checked::after {
 }
 
 /* Input errors */
-.pf-c-form-control[aria-invalid="true"],
-input[aria-invalid="true"] {
+.pf-c-form-control[aria-invalid='true'],
+input[aria-invalid='true'] {
   border-color: var(--cyber-error) !important;
   box-shadow: 0 0 10px rgba(255, 51, 102, 0.2);
 }
@@ -743,13 +879,14 @@ input[aria-invalid="true"] {
 }
 
 @keyframes glowPulse {
-  0%, 100% {
-    box-shadow: 
+  0%,
+  100% {
+    box-shadow:
       0 0 20px var(--glow-cyan),
       0 0 40px var(--glow-magenta);
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 0 30px var(--glow-cyan-strong),
       0 0 50px var(--glow-magenta-strong);
   }
@@ -777,7 +914,7 @@ input[aria-invalid="true"] {
     flex-direction: column !important;
     align-items: flex-start !important;
   }
-  
+
   #kc-social-providers ul li,
   .social-links li {
     flex: 1 1 100% !important;
