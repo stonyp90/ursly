@@ -1,48 +1,101 @@
-/* Header Tabs */
+/* Header Tabs - Modern pill-style navigation */
+/* Uses global CSS variables from ThemeContext */
+
 .header-tabs {
   display: flex;
   gap: 4px;
   padding: 4px;
   background: var(--surface, #2c2c2e);
-  border-radius: 10px;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .header-tab {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 10px 18px;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 9px;
   color: var(--text-secondary, #a1a1a6);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+.header-tab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .header-tab:hover {
-  background: var(--surface-elevated, rgba(255, 255, 255, 0.06));
   color: var(--text-primary, #f5f5f7);
 }
 
+.header-tab:hover::before {
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.06));
+  opacity: 1;
+}
+
+/* Active tab with gradient and glow */
 .header-tab.active {
-  background: var(--primary, #0a84ff);
+  background: linear-gradient(
+    135deg,
+    var(--primary, #0a84ff) 0%,
+    color-mix(in srgb, var(--primary, #0a84ff) 80%, var(--secondary, #5e5ce6)) 100%
+  );
   color: white;
+  font-weight: 600;
+  box-shadow:
+    0 2px 8px color-mix(in srgb, var(--primary, #0a84ff) 40%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .header-tab.active:hover {
-  background: var(--primary, #0a84ff);
   filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 16px color-mix(in srgb, var(--primary, #0a84ff) 50%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
+.header-tab.active:hover::before {
+  opacity: 0;
+}
+
+/* Icon styling */
 .header-tab svg {
-  opacity: 0.8;
+  position: relative;
+  z-index: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.header-tab:hover svg {
+  opacity: 0.9;
 }
 
 .header-tab.active svg {
   opacity: 1;
 }
 
+.header-tab:hover svg {
+  transform: scale(1.05);
+}
+
+/* Text styling */
+.header-tab span {
+  position: relative;
+  z-index: 1;
+}

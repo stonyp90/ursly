@@ -172,37 +172,42 @@
   max-width: 600px;
 }
 
-/* Toolbar Buttons - Redesigned with better visibility */
+/* Toolbar Buttons - Modern pill-style with glow effects */
 .toolbar-btn {
   position: relative;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--finder-surface);
   border: 1px solid var(--finder-border);
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--finder-text-secondary);
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Native-like hover */
+/* Hover with glow */
 .toolbar-btn:hover:not(:disabled) {
   background: var(--finder-surface-elevated);
   color: var(--finder-text-primary);
   border-color: var(--finder-accent);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(var(--finder-accent-rgb), 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .toolbar-btn:active:not(:disabled) {
   background: var(--finder-selection);
   transform: translateY(0);
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .toolbar-btn:disabled {
@@ -210,22 +215,42 @@
   cursor: not-allowed;
 }
 
-/* Active state with gradient background */
+/* Active state with prominent glow */
 .toolbar-btn.active {
-  background: linear-gradient(135deg, rgba(var(--finder-accent-rgb), 0.2), rgba(var(--finder-secondary-rgb), 0.2));
+  background: linear-gradient(
+    135deg,
+    rgba(var(--finder-accent-rgb), 0.25) 0%,
+    rgba(var(--finder-secondary-rgb), 0.2) 100%
+  );
   border-color: var(--finder-accent);
   color: var(--finder-accent);
-  box-shadow: 0 0 0 2px rgba(var(--finder-accent-rgb), 0.15);
+  box-shadow: 
+    0 0 0 2px rgba(var(--finder-accent-rgb), 0.2),
+    0 4px 16px rgba(var(--finder-accent-rgb), 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .toolbar-btn.active:hover {
-  background: linear-gradient(135deg, rgba(var(--finder-accent-rgb), 0.3), rgba(var(--finder-secondary-rgb), 0.3));
+  background: linear-gradient(
+    135deg,
+    rgba(var(--finder-accent-rgb), 0.35) 0%,
+    rgba(var(--finder-secondary-rgb), 0.3) 100%
+  );
+  box-shadow: 
+    0 0 0 2px rgba(var(--finder-accent-rgb), 0.3),
+    0 6px 24px rgba(var(--finder-accent-rgb), 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .toolbar-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   stroke-width: 1.75;
+  transition: transform 0.2s ease;
+}
+
+.toolbar-btn:hover svg {
+  transform: scale(1.1);
 }
 
 /* Navigation buttons */
