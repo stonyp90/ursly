@@ -13,7 +13,7 @@ export type AppTab = 'files' | 'metrics';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>('files');
   const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
@@ -81,10 +81,7 @@ function App() {
       <ToastProvider>
         <ErrorDialogProvider>
           <div className="app">
-            <Header
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
+            <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
             <main className="main-content full-height">
               {activeTab === 'files' && <FinderPage />}

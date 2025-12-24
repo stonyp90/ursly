@@ -897,7 +897,7 @@ export function FinderPage() {
 
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      let successCount = 0;
+      let _successCount = 0;
       const failedPaths: string[] = [];
 
       for (const path of paths) {
@@ -915,7 +915,7 @@ export function FinderPage() {
           });
 
           console.log(`[VFS Delete] Result:`, result);
-          successCount++;
+          _successCount++;
         } catch (err) {
           console.error(`[VFS Delete] Failed to delete ${path}:`, err);
           failedPaths.push(path);
@@ -2012,7 +2012,14 @@ export function FinderPage() {
               <rect x="3" y="3" width="18" height="18" rx="2.5" />
               <line x1="9" y1="3" x2="9" y2="21" />
               <circle cx="15" cy="10" r="1.5" fill="currentColor" />
-              <line x1="15" y1="13" x2="15" y2="17" strokeWidth="2" strokeLinecap="round" />
+              <line
+                x1="15"
+                y1="13"
+                x2="15"
+                y2="17"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
           </button>
         </div>
@@ -2055,7 +2062,7 @@ export function FinderPage() {
             }}
           >
             <div className="section-header">
-              <IconStar size={12} color="var(--vfs-warning)" glow={false} />
+              <IconStar size={14} glow={false} />
               <span>Favorites</span>
               {favorites.length > 0 && (
                 <span className="section-count">({favorites.length})</span>
@@ -2081,9 +2088,9 @@ export function FinderPage() {
                 >
                   <span className="item-icon">
                     {fav.isDirectory ? (
-                      <IconFolder size={16} color="var(--finder-accent)" />
+                      <IconFolder size={16} />
                     ) : (
-                      <IconStar size={16} color="var(--vfs-warning)" />
+                      <IconStar size={16} />
                     )}
                   </span>
                   <span className="item-name">{fav.name}</span>
@@ -2100,7 +2107,7 @@ export function FinderPage() {
 
           <div className="sidebar-section">
             <div className="section-header">
-              <IconHome size={12} color="var(--vfs-primary)" glow={false} />
+              <IconHome size={14} glow={false} />
               <span>Locations</span>
             </div>
             {sources
@@ -2147,11 +2154,7 @@ export function FinderPage() {
           {sources.filter((s) => s.category === 'cloud').length > 0 && (
             <div className="sidebar-section">
               <div className="section-header">
-                <IconCloud
-                  size={12}
-                  color="var(--vfs-secondary)"
-                  glow={false}
-                />
+                <IconCloud size={14} glow={false} />
                 <span>Cloud</span>
               </div>
               {sources
@@ -2194,11 +2197,7 @@ export function FinderPage() {
           {sources.filter((s) => s.category === 'network').length > 0 && (
             <div className="sidebar-section">
               <div className="section-header">
-                <IconNetwork
-                  size={12}
-                  color="var(--vfs-tertiary)"
-                  glow={false}
-                />
+                <IconNetwork size={14} glow={false} />
                 <span>Network</span>
               </div>
               {sources
@@ -2241,11 +2240,7 @@ export function FinderPage() {
           {sources.filter((s) => s.category === 'hybrid').length > 0 && (
             <div className="sidebar-section">
               <div className="section-header">
-                <IconDatabase
-                  size={12}
-                  color="var(--vfs-warning)"
-                  glow={false}
-                />
+                <IconDatabase size={14} glow={false} />
                 <span>Hybrid</span>
               </div>
               {sources
@@ -2298,7 +2293,7 @@ export function FinderPage() {
 
           <div className="sidebar-section">
             <div className="section-header">
-              <IconTag size={12} color="var(--vfs-tertiary)" glow={false} />
+              <IconTag size={14} glow={false} />
               <span>Tags</span>
               {allTags.length > 0 && (
                 <span className="section-count">({allTags.length})</span>

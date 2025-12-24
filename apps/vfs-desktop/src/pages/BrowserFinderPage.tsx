@@ -20,7 +20,6 @@ import { getBrowserApi } from '../services/browser-api.service';
 import type {
   StorageSource,
   FileMetadata,
-  ApiFileListResponse,
   ApiSearchRequest,
   GlobalFavorite,
   FileTierStatus,
@@ -28,10 +27,8 @@ import type {
 import { Breadcrumbs, type BreadcrumbItem } from '../components/Breadcrumbs';
 import {
   IconStar,
-  IconHome,
   IconFolder,
   IconCloud,
-  IconNetwork,
   IconDatabase,
   IconTag,
   getFileIcon as getFileIconComponent,
@@ -65,7 +62,7 @@ export function BrowserFinderPage() {
 
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('icon');
-  const [showHiddenFiles, setShowHiddenFiles] = useState(false);
+  const [showHiddenFiles, _setShowHiddenFiles] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
 
   // Search state
@@ -370,7 +367,7 @@ export function BrowserFinderPage() {
     }
   };
 
-  const handleRequestTierChange = async (
+  const _handleRequestTierChange = async (
     file: FileMetadata,
     targetTier: FileTierStatus,
   ) => {
@@ -605,7 +602,14 @@ export function BrowserFinderPage() {
               <rect x="3" y="3" width="18" height="18" rx="2.5" />
               <line x1="9" y1="3" x2="9" y2="21" />
               <circle cx="15" cy="10" r="1.5" fill="currentColor" />
-              <line x1="15" y1="13" x2="15" y2="17" strokeWidth="2" strokeLinecap="round" />
+              <line
+                x1="15"
+                y1="13"
+                x2="15"
+                y2="17"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
           </button>
         </div>
@@ -938,7 +942,6 @@ export function BrowserFinderPage() {
           onRemoveTag={(file, tag) => handleRemoveTag(file, tag)}
         />
       )}
-
     </div>
   );
 }
