@@ -1,4 +1,12 @@
-import { IsString, IsNotEmpty, IsNumber, IsUrl, Min, Max, validateSync } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsUrl,
+  Min,
+  Max,
+  validateSync,
+} from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 
 class EnvironmentVariables {
@@ -37,7 +45,7 @@ class EnvironmentVariables {
   @IsNumber()
   @Min(60)
   @Max(3600)
-  AGENT_TOKEN_EXPIRY: number = 300;
+  AGENT_TOKEN_EXPIRY = 300;
 
   // gRPC
   @IsString()
@@ -48,7 +56,7 @@ class EnvironmentVariables {
   @IsNumber()
   @Min(1)
   @Max(65535)
-  PORT: number = 3000;
+  PORT = 3000;
 
   @IsString()
   @IsNotEmpty()
@@ -70,4 +78,3 @@ export function validate(config: Record<string, unknown>) {
 
   return validatedConfig;
 }
-

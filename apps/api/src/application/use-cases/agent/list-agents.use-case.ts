@@ -13,7 +13,7 @@ export interface ListAgentsInput {
   query: QueryAgentDto;
 }
 
-export interface ListAgentsOutput extends AgentListResponse {}
+export type ListAgentsOutput = AgentListResponse;
 
 @Injectable()
 export class ListAgentsUseCase {

@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "identifier": "io.ursly.agent",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1421",
-    "beforeBuildCommand": "npm run build",
-    "frontendDist": "../dist"
+    "beforeDevCommand": "npx nx serve web",
+    "devUrl": "http://localhost:4200",
+    "beforeBuildCommand": "npx nx build web",
+    "frontendDist": "../../../dist/apps/web"
   },
   "app": {
     "windows": [
@@ -26,12 +26,12 @@
         "zoomHotkeysEnabled": true,
         "url": "index.html",
         "devtools": true,
-        "visible": false,
-        "skipTaskbar": true
+        "visible": true,
+        "skipTaskbar": false
       }
     ],
     "security": {
-      "csp": "default-src 'self' tauri: asset: http://localhost:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' tauri: http://localhost:*; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com http://localhost:*; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob: tauri: asset:"
+      "csp": "default-src 'self' tauri: asset: http://localhost:* https://app.ursly.io https://api.ursly.io https://auth.ursly.io https://*.ursly.io; connect-src 'self' tauri: http://localhost:* ws://localhost:* https://app.ursly.io https://api.ursly.io https://auth.ursly.io wss://*.ursly.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' tauri: http://localhost:* https://*.ursly.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com http://localhost:*; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob: tauri: asset:; frame-src 'self' http://localhost:* https://auth.ursly.io"
     },
     "trayIcon": {
       "id": "main",

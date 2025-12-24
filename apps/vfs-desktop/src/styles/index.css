@@ -68,6 +68,17 @@
   --color-error: #ff453a;
   --color-error-rgb: 255, 69, 58;
 
+  /* Semantic color aliases */
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --error: var(--color-error);
+
+  /* Glow effects for status colors */
+  --success-glow: rgba(var(--color-success-rgb), 0.2);
+  --warning-glow: rgba(var(--color-warning-rgb), 0.2);
+  --error-glow: rgba(var(--color-error-rgb), 0.2);
+  --primary-glow-soft: rgba(var(--primary-rgb), 0.1);
+
   /* File system colors */
   --folder-color: var(--accent, #64d2ff);
 
@@ -397,6 +408,24 @@ body {
 .main-content:has(.finder) {
   padding: 0;
   overflow: hidden;
+}
+
+/* Metrics Panel Layout */
+.main-content.with-metrics-panel {
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+}
+
+.main-content.with-metrics-panel .content-area {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content.with-metrics-panel .content-area .finder {
+  flex: 1;
 }
 
 /* Page Layout */
@@ -1835,4 +1864,38 @@ body {
     grid-template-columns: 1fr;
     gap: 8px;
   }
+}
+
+/* ============================================
+   Floating Settings Button
+   ============================================ */
+.floating-settings-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.floating-settings-btn:hover {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  transform: scale(1.05);
+  border-color: var(--border-hover);
+}
+
+.floating-settings-btn svg {
+  width: 20px;
+  height: 20px;
 }

@@ -33,7 +33,7 @@ export class AuditLogQueryBuilder {
     return this;
   }
 
-  pagination(limit: number, offset: number = 0): this {
+  pagination(limit: number, offset = 0): this {
     this.query.limit = limit;
     this.query.offset = offset;
     return this;

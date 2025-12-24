@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "identifier": "io.ursly.vfs",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npx vite --port 1420",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npx vite build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -26,8 +26,8 @@
         "zoomHotkeysEnabled": true,
         "url": "index.html",
         "devtools": true,
-        "visible": false,
-        "skipTaskbar": true
+        "visible": true,
+        "skipTaskbar": false
       }
     ],
     "security": {

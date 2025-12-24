@@ -3,6 +3,9 @@
 //! A multi-tier cloud storage file browser with DAM/MAM features.
 
 pub mod vfs;
+pub mod gpu;
+pub mod system;
+pub mod commands;
 
 use tauri::{Manager, tray::TrayIconEvent};
 use vfs::commands::VfsStateWrapper;
@@ -77,6 +80,12 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(vfs_state)
         .setup(|app| {
+            // Start GPU metrics polling
+            let handle = app.handle().clone();
+            std::thread::spawn(move || {
+                gpu::start_metrics_polling(handle);
+            });
+            
             // Setup tray icon click handler
             let app_handle = app.handle().clone();
             if let Some(tray) = app.tray_by_id("main") {
@@ -109,6 +118,14 @@ pub fn run() {
             toggle_devtools,
             open_devtools,
             close_devtools,
+            // GPU & System metrics commands
+            commands::get_gpu_info,
+            commands::get_gpu_metrics,
+            commands::get_system_info,
+            commands::get_all_metrics,
+            commands::start_model,
+            commands::stop_model,
+            commands::get_model_status,
             // VFS Clean Architecture commands
             vfs::commands::vfs_init,
             vfs::commands::vfs_list_sources,

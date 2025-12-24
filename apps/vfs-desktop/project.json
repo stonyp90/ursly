@@ -1,0 +1,36 @@
+{
+  "name": "vfs-desktop",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/vfs-desktop/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd apps/vfs-desktop && npx tauri dev",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/src-tauri/target/release/bundle"],
+      "options": {
+        "command": "cd apps/vfs-desktop && npx tauri build",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": ["build-frontend"]
+    },
+    "build-frontend": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "apps/vfs-desktop/dist"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "tags": ["type:app", "platform:desktop"]
+}

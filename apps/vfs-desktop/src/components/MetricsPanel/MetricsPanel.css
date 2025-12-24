@@ -1,0 +1,430 @@
+/* ============================================
+   Metrics Panel - Enhanced with View Modes
+   ============================================ */
+
+/* Collapsed state - floating button */
+.metrics-panel-collapsed {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface, #3a3a3c);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  color: var(--primary, #0a84ff);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 1001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.metrics-panel-collapsed:hover {
+  background: var(--surface-elevated, #48484a);
+  transform: scale(1.1);
+}
+
+.metrics-panel-collapsed svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Panel Base */
+.metrics-panel {
+  background: var(--sidebar-bg, rgba(28, 28, 30, 0.95));
+  border-left: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Compact Mode */
+.metrics-panel.compact {
+  width: 280px;
+  min-width: 280px;
+  max-height: 100%;
+}
+
+/* Expanded Mode */
+.metrics-panel.expanded {
+  width: 360px;
+  min-width: 360px;
+  max-height: 100%;
+}
+
+/* Fullscreen Mode */
+.metrics-panel.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2000;
+  background: var(--background, #1c1c1e);
+  border: none;
+}
+
+/* Header */
+.metrics-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  background: var(--toolbar-bg, rgba(44, 44, 46, 0.9));
+  flex-shrink: 0;
+}
+
+.metrics-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #f5f5f7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metrics-panel-title svg {
+  width: 16px;
+  height: 16px;
+  color: var(--primary, #0a84ff);
+}
+
+.metrics-panel-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.metrics-control-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #8e8e93);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.metrics-control-btn:hover {
+  background: var(--surface, #3a3a3c);
+  color: var(--text-primary, #f5f5f7);
+}
+
+.metrics-control-btn.close:hover {
+  background: rgba(255, 69, 58, 0.2);
+  color: var(--error, #ff453a);
+}
+
+.metrics-control-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Error State */
+.metrics-error {
+  padding: 12px 16px;
+  background: rgba(255, 69, 58, 0.1);
+  color: var(--error, #ff453a);
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 69, 58, 0.2);
+}
+
+/* Content */
+.metrics-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fullscreen .metrics-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Metric Section */
+.metric-section {
+  background: var(--surface, rgba(58, 58, 60, 0.5));
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+}
+
+.fullscreen .metric-section {
+  padding: 20px;
+}
+
+.metric-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.metric-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.metric-icon.gpu {
+  background: rgba(var(--secondary-rgb, 94, 92, 230), 0.2);
+  color: var(--secondary, #5e5ce6);
+}
+
+.metric-icon.cpu {
+  background: rgba(var(--primary-rgb, 10, 132, 255), 0.2);
+  color: var(--primary, #0a84ff);
+}
+
+.metric-icon.memory {
+  background: rgba(48, 209, 88, 0.2);
+  color: var(--success, #30d158);
+}
+
+.metric-icon.disk {
+  background: rgba(255, 159, 10, 0.2);
+  color: var(--warning, #ff9f0a);
+}
+
+.metric-icon.network {
+  background: rgba(191, 90, 242, 0.2);
+  color: #bf5af2;
+}
+
+.metric-icon.summary {
+  background: rgba(var(--primary-rgb, 10, 132, 255), 0.2);
+  color: var(--primary, #0a84ff);
+}
+
+.metric-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary, #f5f5f7);
+  flex: 1;
+}
+
+/* Metric Row */
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.metric-label {
+  font-size: 11px;
+  color: var(--text-muted, #8e8e93);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.metric-value {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary, #f5f5f7);
+}
+
+/* Progress Bar */
+.metric-bar {
+  height: 4px;
+  background: var(--surface-elevated, rgba(72, 72, 74, 0.5));
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.metric-bar-fill.gradient {
+  background: linear-gradient(
+    90deg,
+    var(--primary, #0a84ff),
+    var(--secondary, #5e5ce6)
+  );
+}
+
+/* Metric Details (Expanded) */
+.metric-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+}
+
+.metric-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-label {
+  font-size: 10px;
+  color: var(--text-dim, #636366);
+  text-transform: uppercase;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* I/O Metrics Grid */
+.io-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.io-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: var(--surface-elevated, rgba(72, 72, 74, 0.3));
+  border-radius: 8px;
+}
+
+.io-label {
+  font-size: 10px;
+  color: var(--text-muted, #8e8e93);
+  text-transform: uppercase;
+}
+
+.io-value {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.io-value.read,
+.io-value.download {
+  color: var(--success, #30d158);
+}
+
+.io-value.write,
+.io-value.upload {
+  color: var(--warning, #ff9f0a);
+}
+
+.io-iops {
+  font-size: 10px;
+  color: var(--text-dim, #636366);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Sparklines */
+.sparkline {
+  width: 60px;
+  height: 20px;
+  margin-left: auto;
+}
+
+.io-sparklines {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.sparkline-container {
+  background: var(--surface-elevated, rgba(72, 72, 74, 0.3));
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.sparkline-label {
+  display: block;
+  font-size: 9px;
+  color: var(--text-dim, #636366);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.sparkline-container .sparkline {
+  width: 100%;
+  height: 30px;
+}
+
+/* Summary Section (Fullscreen) */
+.summary-section {
+  grid-column: 1 / -1;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.summary-item {
+  background: var(--surface-elevated, rgba(72, 72, 74, 0.3));
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+.summary-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted, #8e8e93);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.summary-value {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary, #f5f5f7);
+}
+
+/* Scrollbar */
+.metrics-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.metrics-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.metrics-content::-webkit-scrollbar-thumb {
+  background: var(--surface-elevated, #48484a);
+  border-radius: 3px;
+}
+
+.metrics-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim, #636366);
+}

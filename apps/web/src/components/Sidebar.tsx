@@ -8,14 +8,37 @@ function useIsAgentDesktop(): boolean {
   const [isAgent, setIsAgent] = useState(false);
 
   useEffect(() => {
-    // Check if running in Tauri by looking at window.__TAURI__
-    const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
-    if (isTauri) {
-      // Check document title or app identifier set by Tauri
-      // Agent Desktop sets title to "Ursly Agent"
-      const title = document.title.toLowerCase();
-      setIsAgent(title.includes('agent') || title.includes('ursly agent'));
-    }
+    const checkAgentDesktop = async () => {
+      // Check if running in Tauri
+      const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+      if (!isTauri) return;
+
+      try {
+        // Try to get the window label from Tauri
+        const { getCurrentWindow } = await import('@tauri-apps/api/window');
+        const win = getCurrentWindow();
+        const label = win.label;
+
+        // Agent Desktop uses "main" window but we can check the app name
+        // by trying to invoke a command that only exists in Agent Desktop
+        // For now, check if we're NOT in VFS by checking for vfs_init command
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('vfs_list_sources');
+          // If vfs_list_sources exists, we're in VFS Desktop, not Agent
+          setIsAgent(false);
+        } catch {
+          // vfs_list_sources doesn't exist, we're in Agent Desktop
+          setIsAgent(true);
+        }
+      } catch {
+        // Fallback: check document title
+        const title = document.title.toLowerCase();
+        setIsAgent(title.includes('agent'));
+      }
+    };
+
+    checkAgentDesktop();
   }, []);
 
   return isAgent;
