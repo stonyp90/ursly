@@ -2742,52 +2742,6 @@
 }
 
 /* =========================================
-   KEYBOARD SHORTCUT HINT BUTTON
-   ========================================= */
-.shortcut-hint-button {
-  position: fixed;
-  bottom: 72px; /* Positioned above the settings button */
-  right: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  background: var(--finder-surface, #3a3a3c);
-  border: 1px solid var(--finder-border, rgba(255, 255, 255, 0.12));
-  border-radius: 10px;
-  color: var(--finder-text-secondary, #a1a1a6);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  z-index: 100;
-  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.2));
-}
-
-.shortcut-hint-button:hover {
-  background: var(--finder-hover, rgba(255, 255, 255, 0.08));
-  color: var(--finder-text-primary, #f5f5f7);
-  border-color: var(--finder-accent, #0a84ff);
-}
-
-.shortcut-hint-button svg {
-  opacity: 0.7;
-}
-
-.shortcut-hint-button:hover svg {
-  opacity: 1;
-}
-
-.shortcut-hint-button span {
-  font-family: var(--font-mono, 'SF Mono', Menlo, Monaco, monospace);
-  font-size: 16px;
-  font-weight: 600;
-  color: inherit;
-}
-
-/* =========================================
    BROWSER MODE NOTICE
    ========================================= */
 .browser-mode-notice {
