@@ -37,6 +37,7 @@ export async function listenTauri<T>(
   callback: (payload: T) => void
 ): Promise<() => void> {
   if (!isTauri()) {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {}; // No-op cleanup in browser
   }
   
@@ -46,6 +47,7 @@ export async function listenTauri<T>(
     return unlisten;
   } catch (err) {
     console.warn(`Failed to listen to Tauri event "${event}":`, err);
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {}; // Return no-op on error
   }
 }

@@ -117,6 +117,7 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     ): (() => void) => {
       if (!socketRef.current?.connected) {
         console.warn('[Realtime] Cannot subscribe: not connected');
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         return () => {};
       }
 

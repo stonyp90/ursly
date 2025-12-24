@@ -482,10 +482,11 @@ export class AuthorizationService implements IAuthorizationService {
       case 'always':
         return true;
 
-      case 'email_domain':
+      case 'email_domain': {
         if (!assignment.conditionValue) return false;
         const domain = email.split('@')[1]?.toLowerCase();
         return domain === assignment.conditionValue.toLowerCase();
+      }
 
       case 'email_pattern':
         if (!assignment.conditionValue) return false;

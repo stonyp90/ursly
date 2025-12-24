@@ -46,7 +46,7 @@ export class TokenCounter {
   private modelName: string;
   private tokenRatio: number;
 
-  constructor(modelName: string = 'default') {
+  constructor(modelName = 'default') {
     this.modelName = this.normalizeModelName(modelName);
     this.tokenRatio = MODEL_TOKEN_RATIOS[this.modelName] || MODEL_TOKEN_RATIOS['default'];
   }
@@ -81,7 +81,7 @@ export class TokenCounter {
     const words = text.split(/\s+/).filter(w => w.length > 0);
     
     // Count punctuation (often separate tokens)
-    const punctuation = (text.match(/[.,!?;:'"()\[\]{}]/g) || []).length;
+    const punctuation = (text.match(/[.,!?;:'"()[\]{}]/g) || []).length;
     
     // Count numbers (often split into multiple tokens)
     const numberMatches: string[] = text.match(/\d+/g) ?? [];
@@ -149,7 +149,7 @@ export class TokenCounter {
   /**
    * Check if text would exceed available tokens
    */
-  wouldExceed(text: string, usedTokens: number, reservedTokens: number = 0): boolean {
+  wouldExceed(text: string, usedTokens: number, reservedTokens = 0): boolean {
     const textTokens = this.countTokens(text);
     const maxAvailable = this.getMaxContextSize() - usedTokens - reservedTokens;
     return textTokens > maxAvailable;

@@ -1,0 +1,14 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "src-tauri/**", "node_modules/**", "dist/**", "vite.config.ts"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "parserOptions": {
+        "project": ["apps/vfs-desktop/tsconfig.json"]
+      },
+      "rules": {}
+    }
+  ]
+}
+

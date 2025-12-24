@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '../../contexts';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PauseIcon from '@mui/icons-material/Pause';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -655,7 +654,7 @@ export function Tasks() {
                               <input
                                 type="checkbox"
                                 checked={selectedUsers.includes(user.id)}
-                                onChange={() => {}}
+                                readOnly
                                 className={styles.accessCheckbox}
                               />
                             </div>
@@ -685,7 +684,7 @@ export function Tasks() {
                               <input
                                 type="checkbox"
                                 checked={selectedGroups.includes(group.id)}
-                                onChange={() => {}}
+                                readOnly
                                 className={styles.accessCheckbox}
                               />
                             </div>
@@ -715,7 +714,7 @@ export function Tasks() {
                               <input
                                 type="checkbox"
                                 checked={selectedPermissions.includes(perm.id)}
-                                onChange={() => {}}
+                                readOnly
                                 className={styles.accessCheckbox}
                               />
                             </div>
@@ -863,7 +862,7 @@ export function Tasks() {
                           <input
                             type="checkbox"
                             checked={selectedUsers.includes(user.id)}
-                            onChange={() => {}}
+                            readOnly
                             className={styles.accessCheckbox}
                           />
                         </div>
@@ -893,7 +892,7 @@ export function Tasks() {
                           <input
                             type="checkbox"
                             checked={selectedGroups.includes(group.id)}
-                            onChange={() => {}}
+                            readOnly
                             className={styles.accessCheckbox}
                           />
                         </div>
@@ -923,7 +922,7 @@ export function Tasks() {
                           <input
                             type="checkbox"
                             checked={selectedPermissions.includes(perm.id)}
-                            onChange={() => {}}
+                            readOnly
                             className={styles.accessCheckbox}
                           />
                         </div>

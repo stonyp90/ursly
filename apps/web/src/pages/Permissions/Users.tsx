@@ -294,7 +294,7 @@ export function Users() {
                     <div className={styles.groupSelectIcon} style={{ backgroundColor: `${group.color || '#6366f1'}20`, color: group.color || '#6366f1' }}><GroupIcon style={{ fontSize: 20 }} /></div>
                     <div><div className={styles.groupSelectName}>{group.name}</div><div className={styles.groupSelectPerms}>{group.permissions?.length || 0} permissions</div></div>
                   </div>
-                  <input type="checkbox" className={styles.groupSelectCheckbox} checked={selectedGroups.includes(group.id)} onChange={() => {}} style={{ accentColor: group.color || '#6366f1' }} />
+                  <input type="checkbox" className={styles.groupSelectCheckbox} checked={selectedGroups.includes(group.id)} readOnly style={{ accentColor: group.color || '#6366f1' }} />
                 </div>
               ))}
             </div>
@@ -326,7 +326,7 @@ export function Users() {
                     <div key={group.id} className={`${styles.groupCheckItem} ${newUserGroups.includes(group.id) ? styles.selected : ''}`} onClick={() => setNewUserGroups((prev) => prev.includes(group.id) ? prev.filter((id) => id !== group.id) : [...prev, group.id])}>
                       <div className={styles.groupCheckIcon} style={{ backgroundColor: `${group.color || '#6366f1'}20`, color: group.color || '#6366f1' }}><GroupIcon style={{ fontSize: 16 }} /></div>
                       <div className={styles.groupCheckInfo}><div className={styles.groupCheckName}>{group.name}</div><div className={styles.groupCheckPerms}>{group.permissions?.length || 0} permissions</div></div>
-                      <input type="checkbox" checked={newUserGroups.includes(group.id)} onChange={() => {}} className={styles.groupCheckbox} style={{ accentColor: group.color || '#6366f1' }} />
+                      <input type="checkbox" checked={newUserGroups.includes(group.id)} readOnly className={styles.groupCheckbox} style={{ accentColor: group.color || '#6366f1' }} />
                     </div>
                   ))}
                 </div>

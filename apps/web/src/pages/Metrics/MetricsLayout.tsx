@@ -1,4 +1,3 @@
-import { ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { MetricsProvider, useMetrics } from './MetricsContext';
 import styles from './Metrics.module.css';

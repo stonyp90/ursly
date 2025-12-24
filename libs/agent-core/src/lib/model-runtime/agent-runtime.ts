@@ -350,6 +350,7 @@ export class AgentRuntime {
 
     // Learn from conversation
     if (config.enableLearning && this.learningService) {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       this.learningService.learnFromConversation(agentId, contextMessages.slice(-10)).catch(() => {});
     }
 

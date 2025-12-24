@@ -32,7 +32,7 @@ export function SystemCard({ metrics, info }: SystemCardProps) {
     return 'var(--error)';
   };
 
-  const getMemoryColor = (percent: number) => {
+  const _getMemoryColor = (percent: number) => {
     if (percent < 70) return 'var(--primary)';
     if (percent < 90) return 'var(--warning)';
     return 'var(--error)';

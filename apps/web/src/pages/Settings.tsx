@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTheme, themeColors, ThemeColorKey, ThemeMode } from '../contexts';
+import { useTheme, themeColors, ThemeColorKey } from '../contexts';
 import { useUser } from '../contexts';
 import './Settings.css';
 

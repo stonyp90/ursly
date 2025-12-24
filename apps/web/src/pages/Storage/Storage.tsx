@@ -33,11 +33,7 @@ import {
   Stepper,
   Step,
   StepLabel,
-  CircularProgress,
   Snackbar,
-  ToggleButtonGroup,
-  ToggleButton,
-  Skeleton,
 } from '@mui/material';
 import {
   Search,
@@ -63,7 +59,6 @@ import {
   KeyboardArrowUp,
   Info,
   CreateNewFolder,
-  DriveFileMove,
   Sync,
   Whatshot,
   AcUnit,
@@ -72,15 +67,11 @@ import {
   Home,
   Computer,
   SwapVert,
-  Speed,
   CloudDownload,
   CloudUpload,
-  CheckCircle,
-  Error as ErrorIcon,
   Cached,
   TrendingUp,
   TrendingDown,
-  Settings,
 } from '@mui/icons-material';
 import {
   StorageService,
@@ -204,7 +195,7 @@ const getSourceIcon = (providerId: string) => {
   }
 };
 
-const getCategoryIcon = (category: string) => {
+const _getCategoryIcon = (category: string) => {
   switch (category) {
     case 'local':
       return <Home />;
@@ -292,7 +283,7 @@ export function StoragePage() {
     file?: FileMetadata;
   }>({ open: false });
   const [addStorageDialog, setAddStorageDialog] = useState(false);
-  const [tierMigrationModal, setTierMigrationModal] = useState(false);
+  const [_tierMigrationModal, setTierMigrationModal] = useState(false);
 
   // Get selected files for tier migration
   const selectedFilesList = files.filter((f) => selectedFiles.has(f.id));
@@ -538,14 +529,14 @@ export function StoragePage() {
     handleCloseContextMenu();
   };
 
-  const handleOpenTierMigration = () => {
+  const _handleOpenTierMigration = () => {
     if (selectedFiles.size > 0) {
       setTierMigrationModal(true);
     }
     handleCloseContextMenu();
   };
 
-  const handleQuickTierChange = async (targetTier: TierType) => {
+  const _handleQuickTierChange = async (targetTier: TierType) => {
     if (!selectedSource || selectedFiles.size === 0) return;
 
     try {
@@ -752,16 +743,7 @@ export function StoragePage() {
   /**
    * Get available target tiers based on current tier
    */
-  const getAvailableTargetTiers = (currentTier: StorageTier): TierConfig[] => {
-    const tierOrder: StorageTier[] = [
-      'archive',
-      'cold',
-      'nearline',
-      'warm',
-      'hot',
-    ];
-    const currentIndex = tierOrder.indexOf(currentTier);
-
+  const _getAvailableTargetTiers = (currentTier: StorageTier): TierConfig[] => {
     // Can move to any tier except current
     return TIER_CONFIGS.filter((t) => t.id !== currentTier);
   };
