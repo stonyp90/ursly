@@ -61,7 +61,7 @@ export function BrowserFinderPage() {
   const [error, setError] = useState<string | null>(null);
 
   // View state
-  const [viewMode, setViewMode] = useState<ViewMode>('icon');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showHiddenFiles, _setShowHiddenFiles] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
 
@@ -779,15 +779,18 @@ export function BrowserFinderPage() {
                     onClick={(e) => handleFileClick(file, e)}
                     onDoubleClick={() => handleFileDoubleClick(file)}
                   >
-                    <div className="icon-placeholder">{getFileIcon(file)}</div>
+                    <div className="icon-placeholder">
+                      {getFileIcon(file)}
+                      <span
+                        className={`grid-tier-badge ${file.tierStatus || 'hot'}`}
+                        title={`Storage: ${file.tierStatus || 'Hot'}`}
+                      >
+                        {file.tierStatus || 'hot'}
+                      </span>
+                    </div>
                     <span className="file-name" title={file.name}>
                       {file.name}
                     </span>
-                    {file.tierStatus && file.tierStatus !== 'hot' && (
-                      <span className={`tier-indicator ${file.tierStatus}`}>
-                        {file.tierStatus}
-                      </span>
-                    )}
                   </div>
                 ))}
               </div>

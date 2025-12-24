@@ -57,7 +57,7 @@ export function FinderPage() {
   const [currentPath, setCurrentPath] = useState('');
   const [files, setFiles] = useState<FileMetadata[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<ViewMode>('icon');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [loading, setLoading] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [showAddStorage, setShowAddStorage] = useState(false);
@@ -2438,6 +2438,12 @@ export function FinderPage() {
                             </span>
                           )}
                           {getTierIndicator(file, warmProgress[file.path])}
+                          <span
+                            className={`grid-tier-badge ${file.tierStatus || 'hot'}`}
+                            title={`Storage: ${file.tierStatus || 'Hot'}`}
+                          >
+                            {file.tierStatus || 'hot'}
+                          </span>
                         </div>
                         <div className="file-name" title={file.name}>
                           {renamingFile === file.path ? (
