@@ -7,7 +7,7 @@ import {
   Max,
   validateSync,
 } from 'class-validator';
-import { plainToInstance } from 'class-transformer';
+import { plainToInstance, Transform } from 'class-transformer';
 
 class EnvironmentVariables {
   // Keycloak
@@ -42,6 +42,7 @@ class EnvironmentVariables {
   @IsNotEmpty()
   AGENT_TOKEN_SECRET: string;
 
+  @Transform(({ value }) => (value ? Number(value) : 300))
   @IsNumber()
   @Min(60)
   @Max(3600)
@@ -53,6 +54,7 @@ class EnvironmentVariables {
   GRPC_SERVICE_URL: string;
 
   // API
+  @Transform(({ value }) => (value ? Number(value) : 3000))
   @IsNumber()
   @Min(1)
   @Max(65535)
