@@ -1867,35 +1867,44 @@ body {
 }
 
 /* ============================================
-   Floating Settings Button
+   Floating Toolbar (Settings + Shortcuts)
    ============================================ */
-.floating-settings-btn {
+.floating-toolbar {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.floating-settings-btn,
+.floating-toolbar-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface, #3a3a3c);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  color: var(--text-secondary, #a1a1a6);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.floating-settings-btn:hover {
-  background: var(--surface-elevated);
-  color: var(--text-primary);
+.floating-settings-btn:hover,
+.floating-toolbar-btn:hover {
+  background: var(--surface-elevated, #48484a);
+  color: var(--text-primary, #f5f5f7);
   transform: scale(1.05);
-  border-color: var(--border-hover);
+  border-color: var(--primary, #0a84ff);
 }
 
-.floating-settings-btn svg {
-  width: 20px;
-  height: 20px;
+.floating-settings-btn svg,
+.floating-toolbar-btn svg {
+  width: 18px;
+  height: 18px;
 }
