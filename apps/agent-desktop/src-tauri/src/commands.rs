@@ -2,7 +2,7 @@
 //! 
 //! IPC commands that can be called from the frontend.
 
-use crate::gpu::{self, GpuInfo, GpuMetrics, GpuMetricsHistory, GPU_METRICS};
+use crate::gpu::{self, GpuInfo, GpuMetrics, GPU_METRICS};
 use crate::system::{self, SystemInfo, SystemMetrics, ProcessInfo};
 use serde::{Deserialize, Serialize};
 use std::process::{Command, Child};
