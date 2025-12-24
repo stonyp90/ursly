@@ -97,6 +97,13 @@ export function FinderPage() {
   const [navigationHistory, setNavigationHistory] = useState<string[]>(['']);
   const [historyIndex, setHistoryIndex] = useState(0);
 
+  // Storage context menu state
+  const [storageContextMenu, setStorageContextMenu] = useState<{
+    source: StorageSource;
+    x: number;
+    y: number;
+  } | null>(null);
+
   // Inline renaming state
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -1573,9 +1580,12 @@ export function FinderPage() {
     setContextMenu({ visible: false, x: 0, y: 0 });
   };
 
-  // Close context menu on click anywhere
+  // Close context menus on click anywhere
   useEffect(() => {
-    const handleClick = () => closeContextMenu();
+    const handleClick = () => {
+      closeContextMenu();
+      setStorageContextMenu(null);
+    };
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
   }, []);
@@ -2105,179 +2115,97 @@ export function FinderPage() {
             )}
           </div>
 
-          <div className="sidebar-section">
+          {/* Unified Storage Section - Clean, minimal design */}
+          <div className="sidebar-section storage-section">
             <div className="section-header">
-              <IconHome size={14} glow={false} />
-              <span>Locations</span>
+              <IconDatabase size={14} glow={false} />
+              <span>Storage</span>
+              <span className="section-count">({sources.length})</span>
             </div>
-            {sources
-              .filter((s) => s.category === 'local')
-              .map((source) => {
-                const LocationIcon = getLocationIcon(source.name);
-                const isDropTarget = dropTarget === `source:${source.id}`;
-                return (
-                  <button
-                    key={source.id}
-                    className={`sidebar-item ${selectedSource?.id === source.id ? 'active' : ''} ${isDropTarget ? 'drop-target' : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      selectSource(source);
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      if (dragSourceId !== source.id) {
-                        setDropTarget(`source:${source.id}`);
-                      }
-                    }}
-                    onDragLeave={() => setDropTarget(null)}
-                    onDrop={(e) => handleDropOnSource(e, source)}
-                  >
-                    <span className="item-icon">
-                      <LocationIcon size={16} color="var(--vfs-primary)" />
+            {sources.map((source) => {
+              const StorageIcon = getStorageIcon(source);
+              const isDropTarget = dropTarget === `source:${source.id}`;
+              const isLocal = source.category === 'local';
+              const tierClass = source.tierStatus || 'hot';
+
+              return (
+                <button
+                  key={source.id}
+                  className={`sidebar-item storage-item ${selectedSource?.id === source.id ? 'active' : ''} ${isDropTarget ? 'drop-target' : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selectSource(source);
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Show storage info context menu
+                    setStorageContextMenu({
+                      source,
+                      x: e.clientX,
+                      y: e.clientY,
+                    });
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (dragSourceId !== source.id) {
+                      setDropTarget(`source:${source.id}`);
+                    }
+                  }}
+                  onDragLeave={() => setDropTarget(null)}
+                  onDrop={(e) => handleDropOnSource(e, source)}
+                >
+                  <span className="item-icon">
+                    <StorageIcon size={16} />
+                  </span>
+                  <span className="item-name">{source.name}</span>
+                  <span className="storage-badges">
+                    {/* Connection type badge */}
+                    <span
+                      className={`storage-type-badge ${isLocal ? 'local' : 'network'}`}
+                      title={isLocal ? 'Local Storage' : 'Network Storage'}
+                    >
+                      {isLocal ? (
+                        <svg
+                          width="10"
+                          height="10"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                        >
+                          <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
+                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="10"
+                          height="10"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                        >
+                          <path d="M0 8a4 4 0 0 1 4-4h8a4 4 0 0 1 0 8H4a4 4 0 0 1-4-4zm4-3a3 3 0 0 0 0 6h8a3 3 0 0 0 0-6H4z" />
+                          <path d="M8 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                        </svg>
+                      )}
                     </span>
-                    <span>{source.name}</span>
-                    {source.status !== 'connected' && (
-                      <span className="offline-dot" />
-                    )}
-                  </button>
-                );
-              })}
-            {sources.filter((s) => s.category === 'local').length === 0 && (
+                    {/* Tier indicator dot */}
+                    <span
+                      className={`storage-tier-dot ${tierClass}`}
+                      title={`${tierClass.charAt(0).toUpperCase() + tierClass.slice(1)} Tier`}
+                    />
+                  </span>
+                  {source.status !== 'connected' && (
+                    <span className="offline-dot" title="Disconnected" />
+                  )}
+                </button>
+              );
+            })}
+            {sources.length === 0 && (
               <div className="sidebar-empty">
-                <span className="empty-text">No local storage</span>
+                <span className="empty-text">No storage connected</span>
               </div>
             )}
           </div>
-
-          {/* Cloud Storage Section */}
-          {sources.filter((s) => s.category === 'cloud').length > 0 && (
-            <div className="sidebar-section">
-              <div className="section-header">
-                <IconCloud size={14} glow={false} />
-                <span>Cloud</span>
-              </div>
-              {sources
-                .filter((s) => s.category === 'cloud')
-                .map((source) => {
-                  const isDropTarget = dropTarget === `source:${source.id}`;
-                  return (
-                    <button
-                      key={source.id}
-                      className={`sidebar-item ${selectedSource?.id === source.id ? 'active' : ''} ${isDropTarget ? 'drop-target' : ''}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        selectSource(source);
-                      }}
-                      title={getStorageDisplayLabel(source)}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        if (dragSourceId !== source.id) {
-                          setDropTarget(`source:${source.id}`);
-                        }
-                      }}
-                      onDragLeave={() => setDropTarget(null)}
-                      onDrop={(e) => handleDropOnSource(e, source)}
-                    >
-                      <span className="item-icon">
-                        <IconCloud size={16} color="var(--vfs-secondary)" />
-                      </span>
-                      <span className="item-name">{source.name}</span>
-                      {source.status !== 'connected' && (
-                        <span className="offline-dot" />
-                      )}
-                    </button>
-                  );
-                })}
-            </div>
-          )}
-
-          {/* Network Shares Section */}
-          {sources.filter((s) => s.category === 'network').length > 0 && (
-            <div className="sidebar-section">
-              <div className="section-header">
-                <IconNetwork size={14} glow={false} />
-                <span>Network</span>
-              </div>
-              {sources
-                .filter((s) => s.category === 'network')
-                .map((source) => {
-                  const isDropTarget = dropTarget === `source:${source.id}`;
-                  return (
-                    <button
-                      key={source.id}
-                      className={`sidebar-item ${selectedSource?.id === source.id ? 'active' : ''} ${isDropTarget ? 'drop-target' : ''}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        selectSource(source);
-                      }}
-                      title={getStorageDisplayLabel(source)}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        if (dragSourceId !== source.id) {
-                          setDropTarget(`source:${source.id}`);
-                        }
-                      }}
-                      onDragLeave={() => setDropTarget(null)}
-                      onDrop={(e) => handleDropOnSource(e, source)}
-                    >
-                      <span className="item-icon">
-                        <IconNetwork size={16} color="var(--vfs-tertiary)" />
-                      </span>
-                      <span className="item-name">{source.name}</span>
-                      {source.status !== 'connected' && (
-                        <span className="offline-dot" />
-                      )}
-                    </button>
-                  );
-                })}
-            </div>
-          )}
-
-          {/* Hybrid Storage Section */}
-          {sources.filter((s) => s.category === 'hybrid').length > 0 && (
-            <div className="sidebar-section">
-              <div className="section-header">
-                <IconDatabase size={14} glow={false} />
-                <span>Hybrid</span>
-              </div>
-              {sources
-                .filter((s) => s.category === 'hybrid')
-                .map((source) => {
-                  const isDropTarget = dropTarget === `source:${source.id}`;
-                  return (
-                    <button
-                      key={source.id}
-                      className={`sidebar-item ${selectedSource?.id === source.id ? 'active' : ''} ${isDropTarget ? 'drop-target' : ''}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        selectSource(source);
-                      }}
-                      title={getStorageDisplayLabel(source)}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        if (dragSourceId !== source.id) {
-                          setDropTarget(`source:${source.id}`);
-                        }
-                      }}
-                      onDragLeave={() => setDropTarget(null)}
-                      onDrop={(e) => handleDropOnSource(e, source)}
-                    >
-                      <span className="item-icon">
-                        <IconDatabase size={16} color="var(--vfs-warning)" />
-                      </span>
-                      <span className="item-name">{source.name}</span>
-                      {source.status !== 'connected' && (
-                        <span className="offline-dot" />
-                      )}
-                    </button>
-                  );
-                })}
-            </div>
-          )}
 
           {/* Add Storage Button */}
           <div className="sidebar-section">
@@ -3225,6 +3153,112 @@ export function FinderPage() {
         </div>
       )}
 
+      {/* Storage Context Menu - Shows technical details on right-click */}
+      {storageContextMenu && (
+        <div
+          className="context-menu storage-context-menu"
+          style={{
+            position: 'fixed',
+            left: storageContextMenu.x,
+            top: storageContextMenu.y,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="storage-info-header">
+            <span className="storage-info-title">
+              {storageContextMenu.source.name}
+            </span>
+            <span
+              className={`storage-info-status ${storageContextMenu.source.status}`}
+            >
+              {storageContextMenu.source.status === 'connected'
+                ? 'Connected'
+                : 'Disconnected'}
+            </span>
+          </div>
+          <div className="context-menu-divider" />
+          <div className="storage-info-details">
+            <div className="storage-info-row">
+              <span className="info-label">Type</span>
+              <span className="info-value">
+                {storageContextMenu.source.category === 'local'
+                  ? 'Local Storage'
+                  : storageContextMenu.source.category === 'cloud'
+                    ? 'Cloud Storage'
+                    : storageContextMenu.source.category === 'network'
+                      ? 'Network Share'
+                      : 'Hybrid Storage'}
+              </span>
+            </div>
+            <div className="storage-info-row">
+              <span className="info-label">Tier</span>
+              <span
+                className={`info-value tier-badge ${storageContextMenu.source.tierStatus || 'hot'}`}
+              >
+                {storageContextMenu.source.tierStatus || 'Hot'}
+              </span>
+            </div>
+            {storageContextMenu.source.path && (
+              <div className="storage-info-row">
+                <span className="info-label">Path</span>
+                <span className="info-value mono">
+                  {storageContextMenu.source.path}
+                </span>
+              </div>
+            )}
+            {storageContextMenu.source.protocol && (
+              <div className="storage-info-row">
+                <span className="info-label">Protocol</span>
+                <span className="info-value">
+                  {storageContextMenu.source.protocol.toUpperCase()}
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="context-menu-divider" />
+          <button
+            className="context-menu-item"
+            onClick={() => {
+              selectSource(storageContextMenu.source);
+              setStorageContextMenu(null);
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z" />
+            </svg>
+            Browse Files
+          </button>
+          <button
+            className="context-menu-item"
+            onClick={() => {
+              // Copy path to clipboard
+              if (storageContextMenu.source.path) {
+                navigator.clipboard.writeText(storageContextMenu.source.path);
+              }
+              setStorageContextMenu(null);
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
+              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
+            </svg>
+            Copy Path
+          </button>
+          <button
+            className="context-menu-item"
+            onClick={() => {
+              // TODO: Eject/disconnect storage
+              setStorageContextMenu(null);
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M7.27 1.047a1 1 0 0 1 1.46 0l6.345 6.77c.6.638.146 1.683-.73 1.683H11.5v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3H1.654C.78 9.5.326 8.455.924 7.816L7.27 1.047zM14.346 8.5 8 1.731 1.654 8.5H4.5a1 1 0 0 1 1 1v3h5v-3a1 1 0 0 1 1-1h2.846z" />
+            </svg>
+            Eject
+          </button>
+        </div>
+      )}
+
       {/* Info Modal */}
       {infoModal.visible && infoModal.file && (
         <InfoModal
@@ -3351,6 +3385,22 @@ function getLocationIcon(name: string) {
   if (lowerName === 'music' || lowerName === 'audio') return IconMusic;
   if (lowerName === 'volumes' || lowerName === 'drives') return IconVolumes;
   return IconFolder;
+}
+
+// Get storage icon based on category
+function getStorageIcon(source: StorageSource) {
+  switch (source.category) {
+    case 'local':
+      return getLocationIcon(source.name);
+    case 'cloud':
+      return IconCloud;
+    case 'network':
+      return IconNetwork;
+    case 'hybrid':
+      return IconDatabase;
+    default:
+      return IconFolder;
+  }
 }
 
 /**

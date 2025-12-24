@@ -647,6 +647,196 @@
   /* Keep protocol badge unchanged */
 }
 
+/* =========================================
+   UNIFIED STORAGE SECTION
+   ========================================= */
+.storage-section {
+  margin-top: 8px;
+}
+
+.storage-item {
+  position: relative;
+}
+
+.storage-item .item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+/* Storage badges container */
+.storage-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.sidebar-item:hover .storage-badges,
+.sidebar-item.active .storage-badges {
+  opacity: 1;
+}
+
+/* Storage type badge (local/network icon) */
+.storage-type-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  color: var(--finder-text-tertiary);
+  transition: all 0.15s ease;
+}
+
+.storage-type-badge.local {
+  color: var(--tier-hot, #10b981);
+}
+
+.storage-type-badge.network {
+  color: var(--finder-accent, #0a84ff);
+}
+
+/* Storage tier indicator dot */
+.storage-tier-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.storage-tier-dot.hot {
+  background: var(--tier-hot, #10b981);
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.5);
+}
+
+.storage-tier-dot.warm {
+  background: var(--tier-warm, #f59e0b);
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.5);
+}
+
+.storage-tier-dot.cold {
+  background: var(--tier-cold, #3b82f6);
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.5);
+}
+
+.storage-tier-dot.nearline {
+  background: var(--tier-nearline, #8b5cf6);
+  box-shadow: 0 0 4px rgba(139, 92, 246, 0.5);
+}
+
+.storage-tier-dot.archive {
+  background: var(--tier-archive, #6b7280);
+  box-shadow: 0 0 4px rgba(107, 114, 128, 0.5);
+}
+
+/* =========================================
+   STORAGE CONTEXT MENU
+   ========================================= */
+.storage-context-menu {
+  min-width: 220px;
+  max-width: 300px;
+}
+
+.storage-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.storage-info-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--finder-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.storage-info-status {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.storage-info-status.connected {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--tier-hot, #10b981);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.storage-info-status.disconnected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.storage-info-details {
+  padding: 8px 12px;
+}
+
+.storage-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.storage-info-row .info-label {
+  color: var(--finder-text-tertiary);
+  font-weight: 500;
+}
+
+.storage-info-row .info-value {
+  color: var(--finder-text-primary);
+  text-transform: capitalize;
+}
+
+.storage-info-row .info-value.mono {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: none;
+}
+
+.storage-info-row .info-value.tier-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.storage-info-row .info-value.tier-badge.hot {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--tier-hot, #10b981);
+}
+
+.storage-info-row .info-value.tier-badge.cold {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--tier-cold, #3b82f6);
+}
+
+.storage-info-row .info-value.tier-badge.archive {
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--tier-archive, #6b7280);
+}
+
 /* Native-like offline indicator - no shadow */
 .offline-dot {
   width: 6px;
