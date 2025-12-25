@@ -106,7 +106,7 @@ Your files are scattered across AWS S3, Azure Blob, Google Cloud, your NAS, loca
 Press `Cmd+K` to instantly search across all your storage. Use powerful operators like `tag:important`, `type:video`, `ext:mp4`, or `size:>1gb`.
 
 <p align="center">
-  <img src="website/screenshots/vfs-spotlight-search.png" alt="Spotlight Search" width="700" />
+  <img src="website/screenshots/vfs-spotlight-search.png" alt="Spotlight Search overlay showing search input with magnifying glass icon, filter operators (tag:, type:, ext:, size:) with icons, keyboard shortcuts footer (↑ ↓ Navigate, ⏎ Select, Tab Complete, Esc Close)" width="700" />
 </p>
 
 ### System Performance Monitor
