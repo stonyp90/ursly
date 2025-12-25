@@ -3875,6 +3875,7 @@ export function FinderPage({
       {infoModal.visible && infoModal.file && (
         <InfoModal
           file={infoModal.file}
+          sourceId={selectedSource?.id}
           onClose={() => setInfoModal({ visible: false, file: null })}
           onToggleFavorite={(file) => handleToggleFavorite(file.path)}
           isFavorite={isFileFavorite(infoModal.file.path)}

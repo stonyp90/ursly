@@ -16,7 +16,8 @@
  * - "Tags" for searchable keywords
  * - "Metadata" for technical information
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { FileMetadata } from '../../types/storage';
 import {
   IconFolderCyber,
@@ -26,8 +27,14 @@ import {
 } from '../CyberpunkIcons';
 import './InfoModal.css';
 
+interface FileTag {
+  name: string;
+  color?: string;
+}
+
 interface InfoModalProps {
   file: FileMetadata;
+  sourceId?: string;
   onClose: () => void;
   onToggleFavorite?: (file: FileMetadata) => void;
   onAddTag?: (file: FileMetadata, tag: string) => void;
@@ -250,6 +257,7 @@ function getSuggestedTags(file: FileMetadata): string[] {
 
 export const InfoModal: React.FC<InfoModalProps> = ({
   file,
+  sourceId,
   onClose,
   onToggleFavorite,
   onAddTag,
@@ -261,6 +269,41 @@ export const InfoModal: React.FC<InfoModalProps> = ({
   const [newTag, setNewTag] = useState('');
   const [comments, setComments] = useState(file.comments || '');
   const [isEditingComments, setIsEditingComments] = useState(false);
+  const [availableTags, setAvailableTags] = useState<FileTag[]>([]);
+  const [tagColors, setTagColors] = useState<Record<string, string>>({});
+
+  // Load available tags with colors
+  useEffect(() => {
+    const loadTags = async () => {
+      try {
+        // Try to get tags from Tauri backend if available
+        if (
+          sourceId &&
+          typeof window !== 'undefined' &&
+          '__TAURI_INTERNALS__' in window
+        ) {
+          const tags = await invoke<FileTag[]>('vfs_list_all_tags', {
+            sourceId,
+          });
+          setAvailableTags(tags);
+
+          // Create a map of tag names to colors
+          const colorMap: Record<string, string> = {};
+          tags.forEach((tag) => {
+            if (tag.color) {
+              colorMap[tag.name] = tag.color;
+            }
+          });
+          setTagColors(colorMap);
+        }
+      } catch (error) {
+        // Fallback: try to get from localStorage
+        console.debug('Failed to load tags from backend:', error);
+      }
+    };
+
+    loadTags();
+  }, [sourceId]);
 
   const isFolder = file.mimeType === 'folder' || file.path.endsWith('/');
   const isMedia =
@@ -496,23 +539,40 @@ export const InfoModal: React.FC<InfoModalProps> = ({
 
             {/* Tags - Searchable keywords for DAM/MAM */}
             <div className="info-field tags-field">
-              <span className="info-label">Tags</span>
+              <div className="tags-header">
+                <span className="info-label">Tags</span>
+                <span className="tags-count">({file.tags?.length || 0})</span>
+              </div>
               <span className="info-hint">
                 Use tag:keyword in search to find assets
               </span>
               <div className="tags-container">
-                {(file.tags || []).map((tag) => (
-                  <span key={tag} className="tag-chip">
-                    <IconTag size={12} />
-                    {tag}
-                    <button
-                      className="tag-remove"
-                      onClick={() => onRemoveTag?.(file, tag)}
+                {(file.tags || []).map((tag) => {
+                  const tagColor = tagColors[tag] || '#8E8E93';
+                  return (
+                    <span
+                      key={tag}
+                      className="tag-chip"
+                      style={{
+                        borderColor: tagColor,
+                        backgroundColor: `${tagColor}15`,
+                      }}
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
+                      <span
+                        className="tag-dot"
+                        style={{ backgroundColor: tagColor }}
+                      />
+                      <span className="tag-name">{tag}</span>
+                      <button
+                        className="tag-remove"
+                        onClick={() => onRemoveTag?.(file, tag)}
+                        title={`Remove "${tag}" tag`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
                 <div className="tag-input-wrapper">
                   <input
                     type="text"
@@ -522,11 +582,49 @@ export const InfoModal: React.FC<InfoModalProps> = ({
                     onKeyPress={handleKeyPress}
                     className="tag-input"
                   />
-                  <button className="tag-add" onClick={handleAddTag}>
+                  <button
+                    className="tag-add"
+                    onClick={handleAddTag}
+                    disabled={!newTag.trim()}
+                    title="Add tag"
+                  >
                     +
                   </button>
                 </div>
               </div>
+
+              {/* Available Tags (existing tags with colors) */}
+              {availableTags.length > 0 && (
+                <div className="available-tags">
+                  <span className="available-tags-label">Available:</span>
+                  <div className="available-tags-list">
+                    {availableTags
+                      .filter((t) => !(file.tags || []).includes(t.name))
+                      .slice(0, 8)
+                      .map((tag) => {
+                        const tagColor = tag.color || '#8E8E93';
+                        return (
+                          <button
+                            key={tag.name}
+                            className="available-tag"
+                            onClick={() => onAddTag?.(file, tag.name)}
+                            style={{
+                              borderColor: tagColor,
+                              backgroundColor: `${tagColor}15`,
+                            }}
+                            title={`Add "${tag.name}" tag`}
+                          >
+                            <span
+                              className="tag-dot"
+                              style={{ backgroundColor: tagColor }}
+                            />
+                            {tag.name}
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
 
               {/* Suggested Tags based on file type */}
               <div className="suggested-tags">

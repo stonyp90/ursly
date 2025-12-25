@@ -325,44 +325,80 @@
   margin-top: 12px;
 }
 
+.tags-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.tags-count {
+  font-size: 11px;
+  color: var(--finder-text-tertiary, var(--text-muted, #8e8e93));
+  font-weight: 500;
+}
+
 .tags-container {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 8px;
+  align-items: center;
 }
 
 .tag-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 5px 10px;
   background: var(--finder-hover, rgba(255, 255, 255, 0.06));
   border: 1px solid var(--finder-border, rgba(255, 255, 255, 0.1));
   border-radius: 12px;
   font-size: 11px;
   color: var(--finder-text-primary);
+  transition: all 0.15s ease;
+}
+
+.tag-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.tag-name {
+  font-weight: 500;
 }
 
 .tag-remove {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   padding: 0;
-  margin-left: 2px;
-  background: rgba(255, 69, 58, 0.15);
+  margin-left: 4px;
+  background: transparent;
   border: none;
   border-radius: 50%;
-  color: var(--finder-danger, #ff453a);
-  font-size: 10px;
+  color: var(--finder-text-tertiary, var(--text-muted, #8e8e93));
+  font-size: 12px;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
+  opacity: 0.6;
 }
 
 .tag-remove:hover {
-  background: rgba(255, 69, 58, 0.25);
+  background: rgba(255, 69, 58, 0.15);
+  color: var(--finder-danger, #ff453a);
+  opacity: 1;
 }
 
 .tag-input-wrapper {
@@ -407,9 +443,58 @@
   transition: all 0.15s ease;
 }
 
-.tag-add:hover {
+.tag-add:hover:not(:disabled) {
   background: var(--finder-selection);
   border-color: rgba(var(--primary-rgb, 10, 132, 255), 0.3);
+  transform: scale(1.1);
+}
+
+.tag-add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Available Tags - Existing tags with colors */
+.available-tags {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--finder-border, rgba(255, 255, 255, 0.06));
+}
+
+.available-tags-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--finder-text-tertiary, var(--text-muted, #8e8e93));
+  margin-bottom: 6px;
+  display: block;
+}
+
+.available-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.available-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--finder-hover, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--finder-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--finder-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.available-tag:hover {
+  background: var(--finder-selection);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Suggested Tags - DAM/MAM feature */
@@ -417,6 +502,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--finder-border, rgba(255, 255, 255, 0.06));
   gap: 6px;
   margin-top: 10px;
   padding-top: 10px;
