@@ -291,9 +291,13 @@ ul {
   gap: 32px;
 }
 
-/* Social icons should be closer together */
+/* Social icons should be closer together - group them */
+.nav-links .btn-nav-icon {
+  margin-right: 0;
+}
+
 .nav-links .btn-nav-icon + .btn-nav-icon {
-  margin-left: -20px;
+  margin-left: -16px;
 }
 
 .nav-links a {
