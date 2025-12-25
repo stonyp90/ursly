@@ -13,6 +13,7 @@ pub mod gcs_storage;
 pub mod nas_storage;
 pub mod clipboard;
 pub mod metadata_store;
+pub mod native_thumbnail;
 
 pub use local_storage::LocalStorageAdapter;
 pub use s3_storage::S3StorageAdapter;
@@ -24,4 +25,5 @@ pub use gcs_storage::GcsStorageAdapter;
 pub use nas_storage::{NasStorageAdapter, NasProtocol};
 pub use clipboard::ClipboardAdapter;
 pub use metadata_store::JsonMetadataStore;
+pub use native_thumbnail::{NativeThumbnailAdapter, ThumbnailType};
 

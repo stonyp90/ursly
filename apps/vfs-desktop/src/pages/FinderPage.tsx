@@ -39,6 +39,7 @@ import { useToast } from '../components/Toast';
 import { ShortcutSettings } from '../components/ShortcutSettings';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { SearchBox } from '../components/SearchBox';
+import { SpotlightSearch } from '../components/SpotlightSearch';
 import '../styles/finder.css';
 
 type ViewMode = 'icon' | 'list';
@@ -92,6 +93,9 @@ export function FinderPage() {
     visible: false,
     file: null,
   });
+
+  // Spotlight search state
+  const [spotlightOpen, setSpotlightOpen] = useState(false);
 
   // Navigation history
   const [navigationHistory, setNavigationHistory] = useState<string[]>(['']);
@@ -308,6 +312,12 @@ export function FinderPage() {
           handleFileDoubleClick(selectedFile);
         }
       }
+
+      // Spotlight Search - Cmd/Ctrl+K
+      if (shortcuts.matchesShortcut(e, 'spotlight')) {
+        e.preventDefault();
+        setSpotlightOpen(true);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -333,6 +343,44 @@ export function FinderPage() {
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
+
+  // Handle spotlight quick actions
+  useEffect(() => {
+    const handleSpotlightAction = (e: CustomEvent<string>) => {
+      const actionId = e.detail;
+      switch (actionId) {
+        case 'new-folder':
+          handleNewFolder();
+          break;
+        case 'toggle-hidden':
+          setShowHiddenFiles((prev) => !prev);
+          break;
+        case 'icon-view':
+          setViewMode('icon');
+          break;
+        case 'list-view':
+          setViewMode('list');
+          break;
+        case 'refresh':
+          if (selectedSource) {
+            loadFilesList(selectedSource.id, currentPath);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener(
+      'spotlight-action',
+      handleSpotlightAction as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'spotlight-action',
+        handleSpotlightAction as EventListener,
+      );
+    };
+  }, [selectedSource, currentPath]);
 
   const initAndLoadSources = async () => {
     try {
@@ -3721,6 +3769,38 @@ export function FinderPage() {
         isOpen={showAddStorage}
         onClose={() => setShowAddStorage(false)}
         onAdd={handleAddStorage}
+      />
+
+      {/* Spotlight Search */}
+      <SpotlightSearch
+        isOpen={spotlightOpen}
+        onClose={() => setSpotlightOpen(false)}
+        files={files}
+        sources={sources}
+        currentSourceId={selectedSource?.id}
+        onNavigateToFile={(file) => {
+          if (file.isDirectory) {
+            navigateTo(file.path);
+          } else {
+            // Select the file
+            setSelectedFiles(new Set([file.path]));
+            // Open info modal
+            setInfoModal({ visible: true, file });
+          }
+          setSpotlightOpen(false);
+        }}
+        onNavigateToPath={(sourceId, path) => {
+          const source = sources.find((s) => s.id === sourceId);
+          if (source) {
+            selectSource(source);
+            navigateTo(path);
+          }
+          setSpotlightOpen(false);
+        }}
+        onSearchSubmit={(query) => {
+          setSearchQuery(query);
+          setSpotlightOpen(false);
+        }}
       />
 
       {/* File Operation Progress */}

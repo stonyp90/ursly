@@ -214,6 +214,14 @@ export const DEFAULT_SHORTCUTS: ShortcutDefinition[] = [
     defaultModifiers: ['meta'],
   },
   {
+    id: 'spotlight',
+    name: 'Quick Search',
+    description: 'Open spotlight-style quick search',
+    category: 'search',
+    defaultKey: 'k',
+    defaultModifiers: ['meta'],
+  },
+  {
     id: 'show-shortcuts',
     name: 'Show Shortcuts',
     description: 'Show keyboard shortcuts',

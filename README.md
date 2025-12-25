@@ -4,13 +4,14 @@
 
 **AI Agent Orchestration Platform with Cloud-Agnostic Virtual File System**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Website](https://img.shields.io/badge/Website-ursly.io-00ff88?style=flat&logo=safari)](https://ursly.io)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Rust](https://img.shields.io/badge/Rust-1.75+-orange?logo=rust)](https://www.rust-lang.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-10.x-e0234e?logo=nestjs)](https://nestjs.com/)
 [![Nx](https://img.shields.io/badge/Nx-18.x-143055?logo=nx)](https://nx.dev/)
 
-[Demo](https://app.ursly.io) · [Documentation](./agents.md) · [Report Bug](https://github.com/stonyp90/ursly/issues)
+[🌐 Website](https://ursly.io) · [Demo](https://app.ursly.io) · [Documentation](./agents.md) · [Report Bug](https://github.com/stonyp90/ursly/issues)
 
 </div>
 
@@ -34,10 +35,10 @@ Ursly.io is an open-source platform for orchestrating AI agents with enterprise-
 
 Two native desktop apps built with Tauri and Rust, each focused on a distinct use case:
 
-| App | Description | Features |
-|-----|-------------|----------|
-| **Ursly Agent** | AI agent orchestration | Agent management, model control, GPU metrics, performance monitoring |
-| **Ursly VFS** | Virtual file system | Finder-style browser, multi-tier storage, file operations, GPU metrics |
+| App             | Description            | Features                                                               |
+| --------------- | ---------------------- | ---------------------------------------------------------------------- |
+| **Ursly Agent** | AI agent orchestration | Agent management, model control, GPU metrics, performance monitoring   |
+| **Ursly VFS**   | Virtual file system    | Finder-style browser, multi-tier storage, file operations, GPU metrics |
 
 ### Architecture Separation
 
@@ -50,14 +51,14 @@ Both apps share Keycloak authentication for unified identity management.
 
 ## Tech Stack
 
-| Layer | Technologies |
-|-------|-------------|
-| **Backend** | NestJS · TypeScript · MongoDB · gRPC · WebSocket |
-| **Frontend** | React · MUI · Tailwind CSS · Vite |
-| **Desktop** | Tauri · Rust · wgpu · Metal/DirectX |
-| **AI/ML** | Ollama · LLaMA 3.x · Mistral · Phi3 |
-| **Auth** | Keycloak · OIDC · JWT |
-| **Build** | Nx Monorepo · Docker |
+| Layer        | Technologies                                     |
+| ------------ | ------------------------------------------------ |
+| **Backend**  | NestJS · TypeScript · MongoDB · gRPC · WebSocket |
+| **Frontend** | React · MUI · Tailwind CSS · Vite                |
+| **Desktop**  | Tauri · Rust · wgpu · Metal/DirectX              |
+| **AI/ML**    | Ollama · LLaMA 3.x · Mistral · Phi3              |
+| **Auth**     | Keycloak · OIDC · JWT                            |
+| **Build**    | Nx Monorepo · Docker                             |
 
 ---
 
@@ -78,11 +79,11 @@ npm run dev
 
 ### Service Ports
 
-| Service | Port |
-|---------|------|
-| Web UI | 4200 |
-| API | 3000 |
-| gRPC | 50051 |
+| Service | Port  |
+| ------- | ----- |
+| Web UI  | 4200  |
+| API     | 3000  |
+| gRPC    | 50051 |
 
 ---
 
@@ -134,15 +135,16 @@ npm run build:vfs        # Build VFS Desktop
 
 The Rust-based VFS provides unified access across storage providers:
 
-| Storage | Features |
-|---------|----------|
-| **AWS S3** | Real-time sync, versioning, lifecycle policies |
-| **Google Cloud Storage** | Multi-region, bucket policies |
-| **Azure Blob Storage** | Hot/cool/archive tiers |
-| **On-Premise NAS** | SMB/NFS, local network optimization |
-| **Local Storage** | Direct filesystem with NVMe caching |
+| Storage                  | Features                                       |
+| ------------------------ | ---------------------------------------------- |
+| **AWS S3**               | Real-time sync, versioning, lifecycle policies |
+| **Google Cloud Storage** | Multi-region, bucket policies                  |
+| **Azure Blob Storage**   | Hot/cool/archive tiers                         |
+| **On-Premise NAS**       | SMB/NFS, local network optimization            |
+| **Local Storage**        | Direct filesystem with NVMe caching            |
 
 **Capabilities:**
+
 - Unified namespace across all backends
 - Automatic failover and replication
 - Media asset transcoding
@@ -196,12 +198,14 @@ We welcome contributions! Please follow these steps:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+AGPL-3.0 License - see [LICENSE](LICENSE) for details.
+
+This project is licensed under the GNU Affero General Public License v3.0, the same license used by [Spacedrive](https://www.spacedrive.com/). This ensures that the software remains open source and any modifications or network deployments must also be open source.
 
 ---
 
 <div align="center">
 
-**[ursly.io](https://ursly.io)**
+**[ursly.io](https://ursly.io)** · Built with ❤️ by the Ursly team
 
 </div>
