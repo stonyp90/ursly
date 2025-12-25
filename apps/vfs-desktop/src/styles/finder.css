@@ -1728,17 +1728,21 @@
   margin-bottom: 6px;
   flex-shrink: 0;
   transition: transform 0.15s ease;
-  color: var(--finder-accent, var(--primary, #0a84ff));
+  color: var(--finder-accent, var(--vfs-primary, #0a84ff));
 }
 
-.file-icon svg {
+/* Ensure all SVGs inside file-icon have consistent sizing */
+.file-icon svg,
+.file-icon .cyber-icon {
+  width: 48px;
+  height: 48px;
   color: inherit;
 }
 
-/* All file icons use the same accent color */
+/* All file icons use the same accent color from theme */
 .file-item .file-icon,
 .file-item .icon-placeholder {
-  color: var(--finder-accent, var(--primary, #0a84ff));
+  color: var(--finder-accent, var(--vfs-primary, #0a84ff));
 }
 
 /* Thumbnail image styling */
@@ -1747,7 +1751,7 @@
   height: 100%;
   object-fit: cover;
   border-radius: 6px;
-  background: var(--finder-bg, #1c1c1e);
+  background: var(--vfs-bg-secondary, #1c1c1e);
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.2),
     inset 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -1756,7 +1760,7 @@
 /* Selected thumbnail has accent border */
 .file-item.selected .file-icon img {
   box-shadow:
-    0 0 0 2px var(--finder-accent, var(--primary, #0a84ff)),
+    0 0 0 2px var(--finder-accent, var(--vfs-primary, #0a84ff)),
     0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -1767,14 +1771,17 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  color: var(--finder-accent, var(--primary, #0a84ff));
+  color: var(--finder-accent, var(--vfs-primary, #0a84ff));
   transition: color 0.15s ease;
 }
 
+/* Ensure consistent icon sizing inside placeholder */
 .icon-placeholder .cyber-icon,
 .icon-placeholder svg {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 48px;
+  max-height: 48px;
   color: inherit;
 }
 
@@ -1786,14 +1793,17 @@
   max-width: 100%;
   font-size: 11px;
   font-weight: 450;
-  color: var(--finder-text-primary);
+  color: var(--vfs-text-primary, var(--finder-text-primary));
   /* macOS Finder style: 2 lines max, middle truncation handled by JS */
-  display: block;
-  max-height: calc(1.35em * 2); /* 2 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
+  text-overflow: ellipsis;
   padding: 4px 6px;
   border-radius: 4px;
   transition: all 0.2s ease;
+  hyphens: auto;
 }
 
 /* Hover - keep text style unchanged, use native title for tooltip */

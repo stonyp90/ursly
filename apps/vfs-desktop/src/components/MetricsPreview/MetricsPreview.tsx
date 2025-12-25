@@ -9,24 +9,25 @@ import './MetricsPreview.css';
 
 interface SystemMetrics {
   cpu_usage: number;
-  memory_used: number;
-  memory_total: number;
-  disk_read_bytes: number;
-  disk_write_bytes: number;
-  net_rx_bytes: number;
-  net_tx_bytes: number;
+  memory_used_mb: number;
+  memory_total_mb: number;
+  memory_usage_percent: number;
+  disk_read_bytes_sec: number;
+  disk_write_bytes_sec: number;
+  network_rx_bytes_sec: number;
+  network_tx_bytes_sec: number;
 }
 
 interface GpuMetrics {
-  utilization: number;
-  memory_used: number;
-  memory_total: number;
-  temperature?: number;
+  gpu_utilization: number;
+  memory_used_mb: number;
+  memory_total_mb: number;
+  temperature_celsius?: number | null;
 }
 
 interface GpuWithMetrics {
   info: { name: string };
-  metrics: GpuMetrics | null;
+  current: GpuMetrics | null;
 }
 
 interface AllMetrics {
@@ -76,10 +77,10 @@ export function MetricsPreview({ onOpenMetrics }: MetricsPreviewProps) {
     return null;
   }
 
-  const gpu = metrics.gpus[0]?.metrics;
+  const gpu = metrics.gpus[0]?.current;
   const sys = metrics.system;
-  const memPercent = (sys.memory_used / sys.memory_total) * 100;
-  const netTotal = sys.net_rx_bytes + sys.net_tx_bytes;
+  const memPercent = sys.memory_usage_percent || 0;
+  const netTotal = sys.network_rx_bytes_sec + sys.network_tx_bytes_sec;
 
   return (
     <div className="metrics-preview">
@@ -140,15 +141,15 @@ export function MetricsPreview({ onOpenMetrics }: MetricsPreviewProps) {
               <div className="metric-info">
                 <span className="metric-label">GPU</span>
                 <span
-                  className={`metric-value ${getStatusClass(gpu.utilization)}`}
+                  className={`metric-value ${getStatusClass(gpu.gpu_utilization)}`}
                 >
-                  {gpu.utilization.toFixed(0)}%
+                  {gpu.gpu_utilization.toFixed(0)}%
                 </span>
               </div>
               <div className="metric-bar">
                 <div
-                  className={`metric-bar-fill gpu ${getStatusClass(gpu.utilization)}`}
-                  style={{ width: `${Math.min(gpu.utilization, 100)}%` }}
+                  className={`metric-bar-fill gpu ${getStatusClass(gpu.gpu_utilization)}`}
+                  style={{ width: `${Math.min(gpu.gpu_utilization, 100)}%` }}
                 />
               </div>
             </div>
@@ -163,9 +164,11 @@ export function MetricsPreview({ onOpenMetrics }: MetricsPreviewProps) {
               </span>
             </div>
             <div className="network-detail">
-              <span className="net-up">↑ {formatBytes(sys.net_tx_bytes)}</span>
+              <span className="net-up">
+                ↑ {formatBytes(sys.network_tx_bytes_sec)}
+              </span>
               <span className="net-down">
-                ↓ {formatBytes(sys.net_rx_bytes)}
+                ↓ {formatBytes(sys.network_rx_bytes_sec)}
               </span>
             </div>
           </div>
