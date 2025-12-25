@@ -127,6 +127,22 @@ export function FinderPage() {
   const shortcuts = useKeyboardShortcuts();
   const [showShortcutSettings, setShowShortcutSettings] = useState(false);
 
+  // Collapsed storage groups
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(),
+  );
+  const toggleGroup = (group: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(group)) {
+        next.delete(group);
+      } else {
+        next.add(group);
+      }
+      return next;
+    });
+  };
+
   // Initialize
   useEffect(() => {
     initAndLoadSources();
@@ -2168,7 +2184,7 @@ export function FinderPage() {
             )}
           </div>
 
-          {/* Storage Section - Grouped by type */}
+          {/* Storage Section - Grouped by type with collapsible submenus */}
           <div className="sidebar-section storage-section">
             <div className="section-header">
               <IconDatabase size={14} glow={false} />
@@ -2178,23 +2194,33 @@ export function FinderPage() {
 
             {/* Local Storage */}
             {sources.filter((s) => s.category === 'local').length > 0 && (
-              <div className="storage-group">
-                <div className="storage-group-header">
+              <div
+                className={`storage-group ${collapsedGroups.has('local') ? 'collapsed' : ''}`}
+              >
+                <button
+                  className="storage-group-header"
+                  onClick={() => toggleGroup('local')}
+                >
+                  <span className="group-chevron">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                  </span>
                   <span className="group-icon local">
-                    <svg
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                      width="10"
-                      height="10"
-                    >
+                    <svg viewBox="0 0 16 16" fill="currentColor">
                       <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
                     </svg>
                   </span>
                   <span className="group-label">Local</span>
+                  <span className="group-count">
+                    {sources.filter((s) => s.category === 'local').length}
+                  </span>
+                </button>
+                <div className="storage-group-items">
+                  {sources
+                    .filter((s) => s.category === 'local')
+                    .map((source) => renderStorageItem(source))}
                 </div>
-                {sources
-                  .filter((s) => s.category === 'local')
-                  .map((source) => renderStorageItem(source))}
               </div>
             )}
 
@@ -2202,71 +2228,107 @@ export function FinderPage() {
             {sources.filter(
               (s) => s.category === 'network' || s.category === 'hybrid',
             ).length > 0 && (
-              <div className="storage-group">
-                <div className="storage-group-header">
+              <div
+                className={`storage-group ${collapsedGroups.has('network') ? 'collapsed' : ''}`}
+              >
+                <button
+                  className="storage-group-header"
+                  onClick={() => toggleGroup('network')}
+                >
+                  <span className="group-chevron">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                  </span>
                   <span className="group-icon network">
-                    <svg
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                      width="10"
-                      height="10"
-                    >
+                    <svg viewBox="0 0 16 16" fill="currentColor">
                       <path d="M0 8a4 4 0 0 1 4-4h8a4 4 0 0 1 0 8H4a4 4 0 0 1-4-4zm4-3a3 3 0 0 0 0 6h8a3 3 0 0 0 0-6H4z" />
                       <path d="M8 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
                     </svg>
                   </span>
                   <span className="group-label">Network</span>
+                  <span className="group-count">
+                    {
+                      sources.filter(
+                        (s) =>
+                          s.category === 'network' || s.category === 'hybrid',
+                      ).length
+                    }
+                  </span>
+                </button>
+                <div className="storage-group-items">
+                  {sources
+                    .filter(
+                      (s) =>
+                        s.category === 'network' || s.category === 'hybrid',
+                    )
+                    .map((source) => renderStorageItem(source))}
                 </div>
-                {sources
-                  .filter(
-                    (s) => s.category === 'network' || s.category === 'hybrid',
-                  )
-                  .map((source) => renderStorageItem(source))}
               </div>
             )}
 
             {/* Object Storage (S3, GCS, Azure) */}
             {sources.filter((s) => s.category === 'cloud').length > 0 && (
-              <div className="storage-group">
-                <div className="storage-group-header">
+              <div
+                className={`storage-group ${collapsedGroups.has('cloud') ? 'collapsed' : ''}`}
+              >
+                <button
+                  className="storage-group-header"
+                  onClick={() => toggleGroup('cloud')}
+                >
+                  <span className="group-chevron">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                  </span>
                   <span className="group-icon cloud">
-                    <svg
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                      width="10"
-                      height="10"
-                    >
+                    <svg viewBox="0 0 16 16" fill="currentColor">
                       <path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z" />
                     </svg>
                   </span>
-                  <span className="group-label">Object</span>
+                  <span className="group-label">Cloud</span>
+                  <span className="group-count">
+                    {sources.filter((s) => s.category === 'cloud').length}
+                  </span>
+                </button>
+                <div className="storage-group-items">
+                  {sources
+                    .filter((s) => s.category === 'cloud')
+                    .map((source) => renderStorageItem(source))}
                 </div>
-                {sources
-                  .filter((s) => s.category === 'cloud')
-                  .map((source) => renderStorageItem(source))}
               </div>
             )}
 
             {/* Block Storage */}
             {sources.filter((s) => s.category === 'block').length > 0 && (
-              <div className="storage-group">
-                <div className="storage-group-header">
+              <div
+                className={`storage-group ${collapsedGroups.has('block') ? 'collapsed' : ''}`}
+              >
+                <button
+                  className="storage-group-header"
+                  onClick={() => toggleGroup('block')}
+                >
+                  <span className="group-chevron">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                  </span>
                   <span className="group-icon block">
-                    <svg
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                      width="10"
-                      height="10"
-                    >
+                    <svg viewBox="0 0 16 16" fill="currentColor">
                       <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v2A1.5 1.5 0 0 1 14.5 5h-13A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-13z" />
                       <path d="M0 6.5A1.5 1.5 0 0 1 1.5 5h13A1.5 1.5 0 0 1 16 6.5v2A1.5 1.5 0 0 1 14.5 10h-13A1.5 1.5 0 0 1 0 8.5v-2z" />
                     </svg>
                   </span>
                   <span className="group-label">Block</span>
+                  <span className="group-count">
+                    {sources.filter((s) => s.category === 'block').length}
+                  </span>
+                </button>
+                <div className="storage-group-items">
+                  {sources
+                    .filter((s) => s.category === 'block')
+                    .map((source) => renderStorageItem(source))}
                 </div>
-                {sources
-                  .filter((s) => s.category === 'block')
-                  .map((source) => renderStorageItem(source))}
               </div>
             )}
 

@@ -659,9 +659,9 @@
   margin-top: 8px;
 }
 
-/* Storage Groups - Local, Network, Object */
+/* Storage Groups - Collapsible submenus */
 .storage-group {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .storage-group:last-child {
@@ -672,23 +672,66 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  font-size: 10px;
+  width: 100%;
+  padding: 6px 10px;
+  margin: 0;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--finder-text-tertiary);
-  opacity: 0.7;
+  letter-spacing: 0.04em;
+  color: var(--vfs-text-secondary);
+  background: var(--vfs-bg-tertiary);
+  border: none;
+  border-radius: var(--finder-radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
 }
 
+.storage-group-header:hover {
+  background: var(--vfs-bg-elevated);
+  color: var(--vfs-text-primary);
+}
+
+.storage-group-header:active {
+  transform: scale(0.98);
+}
+
+/* Chevron icon */
+.group-chevron {
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--vfs-text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.group-chevron svg {
+  width: 10px;
+  height: 10px;
+}
+
+.storage-group:not(.collapsed) .group-chevron {
+  transform: rotate(90deg);
+}
+
+/* Group icon with category colors */
 .group-icon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  padding: 2px;
+  flex-shrink: 0;
+}
+
+.group-icon svg {
+  width: 11px;
+  height: 11px;
 }
 
 .group-icon.local {
@@ -713,11 +756,59 @@
 
 .group-label {
   flex: 1;
+  font-weight: 500;
 }
 
+.group-count {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--vfs-text-muted);
+  background: var(--vfs-separator);
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Collapsible items container */
+.storage-group-items {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 500px;
+  transition:
+    max-height 0.25s ease,
+    opacity 0.2s ease,
+    margin 0.2s ease;
+  margin-top: 2px;
+  opacity: 1;
+  position: relative;
+  padding-left: 8px;
+}
+
+.storage-group.collapsed .storage-group-items {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+}
+
+/* Connecting line for visual hierarchy */
+.storage-group-items::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 0;
+  bottom: 8px;
+  width: 1px;
+  background: var(--vfs-separator);
+  opacity: 0.4;
+}
+
+/* Storage items inside groups - indented */
 .storage-item {
   position: relative;
-  padding-left: 18px !important;
+  padding-left: 24px !important;
+  margin-left: 0;
 }
 
 .storage-item .item-name {
