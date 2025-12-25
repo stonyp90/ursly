@@ -39,7 +39,7 @@ jobs:
         continue-on-error: true
 
   # ==========================================================================
-  # Build Web & API (excludes desktop apps)
+  # Build Web & API (excludes desktop apps - built in release workflow)
   # ==========================================================================
   build-web-api:
     name: Build Web & API
@@ -66,87 +66,5 @@ jobs:
         with:
           name: dist
           path: dist/
-          retention-days: 7
-          if-no-files-found: ignore
-
-  # ==========================================================================
-  # VFS Desktop - Rust Tests
-  # ==========================================================================
-  vfs-rust-tests:
-    name: VFS Rust Tests
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Tauri dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/vfs-desktop/src-tauri -> target
-
-      - name: Run Rust tests
-        working-directory: apps/vfs-desktop/src-tauri
-        run: cargo test --lib || true
-
-  # ==========================================================================
-  # VFS Desktop - Build (Linux only for CI speed)
-  # ==========================================================================
-  vfs-build:
-    name: VFS Build (Linux)
-    runs-on: ubuntu-22.04
-    needs: [vfs-rust-tests]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Tauri dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/vfs-desktop/src-tauri -> target
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install desktop dependencies
-        working-directory: apps/vfs-desktop
-        run: npm ci
-
-      - name: Build Tauri app
-        working-directory: apps/vfs-desktop
-        run: npm run tauri:build
-        env:
-          VITE_KEYCLOAK_URL: https://auth.ursly.io
-          VITE_KEYCLOAK_REALM: agent-orchestrator
-          VITE_KEYCLOAK_CLIENT_ID: agent-web
-          VITE_API_URL: https://api.ursly.io
-          VITE_WS_URL: wss://api.ursly.io
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ursly-vfs-linux
-          path: |
-            apps/vfs-desktop/src-tauri/target/release/bundle/deb/*.deb
-            apps/vfs-desktop/src-tauri/target/release/bundle/appimage/*.AppImage
           retention-days: 7
           if-no-files-found: ignore
