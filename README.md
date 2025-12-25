@@ -112,14 +112,19 @@ Free for personal use. No account required.
 ## 🖼️ Screenshots
 
 <p align="center">
-  <img src="website/screenshots/ursly-deployed-lean.png" alt="System Monitor" width="600" />
+  <img src="website/screenshots/vfs-performance-metrics.png" alt="System Monitor" width="600" />
 </p>
 <p align="center"><em>System Monitor — Keep an eye on GPU, CPU, RAM while you work</em></p>
 
 <p align="center">
-  <img src="website/screenshots/vfs-theme-customizer-dark.png" alt="Keyboard Shortcuts" width="600" />
+  <img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts" width="600" />
 </p>
 <p align="center"><em>Keyboard First — Every action has a shortcut</em></p>
+
+<p align="center">
+  <img src="website/screenshots/vfs-spotlight-search.png" alt="Spotlight Search" width="600" />
+</p>
+<p align="center"><em>Spotlight Search — Press Cmd+K to instantly search files, folders, tags, and AI-powered options</em></p>
 
 ---
 
