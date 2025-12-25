@@ -62,16 +62,16 @@ No vendor lock-in. No per-token API costs. Your media, your infrastructure.
 
 ## Features
 
-| Feature                | Description                                                        |
-| ---------------------- | ------------------------------------------------------------------ |
-| **Multi-Cloud VFS**    | Connect S3, GCS, Azure Blob, SMB, NFS, SFTP, WebDAV, FSx for ONTAP |
-| **Keyboard-First**     | Full keyboard navigation — every action has a shortcut             |
-| **Fully Customizable** | Dark/light modes, 10 accent colors, configurable shortcuts         |
-| **Storage Tiering**    | Hot, warm, cold tiers with intelligent NVMe caching                |
-| **AI Transcription**   | Whisper-powered transcription in 99 languages                      |
-| **Smart Search**       | AI-powered semantic search via local Ollama models                 |
-| **GPU Metrics**        | Real-time CPU/GPU/RAM monitoring with native Rust APIs             |
-| **Enterprise RBAC**    | Role-based access control with Keycloak                            |
+| Feature                     | Description                                                        |
+| --------------------------- | ------------------------------------------------------------------ |
+| **Multi-Cloud VFS**         | Connect S3, GCS, Azure Blob, SMB, NFS, SFTP, WebDAV, FSx for ONTAP |
+| **Seamless Tier Migration** | Move files between storage classes — works across any provider     |
+| **Keyboard-First**          | Full keyboard navigation — every action has a shortcut             |
+| **Fully Customizable**      | Dark/light modes, 10 accent colors, configurable shortcuts         |
+| **Storage Tiering**         | Hot, warm, cold tiers with intelligent NVMe caching                |
+| **AI Transcription**        | Whisper-powered transcription in 99 languages                      |
+| **Smart Search**            | AI-powered semantic search via local Ollama models                 |
+| **GPU Metrics**             | Real-time CPU/GPU/RAM monitoring with native Rust APIs             |
 
 ---
 
