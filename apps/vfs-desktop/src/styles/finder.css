@@ -967,42 +967,42 @@
 .storage-info-icon.local {
   background: linear-gradient(
     135deg,
-    rgba(16, 185, 129, 0.2),
-    rgba(16, 185, 129, 0.05)
+    rgba(var(--tier-hot-rgb), 0.2),
+    rgba(var(--tier-hot-rgb), 0.05)
   );
-  color: var(--tier-hot, #10b981);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--tier-hot);
+  border: 1px solid rgba(var(--tier-hot-rgb), 0.3);
 }
 
 .storage-info-icon.network {
   background: linear-gradient(
     135deg,
-    rgba(10, 132, 255, 0.2),
-    rgba(10, 132, 255, 0.05)
+    rgba(var(--vfs-primary-rgb), 0.2),
+    rgba(var(--vfs-primary-rgb), 0.05)
   );
-  color: var(--finder-accent, #0a84ff);
-  border: 1px solid rgba(10, 132, 255, 0.3);
+  color: var(--vfs-primary);
+  border: 1px solid rgba(var(--vfs-primary-rgb), 0.3);
 }
 
 .storage-info-icon.cloud {
   background: linear-gradient(
     135deg,
-    rgba(139, 92, 246, 0.2),
-    rgba(139, 92, 246, 0.05)
+    rgba(var(--tier-nearline-rgb), 0.2),
+    rgba(var(--tier-nearline-rgb), 0.05)
   );
-  color: var(--tier-nearline, #8b5cf6);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--tier-nearline);
+  border: 1px solid rgba(var(--tier-nearline-rgb), 0.3);
 }
 
 .storage-info-icon.block,
 .storage-info-icon.hybrid {
   background: linear-gradient(
     135deg,
-    rgba(59, 130, 246, 0.2),
-    rgba(59, 130, 246, 0.05)
+    rgba(var(--tier-cold-rgb), 0.2),
+    rgba(var(--tier-cold-rgb), 0.05)
   );
-  color: var(--tier-cold, #3b82f6);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--tier-cold);
+  border: 1px solid rgba(var(--tier-cold-rgb), 0.3);
 }
 
 .storage-info-title-area {
@@ -1188,27 +1188,27 @@
 }
 
 .storage-action-btn.eject {
-  color: var(--vfs-text-muted);
+  color: var(--vfs-text-tertiary);
 }
 
 .storage-action-btn.eject:hover {
-  color: var(--vfs-error);
-  border-color: var(--vfs-error);
-  background: rgba(255, 69, 58, 0.1);
+  color: var(--vfs-warning);
+  border-color: var(--vfs-warning);
+  background: rgba(var(--vfs-warning-rgb, 245, 158, 11), 0.1);
 }
 
-/* Light Theme Overrides */
+/* Light Theme Overrides - Storage Info */
 [data-theme='light'] .storage-info-popover {
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background: var(--vfs-bg-primary);
+  box-shadow: var(--vfs-shadow-lg);
 }
 
 [data-theme='light'] .storage-info-hero {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--vfs-bg-tertiary);
 }
 
 [data-theme='light'] .storage-info-actions {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--vfs-bg-secondary);
 }
 
 .storage-info-row .info-value.tier-badge.archive {

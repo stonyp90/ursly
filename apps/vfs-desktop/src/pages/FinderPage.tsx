@@ -2698,6 +2698,7 @@ export function FinderPage() {
                       <div
                         key={file.path}
                         data-path={file.path}
+                        data-full-name={file.name}
                         className={`file-item ${selectedFiles.has(file.path) ? 'selected' : ''} ${isFolder ? 'folder' : ''} ${isDropTarget ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${fileIsHidden ? 'is-hidden' : ''}`}
                         onClick={(e) => handleFileClick(file, e)}
                         onDoubleClick={() => handleFileDoubleClick(file)}
@@ -3666,17 +3667,41 @@ export function FinderPage() {
               </svg>
               Copy Path
             </button>
-            <button
-              className="storage-action-btn eject"
-              onClick={() => {
-                setStorageContextMenu(null);
-              }}
-            >
-              <svg viewBox="0 0 16 16" fill="currentColor">
-                <path d="M7.27 1.047a1 1 0 0 1 1.46 0l6.345 6.77c.6.638.146 1.683-.73 1.683H11.5v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3H1.654C.78 9.5.326 8.455.924 7.816L7.27 1.047z" />
-              </svg>
-              Eject
-            </button>
+            {storageContextMenu.source.isEjectable && (
+              <button
+                className="storage-action-btn eject"
+                onClick={async () => {
+                  const source = storageContextMenu.source;
+                  setStorageContextMenu(null);
+
+                  try {
+                    await StorageService.ejectSource(source.id);
+                    toast.showToast({
+                      type: 'success',
+                      message: `Ejected ${source.name}`,
+                    });
+                    // Refresh sources list
+                    await loadSourcesList();
+                    // If the ejected source was selected, clear selection
+                    if (selectedSource?.id === source.id) {
+                      setSelectedSource(null);
+                      setFiles([]);
+                      setCurrentPath('');
+                    }
+                  } catch (err) {
+                    toast.showToast({
+                      type: 'error',
+                      message: `Failed to eject: ${err}`,
+                    });
+                  }
+                }}
+              >
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M7.27 1.047a1 1 0 0 1 1.46 0l6.345 6.77c.6.638.146 1.683-.73 1.683H11.5v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3H1.654C.78 9.5.326 8.455.924 7.816L7.27 1.047z" />
+                </svg>
+                Eject
+              </button>
+            )}
           </div>
         </div>
       )}

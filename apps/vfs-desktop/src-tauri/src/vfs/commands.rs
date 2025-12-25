@@ -316,6 +316,115 @@ pub async fn vfs_mount_local(
     })
 }
 
+/// Eject/unmount a storage volume
+#[tauri::command]
+pub async fn vfs_eject(
+    source_id: String,
+    state: State<'_, VfsStateWrapper>,
+) -> Result<(), String> {
+    info!("vfs_eject: source_id={}", source_id);
+    
+    let service = state.get_service()
+        .ok_or_else(|| "VFS not initialized".to_string())?;
+    
+    // Find the source to get the path
+    let sources = service.list_sources();
+    let source = sources.iter()
+        .find(|s| s.id == source_id)
+        .ok_or_else(|| format!("Source not found: {}", source_id))?;
+    
+    let mount_path = source.mount_point.as_ref()
+        .ok_or_else(|| "No mount point for source".to_string())?;
+    
+    let path_str = mount_path.to_string_lossy().to_string();
+    
+    // Perform platform-specific eject
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        
+        // Use diskutil to eject the volume
+        let output = Command::new("diskutil")
+            .args(["eject", &path_str])
+            .output()
+            .map_err(|e| format!("Failed to run diskutil: {}", e))?;
+        
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Try alternative: osascript to eject
+            let alt_output = Command::new("osascript")
+                .args(["-e", &format!("tell application \"Finder\" to eject disk \"{}\"", 
+                    mount_path.file_name()
+                        .map(|n| n.to_string_lossy().to_string())
+                        .unwrap_or_else(|| path_str.clone())
+                )])
+                .output()
+                .map_err(|e| format!("Failed to run osascript: {}", e))?;
+            
+            if !alt_output.status.success() {
+                return Err(format!("Failed to eject volume: {}", stderr));
+            }
+        }
+        
+        info!("Ejected volume: {}", path_str);
+    }
+    
+    #[cfg(target_os = "windows")]
+    {
+        // On Windows, use PowerShell to eject
+        use std::process::Command;
+        
+        let output = Command::new("powershell")
+            .args([
+                "-Command",
+                &format!(
+                    "$vol = Get-Volume -FilePath '{}'; \
+                     $driveEject = New-Object -comObject Shell.Application; \
+                     $driveEject.Namespace(17).ParseName($vol.DriveLetter + ':').InvokeVerb('Eject')",
+                    path_str
+                )
+            ])
+            .output()
+            .map_err(|e| format!("Failed to eject: {}", e))?;
+        
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Failed to eject volume: {}", stderr));
+        }
+        
+        info!("Ejected volume: {}", path_str);
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        use std::process::Command;
+        
+        // Try udisksctl first (modern Linux), then fallback to umount
+        let output = Command::new("udisksctl")
+            .args(["unmount", "-b", &path_str])
+            .output()
+            .or_else(|_| {
+                Command::new("umount")
+                    .args([&path_str])
+                    .output()
+            })
+            .map_err(|e| format!("Failed to unmount: {}", e))?;
+        
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Failed to unmount volume: {}", stderr));
+        }
+        
+        info!("Unmounted volume: {}", path_str);
+    }
+    
+    // Remove the source from VFS
+    // Note: In a real implementation, the VfsService should have a remove_source method
+    // For now, we just log success - the UI should refresh to show updated sources
+    
+    Ok(())
+}
+
 /// List files in a storage source (VFS version)
 #[tauri::command]
 pub async fn vfs_list_files(

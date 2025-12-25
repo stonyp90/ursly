@@ -146,6 +146,14 @@ export class StorageService {
   }
 
   /**
+   * Eject/unmount a storage source
+   */
+  static async ejectSource(sourceId: string): Promise<void> {
+    await this.init();
+    await invoke('vfs_eject', { sourceId });
+  }
+
+  /**
    * List files in a storage source
    */
   static async listFiles(sourceId: string, path = ''): Promise<FileMetadata[]> {

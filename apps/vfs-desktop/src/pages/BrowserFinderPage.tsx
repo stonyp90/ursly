@@ -770,6 +770,7 @@ export function BrowserFinderPage() {
                 {displayFiles.map((file) => (
                   <div
                     key={file.path}
+                    data-full-name={file.name}
                     className={`file-item ${selectedFiles.has(file.path) ? 'selected' : ''} ${
                       file.tierStatus === 'cold' ||
                       file.tierStatus === 'archive'
