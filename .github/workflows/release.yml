@@ -1,0 +1,280 @@
+name: Release Desktop Apps
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ==========================================================================
+  # Build VFS Desktop App
+  # ==========================================================================
+  build-vfs:
+    name: VFS Desktop (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin,x86_64-apple-darwin
+            artifact: vfs-macos
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: vfs-windows
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact: vfs-linux
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/vfs-desktop/src-tauri -> target
+          key: vfs-${{ matrix.os }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install VFS desktop dependencies
+        working-directory: apps/vfs-desktop
+        run: npm ci
+
+      - name: Build VFS Desktop
+        working-directory: apps/vfs-desktop
+        run: npm run tauri:build
+        env:
+          VITE_KEYCLOAK_URL: https://auth.ursly.io
+          VITE_KEYCLOAK_REALM: agent-orchestrator
+          VITE_KEYCLOAK_CLIENT_ID: agent-web
+          VITE_API_URL: https://api.ursly.io
+          VITE_WS_URL: wss://api.ursly.io
+
+      - name: Upload macOS DMG
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: apps/vfs-desktop/src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: warn
+
+      - name: Upload Windows MSI
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            apps/vfs-desktop/src-tauri/target/release/bundle/msi/*.msi
+            apps/vfs-desktop/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: warn
+
+      - name: Upload Linux packages
+        if: matrix.os == 'ubuntu-22.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            apps/vfs-desktop/src-tauri/target/release/bundle/deb/*.deb
+            apps/vfs-desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+          if-no-files-found: warn
+
+  # ==========================================================================
+  # Build Agent Desktop App
+  # ==========================================================================
+  build-agent:
+    name: Agent Desktop (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin,x86_64-apple-darwin
+            artifact: agent-macos
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: agent-windows
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact: agent-linux
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/agent-desktop/src-tauri -> target
+          key: agent-${{ matrix.os }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Agent desktop dependencies
+        working-directory: apps/agent-desktop
+        run: npm ci
+
+      - name: Build Agent Desktop
+        working-directory: apps/agent-desktop
+        run: npm run tauri:build
+        env:
+          VITE_KEYCLOAK_URL: https://auth.ursly.io
+          VITE_KEYCLOAK_REALM: agent-orchestrator
+          VITE_KEYCLOAK_CLIENT_ID: agent-web
+          VITE_API_URL: https://api.ursly.io
+          VITE_WS_URL: wss://api.ursly.io
+
+      - name: Upload macOS DMG
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: apps/agent-desktop/src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: warn
+
+      - name: Upload Windows MSI
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            apps/agent-desktop/src-tauri/target/release/bundle/msi/*.msi
+            apps/agent-desktop/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: warn
+
+      - name: Upload Linux packages
+        if: matrix.os == 'ubuntu-22.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            apps/agent-desktop/src-tauri/target/release/bundle/deb/*.deb
+            apps/agent-desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+          if-no-files-found: warn
+
+  # ==========================================================================
+  # Create GitHub Release
+  # ==========================================================================
+  release:
+    name: Create Release
+    needs: [build-vfs, build-agent]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display downloaded files
+        run: find artifacts -type f | head -50
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Delete previous release (keep only latest)
+        run: |
+          # Get all releases except drafts
+          releases=$(gh release list --repo ${{ github.repository }} --limit 10 --json tagName,isDraft --jq '.[] | select(.isDraft == false) | .tagName')
+          for tag in $releases; do
+            if [ "$tag" != "${{ steps.version.outputs.version }}" ]; then
+              echo "Deleting old release: $tag"
+              gh release delete "$tag" --repo ${{ github.repository }} --yes --cleanup-tag 2>/dev/null || true
+            fi
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Ursly ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            artifacts/vfs-macos/*.dmg
+            artifacts/vfs-windows/*.msi
+            artifacts/vfs-windows/*.exe
+            artifacts/vfs-linux/*.deb
+            artifacts/vfs-linux/*.AppImage
+            artifacts/agent-macos/*.dmg
+            artifacts/agent-windows/*.msi
+            artifacts/agent-windows/*.exe
+            artifacts/agent-linux/*.deb
+            artifacts/agent-linux/*.AppImage
+          body: |
+            ## Ursly Desktop Apps
+            
+            ### VFS Desktop (Virtual File System)
+            - **macOS**: `Ursly-VFS_*.dmg`
+            - **Windows**: `Ursly-VFS_*.msi` or `Ursly-VFS_*.exe`
+            - **Linux**: `ursly-vfs_*.deb` or `ursly-vfs_*.AppImage`
+            
+            ### Agent Desktop (AI Management)
+            - **macOS**: `Ursly-Agent_*.dmg`
+            - **Windows**: `Ursly-Agent_*.msi` or `Ursly-Agent_*.exe`
+            - **Linux**: `ursly-agent_*.deb` or `ursly-agent_*.AppImage`
+            
+            ---
+            
+            See the [README](https://github.com/stonyp90/ursly#readme) for installation instructions.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
