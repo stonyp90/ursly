@@ -202,8 +202,53 @@
 
 .suggestion-icon {
   width: 20px;
-  text-align: center;
-  font-size: 14px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.suggestion-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Icon colors using theme variables */
+.suggestion-icon.icon-tag {
+  color: var(--tier-nearline, #ff9f0a);
+}
+
+.suggestion-icon.icon-type {
+  color: var(--vfs-text-secondary);
+}
+
+.suggestion-icon.icon-tier {
+  color: var(--tier-hot, #30d158);
+}
+
+.suggestion-icon.icon-ext {
+  color: var(--vfs-text-tertiary);
+}
+
+.suggestion-icon.icon-is {
+  color: var(--vfs-success, #30d158);
+}
+
+.suggestion-icon.icon-size {
+  color: var(--vfs-primary);
+}
+
+.suggestion-icon.icon-modified {
+  color: var(--vfs-secondary, #5e5ce6);
+}
+
+.suggestion-icon.icon-folder {
+  color: var(--vfs-warning, #ff9f0a);
+}
+
+.suggestion-icon.icon-file {
+  color: var(--vfs-text-secondary);
 }
 
 .suggestion-content {
