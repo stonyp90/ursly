@@ -1,36 +1,41 @@
 /**
  * MetricsPage - Performance Dashboard
- * Uses VFS design system variables for theme compatibility
+ * Fully theme-aware using VFS design system variables
  */
 
-/* Page Layout */
+/* ============================================================
+   Page Layout
+   ============================================================ */
 .metrics-page {
   display: flex;
   flex-direction: column;
   height: 100%;
   padding: var(--space-5, 20px);
-  background: var(--vfs-bg-primary, var(--background, #1c1c1e));
+  background: var(--vfs-bg-primary);
   overflow-y: auto;
   gap: var(--space-5, 20px);
-  color: var(--vfs-text-primary, var(--text-primary, #f5f5f7));
+  color: var(--vfs-text-primary);
+  font-family: var(--vfs-font-sans);
 }
 
-/* Header */
+/* ============================================================
+   Header
+   ============================================================ */
 .metrics-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   padding: var(--space-4, 16px) var(--space-5, 20px);
-  background: var(--vfs-bg-secondary, var(--surface, #2c2c2e));
+  background: var(--vfs-bg-secondary);
   border-radius: var(--radius-xl, 16px);
-  border: 1px solid var(--vfs-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--vfs-border);
 }
 
 .header-left h1 {
   margin: 0 0 var(--space-2, 8px);
   font-size: 22px;
   font-weight: 700;
-  color: var(--vfs-text-primary, var(--text-primary));
+  color: var(--vfs-text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -38,11 +43,11 @@
   display: flex;
   gap: var(--space-5, 20px);
   font-size: 12px;
-  color: var(--vfs-text-secondary, var(--text-secondary));
+  color: var(--vfs-text-secondary);
 }
 
 .header-stats strong {
-  color: var(--vfs-text-muted, var(--text-muted));
+  color: var(--vfs-text-muted);
   font-weight: 500;
   margin-right: 4px;
 }
@@ -53,7 +58,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--vfs-bg-tertiary, var(--surface));
+  background: var(--vfs-bg-tertiary);
   border: 1px solid var(--vfs-border);
   border-radius: var(--radius-md, 10px);
   color: var(--vfs-text-secondary);
@@ -62,7 +67,7 @@
 }
 
 .settings-btn:hover {
-  background: rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.15);
+  background: var(--vfs-bg-elevated);
   border-color: var(--vfs-primary);
   color: var(--vfs-primary);
 }
@@ -72,7 +77,9 @@
   height: 20px;
 }
 
-/* Rings Section */
+/* ============================================================
+   Rings Section - Hero Area
+   ============================================================ */
 .rings-section {
   display: flex;
   justify-content: center;
@@ -94,7 +101,7 @@
   background: var(--vfs-bg-tertiary);
   border-radius: 50%;
   padding: var(--space-2, 8px);
-  box-shadow: var(--vfs-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.2));
+  box-shadow: var(--vfs-shadow-md);
 }
 
 .ring-container svg {
@@ -103,7 +110,8 @@
 
 .ring-bg {
   fill: none;
-  stroke: var(--vfs-border);
+  stroke: var(--vfs-separator);
+  opacity: 0.5;
 }
 
 .ring-value {
@@ -112,6 +120,7 @@
   transition:
     stroke-dashoffset 0.5s ease,
     stroke 0.3s ease;
+  filter: drop-shadow(0 0 4px currentColor);
 }
 
 .ring-content {
@@ -148,6 +157,7 @@
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
 }
 
 .ring-label {
@@ -167,7 +177,9 @@
   text-overflow: ellipsis;
 }
 
-/* Metrics Grid */
+/* ============================================================
+   Metrics Grid
+   ============================================================ */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -175,7 +187,9 @@
   flex: 1;
 }
 
-/* Metric Card */
+/* ============================================================
+   Metric Card
+   ============================================================ */
 .metric-card {
   background: var(--vfs-bg-secondary);
   border-radius: var(--radius-xl, 16px);
@@ -191,12 +205,10 @@
 
 .metric-card.status-crit {
   border-color: var(--vfs-error);
-  box-shadow: 0 0 20px rgba(var(--vfs-error-rgb, 255, 69, 58), 0.2);
 }
 
 .metric-card.status-warn {
   border-color: var(--vfs-warning);
-  box-shadow: 0 0 15px rgba(var(--vfs-warning-rgb, 255, 159, 10), 0.2);
 }
 
 .card-header {
@@ -217,11 +229,12 @@
   background: var(--vfs-bg-primary);
   border-radius: var(--radius-md, 10px);
   color: var(--vfs-text-secondary);
+  border: 1px solid var(--vfs-border);
 }
 
 .card-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
 }
 
 .card-title {
@@ -253,6 +266,7 @@
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
 }
 
 .card-value {
@@ -274,14 +288,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3, 12px);
+  background: var(--vfs-bg-secondary);
 }
 
-/* Live Chart */
+/* ============================================================
+   Live Chart
+   ============================================================ */
 .chart-container {
   position: relative;
   background: var(--vfs-bg-tertiary);
   border-radius: var(--radius-md, 8px);
   overflow: hidden;
+  border: 1px solid var(--vfs-separator);
 }
 
 .chart-container svg {
@@ -311,7 +329,10 @@
   font-size: 12px;
   font-weight: 600;
   font-family: var(--vfs-font-mono);
-  color: var(--vfs-text-secondary);
+  color: var(--vfs-text-primary);
+  background: var(--vfs-bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .chart-empty {
@@ -319,7 +340,9 @@
   border-radius: var(--radius-md, 8px);
 }
 
-/* Core Bars */
+/* ============================================================
+   Core Bars (CPU per-core)
+   ============================================================ */
 .cores-grid {
   display: flex;
   gap: 4px;
@@ -328,6 +351,7 @@
   border-radius: var(--radius-md, 8px);
   justify-content: center;
   flex-wrap: wrap;
+  border: 1px solid var(--vfs-separator);
 }
 
 .core-bar {
@@ -339,13 +363,14 @@
 }
 
 .core-bar > div:first-child {
-  width: 8px;
+  width: 10px;
   height: 40px;
-  background: var(--vfs-separator);
-  border-radius: 4px;
+  background: var(--vfs-bg-primary);
+  border-radius: 5px;
   display: flex;
   flex-direction: column-reverse;
   overflow: hidden;
+  border: 1px solid var(--vfs-separator);
 }
 
 .core-fill {
@@ -357,9 +382,12 @@
 .core-label {
   font-size: 8px;
   color: var(--vfs-text-muted);
+  font-weight: 500;
 }
 
-/* I/O Stats */
+/* ============================================================
+   I/O Stats
+   ============================================================ */
 .io-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -373,7 +401,8 @@
   padding: var(--space-3, 10px) var(--space-3, 12px);
   background: var(--vfs-bg-tertiary);
   border-radius: var(--radius-md, 8px);
-  border-left: 3px solid currentColor;
+  border-left: 3px solid;
+  border-color: inherit;
 }
 
 .io-icon {
@@ -382,13 +411,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(var(--vfs-primary-rgb), 0.1);
+  background: var(--vfs-bg-primary);
   border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--vfs-separator);
 }
 
 .io-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .io-data {
@@ -400,6 +430,7 @@
   font-size: 10px;
   color: var(--vfs-text-muted);
   text-transform: uppercase;
+  font-weight: 500;
 }
 
 .io-value {
@@ -423,7 +454,9 @@
   padding: var(--space-2, 8px) 4px 0;
 }
 
-/* GPU Stats */
+/* ============================================================
+   GPU Stats
+   ============================================================ */
 .gpu-stats {
   display: flex;
   gap: var(--space-3, 12px);
@@ -439,6 +472,7 @@
   border-radius: var(--radius-sm, 6px);
   font-size: 12px;
   color: var(--vfs-text-secondary);
+  border: 1px solid var(--vfs-separator);
 }
 
 .gpu-stat svg {
@@ -446,7 +480,9 @@
   height: 14px;
 }
 
-/* Swap Info */
+/* ============================================================
+   Swap Info
+   ============================================================ */
 .swap-info {
   display: flex;
   justify-content: space-between;
@@ -455,14 +491,18 @@
   border-radius: var(--radius-sm, 6px);
   font-size: 11px;
   color: var(--vfs-text-secondary);
+  border: 1px solid var(--vfs-separator);
 }
 
-/* Modal */
+/* ============================================================
+   Settings Modal
+   ============================================================ */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: var(--vfs-bg-vibrancy);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -499,12 +539,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
+  background: transparent;
   border: none;
   font-size: 24px;
   color: var(--vfs-text-muted);
   cursor: pointer;
   border-radius: var(--radius-sm, 6px);
+  transition: all 0.15s;
 }
 
 .modal-close:hover {
@@ -529,6 +570,7 @@
   width: 100px;
   font-size: 13px;
   color: var(--vfs-text-secondary);
+  font-weight: 500;
 }
 
 .threshold-row input[type='range'] {
@@ -536,16 +578,30 @@
   height: 6px;
   background: var(--vfs-bg-tertiary);
   border-radius: 3px;
+  border: 1px solid var(--vfs-separator);
   -webkit-appearance: none;
+  appearance: none;
 }
 
 .threshold-row input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
+  appearance: none;
+  width: 18px;
+  height: 18px;
   background: var(--vfs-primary);
   border-radius: 50%;
   cursor: pointer;
+  border: 2px solid var(--vfs-bg-secondary);
+  box-shadow: var(--vfs-shadow-sm);
+}
+
+.threshold-row input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--vfs-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--vfs-bg-secondary);
 }
 
 .threshold-row span {
@@ -554,6 +610,7 @@
   font-size: 13px;
   font-family: var(--vfs-font-mono);
   color: var(--vfs-primary);
+  font-weight: 600;
 }
 
 .modal-footer {
@@ -578,6 +635,7 @@
 .modal-footer button:hover {
   background: var(--vfs-bg-primary);
   color: var(--vfs-text-primary);
+  border-color: var(--vfs-border-hover);
 }
 
 .modal-footer button.primary {
@@ -590,7 +648,9 @@
   filter: brightness(1.1);
 }
 
-/* Loading & Error */
+/* ============================================================
+   Loading & Error States
+   ============================================================ */
 .metrics-loading,
 .metrics-error {
   display: flex;
@@ -614,6 +674,11 @@
   color: var(--vfs-text-primary);
 }
 
+.metrics-error p {
+  color: var(--vfs-text-muted);
+  margin: 0;
+}
+
 .metrics-error button,
 .metrics-loading button {
   padding: var(--space-3, 10px) var(--space-6, 24px);
@@ -623,12 +688,18 @@
   color: white;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s;
+}
+
+.metrics-error button:hover,
+.metrics-loading button:hover {
+  filter: brightness(1.1);
 }
 
 .loader {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--vfs-border);
+  border: 3px solid var(--vfs-separator);
   border-top-color: var(--vfs-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -640,7 +711,9 @@
   }
 }
 
-/* Responsive */
+/* ============================================================
+   Responsive
+   ============================================================ */
 @media (max-width: 900px) {
   .metrics-grid {
     grid-template-columns: 1fr;
@@ -674,4 +747,80 @@
   .io-charts {
     grid-template-columns: 1fr;
   }
+}
+
+/* ============================================================
+   Light Theme Specific Overrides
+   ============================================================ */
+[data-theme='light'] .metrics-page {
+  background: var(--vfs-bg-primary);
+}
+
+[data-theme='light'] .ring-container {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .ring-bg {
+  stroke: var(--vfs-border);
+  opacity: 0.3;
+}
+
+[data-theme='light'] .ring-value {
+  filter: none;
+}
+
+[data-theme='light'] .ring-indicator {
+  box-shadow: none;
+}
+
+[data-theme='light'] .status-dot {
+  box-shadow: none;
+}
+
+[data-theme='light'] .metric-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .metric-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .chart-container {
+  background: var(--vfs-bg-primary);
+}
+
+[data-theme='light'] .chart-value {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme='light'] .cores-grid {
+  background: var(--vfs-bg-primary);
+}
+
+[data-theme='light'] .core-bar > div:first-child {
+  background: var(--vfs-bg-tertiary);
+}
+
+[data-theme='light'] .gpu-stat {
+  background: var(--vfs-bg-primary);
+}
+
+[data-theme='light'] .swap-info {
+  background: var(--vfs-bg-primary);
+}
+
+[data-theme='light'] .io-stat {
+  background: var(--vfs-bg-primary);
+}
+
+[data-theme='light'] .modal-overlay {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme='light'] .card-header {
+  background: var(--vfs-bg-primary);
+}
+
+[data-theme='light'] .card-icon {
+  background: var(--vfs-bg-tertiary);
 }
