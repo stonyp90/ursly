@@ -85,6 +85,7 @@ windows = { version = "0.52", features = [
     "Win32_Graphics_Direct3D11",
     "Win32_Graphics_Dxgi"
 ] }
+winreg = "0.52"
 
 [features]
 default = ["custom-protocol"]

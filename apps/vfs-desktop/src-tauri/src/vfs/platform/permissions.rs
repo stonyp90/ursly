@@ -246,12 +246,12 @@ fn set_windows_attributes(path: &Path, hidden: bool, system: bool) -> Result<()>
         let attrs = GetFileAttributesW(PCWSTR::from_raw(wide.as_ptr()));
         
         // INVALID_FILE_ATTRIBUTES is 0xFFFFFFFF
-        if attrs.0 == 0xFFFFFFFF {
+        if attrs == u32::MAX {
             return Err(anyhow::anyhow!("Failed to get file attributes"));
         }
         
-        // Work with the inner u32 value
-        let mut attr_value = attrs.0;
+        // Work with the u32 value directly
+        let mut attr_value = attrs;
         
         if hidden {
             attr_value |= FILE_ATTRIBUTE_HIDDEN.0;
