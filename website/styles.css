@@ -3822,6 +3822,66 @@ ul {
   transform: translateY(2px);
 }
 
+.install-note {
+  max-width: 500px;
+  margin: 24px auto 0;
+}
+
+.install-note details {
+  background: rgba(var(--warning-rgb, 245, 158, 11), 0.1);
+  border: 1px solid rgba(var(--warning-rgb, 245, 158, 11), 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.install-note summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  list-style: none;
+}
+
+.install-note summary::-webkit-details-marker {
+  display: none;
+}
+
+.install-note summary svg {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.install-note summary:hover {
+  color: var(--text-primary);
+}
+
+.install-note-content {
+  padding: 0 16px 16px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.install-note-content p {
+  margin: 0 0 8px;
+}
+
+.install-note-content code {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  color: var(--primary);
+  margin: 8px 0 12px;
+  word-break: break-all;
+  user-select: all;
+}
+
 .download-footer {
   text-align: center;
   margin-top: 32px;
