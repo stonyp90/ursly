@@ -139,46 +139,48 @@ export function AutoUpdater() {
         6 * 60 * 60 * 1000,
       );
 
-      unlistenPromise = updaterModule.onUpdaterEvent(({ event, payload }) => {
-        switch (event) {
-          case 'UPDATE_AVAILABLE':
-            setUpdateAvailable(payload as UpdateManifest);
-            break;
-          case 'DOWNLOAD_PROGRESS': {
-            const progress = payload as {
-              chunkLength: number;
-              contentLength: number;
-            };
-            setDownloadProgress(
-              progress.contentLength > 0
-                ? (progress.chunkLength / progress.contentLength) * 100
-                : 0,
-            );
-            setDownloadedBytes(progress.chunkLength);
-            setTotalBytes(progress.contentLength);
-            break;
-          }
-          case 'DOWNLOAD_FINISHED': {
-            const finished = payload as { contentLength: number };
-            setDownloadProgress(100);
-            setDownloadedBytes(finished.contentLength);
-            setTotalBytes(finished.contentLength);
-            break;
-          }
-          case 'INSTALL_PROGRESS':
-            // Not typically used for Tauri, install is fast
-            break;
-          case 'UPDATE_INSTALLED':
-            if (processModule) {
-              processModule.relaunch();
+      unlistenPromise = updaterModule.onUpdaterEvent(
+        ({ event, payload }: { event: string; payload: any }) => {
+          switch (event) {
+            case 'UPDATE_AVAILABLE':
+              setUpdateAvailable(payload as UpdateManifest);
+              break;
+            case 'DOWNLOAD_PROGRESS': {
+              const progress = payload as {
+                chunkLength: number;
+                contentLength: number;
+              };
+              setDownloadProgress(
+                progress.contentLength > 0
+                  ? (progress.chunkLength / progress.contentLength) * 100
+                  : 0,
+              );
+              setDownloadedBytes(progress.chunkLength);
+              setTotalBytes(progress.contentLength);
+              break;
             }
-            break;
-          case 'ERROR':
-            setError(payload as string);
-            setIsUpdating(false);
-            break;
-        }
-      });
+            case 'DOWNLOAD_FINISHED': {
+              const finished = payload as { contentLength: number };
+              setDownloadProgress(100);
+              setDownloadedBytes(finished.contentLength);
+              setTotalBytes(finished.contentLength);
+              break;
+            }
+            case 'INSTALL_PROGRESS':
+              // Not typically used for Tauri, install is fast
+              break;
+            case 'UPDATE_INSTALLED':
+              if (processModule) {
+                processModule.relaunch();
+              }
+              break;
+            case 'ERROR':
+              setError(payload as string);
+              setIsUpdating(false);
+              break;
+          }
+        },
+      );
     });
 
     return () => {
