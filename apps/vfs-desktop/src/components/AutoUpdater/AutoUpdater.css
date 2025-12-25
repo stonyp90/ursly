@@ -1,0 +1,218 @@
+/**
+ * Auto Updater Styles
+ */
+
+.auto-updater-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.auto-updater-modal {
+  background: var(--vfs-bg-secondary, var(--surface));
+  border: 1px solid var(--vfs-border, var(--border));
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auto-updater-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.auto-updater-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--vfs-text-primary, var(--text-primary));
+}
+
+.auto-updater-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--vfs-border, var(--border));
+  border-top-color: var(--vfs-primary, var(--primary));
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.auto-updater-message {
+  color: var(--vfs-text-secondary, var(--text-secondary));
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.auto-updater-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--vfs-bg-tertiary, var(--surface-elevated));
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--vfs-primary, var(--primary)),
+    var(--vfs-secondary, var(--secondary))
+  );
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: var(--vfs-text-muted, var(--text-muted));
+  text-align: center;
+}
+
+.progress-percent {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vfs-primary, var(--primary));
+  text-align: center;
+}
+
+.auto-updater-info {
+  margin-bottom: 20px;
+  padding: 12px;
+  background: var(--vfs-bg-tertiary, var(--surface-elevated));
+  border-radius: 8px;
+}
+
+.auto-updater-info p {
+  margin: 8px 0;
+  color: var(--vfs-text-secondary, var(--text-secondary));
+  font-size: 14px;
+}
+
+.auto-updater-info strong {
+  color: var(--vfs-text-primary, var(--text-primary));
+}
+
+.auto-updater-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.auto-updater-actions button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.auto-updater-actions .btn-primary {
+  background: var(--vfs-primary, var(--primary));
+  color: white;
+}
+
+.auto-updater-actions .btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.auto-updater-actions .btn-secondary {
+  background: var(--vfs-bg-tertiary, var(--surface-elevated));
+  color: var(--vfs-text-primary, var(--text-primary));
+}
+
+.auto-updater-actions .btn-secondary:hover:not(:disabled) {
+  background: var(--vfs-bg-elevated, var(--surface-overlay));
+}
+
+.auto-updater-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auto-updater-error {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(var(--vfs-error-rgb, 255, 69, 58), 0.1);
+  border: 1px solid var(--vfs-error, #ff453a);
+  border-radius: 8px;
+  color: var(--vfs-error, #ff453a);
+}
+
+.auto-updater-error p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+}
+
+.auto-updater-error button {
+  padding: 8px 16px;
+  background: var(--vfs-error, #ff453a);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.auto-updater-error button:hover {
+  opacity: 0.9;
+}
+
+/* Light theme adjustments */
+[data-theme='light'] .auto-updater-modal {
+  background: var(--surface);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .auto-updater-overlay {
+  background: rgba(0, 0, 0, 0.4);
+}

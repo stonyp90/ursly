@@ -98,21 +98,21 @@ export type ThemeColorKey = keyof typeof themeColors;
 // ============================================================================
 
 const lightModeColors = {
-  background: '#f0f4f8',
-  backgroundSubtle: '#e2e8f0',
+  background: '#f5f5f7',
+  backgroundSubtle: '#e8e8ed',
   surface: '#ffffff',
   surfaceElevated: '#ffffff',
-  surfaceOverlay: '#f8fafc',
-  border: 'rgba(0, 0, 0, 0.1)',
-  borderSubtle: 'rgba(0, 0, 0, 0.05)',
-  borderHover: 'rgba(0, 0, 0, 0.2)',
-  textPrimary: '#0a0a14',
-  textSecondary: '#3a3a4a',
-  textMuted: '#5a5a6a',
-  textDim: '#8a8a9a',
-  sidebarBg: 'rgba(255, 255, 255, 0.8)',
-  toolbarBg: 'rgba(248, 250, 252, 0.9)',
-  cardBg: 'rgba(255, 255, 255, 0.95)',
+  surfaceOverlay: '#fafafa',
+  border: 'rgba(0, 0, 0, 0.08)',
+  borderSubtle: 'rgba(0, 0, 0, 0.04)',
+  borderHover: 'rgba(0, 0, 0, 0.15)',
+  textPrimary: '#1d1d1f',
+  textSecondary: '#6e6e73',
+  textMuted: '#86868b',
+  textDim: '#a1a1a6',
+  sidebarBg: 'rgba(255, 255, 255, 0.85)',
+  toolbarBg: 'rgba(248, 248, 248, 0.95)',
+  cardBg: 'rgba(255, 255, 255, 0.98)',
 };
 
 const darkModeColors = {

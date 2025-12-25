@@ -8,6 +8,7 @@ import { ThemeCustomizer } from './components/ThemeCustomizer';
 import { ToastProvider } from './components/Toast';
 import { ErrorDialogProvider } from './components/ErrorDialog';
 import { BottomToolbar } from './components/BottomToolbar';
+import { AutoUpdater } from './components/AutoUpdater';
 
 export type AppTab = 'files' | 'metrics';
 
@@ -103,6 +104,8 @@ function App() {
               isOpen={isThemeCustomizerOpen}
               onClose={() => setIsThemeCustomizerOpen(false)}
             />
+
+            <AutoUpdater />
           </div>
         </ErrorDialogProvider>
       </ToastProvider>

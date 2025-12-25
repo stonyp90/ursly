@@ -1855,3 +1855,46 @@ body {
 }
 
 /* Old floating buttons removed - using bottom toolbar now */
+
+/* ============================================
+   Light Theme Overrides
+   ============================================ */
+
+[data-theme='light'] {
+  /* Light mode text colors - softer, less black */
+  --text-primary: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --text-muted: #86868b;
+  --text-dim: #a1a1a6;
+
+  /* Light mode backgrounds */
+  --background: #f5f5f7;
+  --background-subtle: #e8e8ed;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-overlay: #fafafa;
+
+  /* Light mode borders */
+  --border: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --border-hover: rgba(0, 0, 0, 0.15);
+
+  /* Light mode special surfaces */
+  --sidebar-bg: rgba(255, 255, 255, 0.85);
+  --toolbar-bg: rgba(248, 248, 248, 0.95);
+  --card-bg: rgba(255, 255, 255, 0.98);
+}
+
+/* Ensure all text elements use proper light mode colors */
+[data-theme='light'] body,
+[data-theme='light'] .page,
+[data-theme='light'] .page-header h1,
+[data-theme='light'] .page-header h2,
+[data-theme='light'] .page-header p {
+  color: var(--text-primary);
+}
+
+[data-theme='light'] .subtitle,
+[data-theme='light'] .text-secondary {
+  color: var(--text-secondary);
+}
