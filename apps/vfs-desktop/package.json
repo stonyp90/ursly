@@ -1,6 +1,6 @@
 {
   "name": "@ursly/vfs-desktop",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Ursly VFS Desktop - Virtual Cloud File System",
   "type": "module",
