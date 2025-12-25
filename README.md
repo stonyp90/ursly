@@ -10,27 +10,11 @@
 
 <br />
 
-<!-- Primary Badges Row -->
+<!-- Primary Badges -->
 
-[![Website](https://img.shields.io/badge/Website-ursly.io-00d4ff?style=for-the-badge&logo=safari&logoColor=white)](https://ursly.io)
-[![Download](https://img.shields.io/github/v/release/stonyp90/ursly?style=for-the-badge&logo=github&label=Download&color=ff00ea)](https://github.com/stonyp90/ursly/releases/latest)
 [![License](https://img.shields.io/badge/License-AGPL_v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/agpl-3.0)
-
-<br />
-
-<!-- Build & Quality -->
-
-[![CI](https://img.shields.io/github/actions/workflow/status/stonyp90/ursly/ci.yml?branch=main&label=CI&logo=github&style=flat-square)](https://github.com/stonyp90/ursly/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/github/actions/workflow/status/stonyp90/ursly/test.yml?branch=main&label=Tests&logo=jest&style=flat-square)](https://github.com/stonyp90/ursly/actions/workflows/test.yml)
-[![codecov](https://img.shields.io/codecov/c/github/stonyp90/ursly?logo=codecov&style=flat-square)](https://codecov.io/gh/stonyp90/ursly)
-[![CodeFactor](https://img.shields.io/codefactor/grade/github/stonyp90/ursly?logo=codefactor&style=flat-square)](https://www.codefactor.io/repository/github/stonyp90/ursly)
-
-<!-- Stats -->
-
-[![GitHub Stars](https://img.shields.io/github/stars/stonyp90/ursly?style=flat-square&logo=github&label=Stars)](https://github.com/stonyp90/ursly/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/stonyp90/ursly?style=flat-square&logo=github&label=Forks)](https://github.com/stonyp90/ursly/network/members)
-[![Downloads](https://img.shields.io/github/downloads/stonyp90/ursly/total?style=flat-square&logo=github&label=Downloads)](https://github.com/stonyp90/ursly/releases)
-[![Contributors](https://img.shields.io/github/contributors/stonyp90/ursly?style=flat-square&logo=github)](https://github.com/stonyp90/ursly/graphs/contributors)
+[![GitHub Stars](https://img.shields.io/github/stars/stonyp90/Ursly?style=for-the-badge&logo=github)](https://github.com/stonyp90/Ursly/stargazers)
+[![CI](https://img.shields.io/github/actions/workflow/status/stonyp90/Ursly/ci.yml?branch=main&style=for-the-badge&logo=github&label=CI)](https://github.com/stonyp90/Ursly/actions/workflows/ci.yml)
 
 <!-- Tech Stack -->
 
@@ -39,16 +23,9 @@
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-ffc131?style=flat-square&logo=tauri&logoColor=black)](https://tauri.app/)
 [![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 
-<!-- Community -->
-
-[![Discord](https://img.shields.io/discord/1234567890?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/cree8)
-[![Twitter](https://img.shields.io/twitter/follow/ursly_io?style=flat-square&logo=x&label=Follow)](https://twitter.com/ursly_io)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](https://github.com/stonyp90/ursly/pulls)
-[![Good First Issues](https://img.shields.io/github/issues/stonyp90/ursly/good%20first%20issue?style=flat-square&label=Good%20First%20Issues&color=7057ff)](https://github.com/stonyp90/ursly/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
-
 <br />
 
-[**Download**](https://github.com/stonyp90/ursly/releases/latest) · [Website](https://ursly.io) · [Documentation](./agents.md) · [Discord](https://discord.gg/cree8) · [Report Bug](https://github.com/stonyp90/ursly/issues/new?template=bug_report.md) · [Request Feature](https://github.com/stonyp90/ursly/issues/new?template=feature_request.md)
+[**Download**](https://github.com/stonyp90/Ursly/releases/latest) · [Website](https://ursly.io) · [Documentation](./agents.md) · [Report Bug](https://github.com/stonyp90/Ursly/issues/new) · [Request Feature](https://github.com/stonyp90/Ursly/issues/new)
 
 </div>
 
@@ -66,9 +43,9 @@ Your files are everywhere. S3 for archives. Azure for production. NAS for local 
 
 | Platform    | Download                                                                                            | Requirements                      |
 | ----------- | --------------------------------------------------------------------------------------------------- | --------------------------------- |
-| **macOS**   | [ursly-vfs.dmg](https://github.com/stonyp90/ursly/releases/latest/download/ursly-vfs.dmg)           | macOS 11+ (Apple Silicon & Intel) |
-| **Windows** | [ursly-vfs.msi](https://github.com/stonyp90/ursly/releases/latest/download/ursly-vfs.msi)           | Windows 10/11                     |
-| **Linux**   | [ursly-vfs.AppImage](https://github.com/stonyp90/ursly/releases/latest/download/ursly-vfs.AppImage) | glibc 2.31+                       |
+| **macOS**   | [ursly-vfs.dmg](https://github.com/stonyp90/Ursly/releases/latest/download/ursly-vfs.dmg)           | macOS 11+ (Apple Silicon & Intel) |
+| **Windows** | [ursly-vfs.msi](https://github.com/stonyp90/Ursly/releases/latest/download/ursly-vfs.msi)           | Windows 10/11                     |
+| **Linux**   | [ursly-vfs.AppImage](https://github.com/stonyp90/Ursly/releases/latest/download/ursly-vfs.AppImage) | glibc 2.31+                       |
 
 ---
 
@@ -107,7 +84,7 @@ Your files are everywhere. S3 for archives. Azure for production. NAS for local 
 
 ### Download the App (Recommended)
 
-1. Download from [Releases](https://github.com/stonyp90/ursly/releases/latest)
+1. Download from [Releases](https://github.com/stonyp90/Ursly/releases/latest)
 2. Install and launch
 3. Add your storage sources
 4. Start browsing
@@ -116,7 +93,7 @@ Your files are everywhere. S3 for archives. Azure for production. NAS for local 
 
 ```bash
 # Clone the repository
-git clone https://github.com/stonyp90/ursly.git
+git clone https://github.com/stonyp90/Ursly.git
 cd ursly
 
 # Install dependencies
@@ -250,6 +227,6 @@ Built with amazing open source projects:
 
 <div align="center">
 
-**[ursly.io](https://ursly.io)** &bull; [Download](https://github.com/stonyp90/ursly/releases/latest) &bull; [Discord](https://discord.gg/cree8) &bull; [GitHub](https://github.com/stonyp90/ursly)
+**[ursly.io](https://ursly.io)** &bull; [Download](https://github.com/stonyp90/Ursly/releases/latest) &bull; [Discord](https://discord.gg/cree8) &bull; [GitHub](https://github.com/stonyp90/Ursly)
 
 </div>
