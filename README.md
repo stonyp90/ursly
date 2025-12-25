@@ -6,13 +6,33 @@
 
 **Unified cloud storage meets AI. One interface for all your media assets.**
 
-[![Website](https://img.shields.io/badge/Website-ursly.io-00d4ff?style=flat-square)](https://ursly.io)
-[![Demo](https://img.shields.io/badge/Demo-app.ursly.io-ff00ea?style=flat-square)](https://app.ursly.io)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
+<!-- Build & Test Status -->
+
+[![CI](https://img.shields.io/github/actions/workflow/status/stonyp90/ursly/ci.yml?branch=main&label=CI&logo=github&style=flat-square)](https://github.com/stonyp90/ursly/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/stonyp90/ursly/test.yml?branch=main&label=Tests&logo=jest&style=flat-square)](https://github.com/stonyp90/ursly/actions/workflows/test.yml)
+[![codecov](https://img.shields.io/codecov/c/github/stonyp90/ursly?logo=codecov&style=flat-square)](https://codecov.io/gh/stonyp90/ursly)
+
+<!-- Release & Downloads -->
+
+[![Release](https://img.shields.io/github/v/release/stonyp90/ursly?logo=github&style=flat-square)](https://github.com/stonyp90/ursly/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/stonyp90/ursly/total?logo=github&style=flat-square)](https://github.com/stonyp90/ursly/releases)
+
+<!-- Tech Stack -->
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Rust](https://img.shields.io/badge/Rust-1.75+-dea584?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Tauri](https://img.shields.io/badge/Tauri-2.0-ffc131?style=flat-square&logo=tauri&logoColor=black)](https://tauri.app/)
 
-[Website](https://ursly.io) &bull; [Live Demo](https://app.ursly.io) &bull; [Documentation](./agents.md) &bull; [Discord](https://discord.gg/cree8)
+<!-- License & Community -->
+
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
+[![Discord](https://img.shields.io/discord/1234567890?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/cree8)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](https://github.com/stonyp90/ursly/pulls)
+
+<br />
+
+[Website](https://ursly.io) &bull; [Live Demo](https://app.ursly.io) &bull; [Documentation](./agents.md) &bull; [Discord](https://discord.gg/cree8) &bull; [Releases](https://github.com/stonyp90/ursly/releases)
 
 </div>
 
