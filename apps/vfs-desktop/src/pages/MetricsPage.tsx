@@ -447,6 +447,11 @@ const SettingsIcon = () => (
     <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
   </svg>
 );
+const LoadIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+  </svg>
+);
 
 // Main Component
 export function MetricsPage() {
@@ -601,6 +606,10 @@ export function MetricsPage() {
   const gpuColor = gpu
     ? getColor(gpu.current.gpu_utilization, thresholds.gpu)
     : 'var(--vfs-success, #30d158)';
+  // Load average: use CPU cores as baseline (load > cores = overloaded)
+  const coreCount = sys.per_core_usage?.length || 4;
+  const loadPercent = (sys.load_average[0] / coreCount) * 100;
+  const loadColor = getColor(Math.min(loadPercent, 100), 100);
 
   return (
     <div className="metrics-page">
@@ -844,6 +853,43 @@ export function MetricsPage() {
           <div className="io-peak">
             <span>Peak ↓: {formatBytes(Math.max(...history.netRx, 0))}/s</span>
             <span>Peak ↑: {formatBytes(Math.max(...history.netTx, 0))}/s</span>
+          </div>
+        </MetricCard>
+
+        {/* System Load & Uptime */}
+        <MetricCard
+          icon={<LoadIcon />}
+          title="System"
+          value={sys.load_average[0].toFixed(2)}
+          unit=""
+          subtitle="Load Average"
+          statusColor={loadColor}
+        >
+          <div className="load-grid">
+            <div className="load-item">
+              <span className="load-period">1m</span>
+              <span className="load-value">
+                {sys.load_average[0].toFixed(2)}
+              </span>
+            </div>
+            <div className="load-item">
+              <span className="load-period">5m</span>
+              <span className="load-value">
+                {sys.load_average[1].toFixed(2)}
+              </span>
+            </div>
+            <div className="load-item">
+              <span className="load-period">15m</span>
+              <span className="load-value">
+                {sys.load_average[2].toFixed(2)}
+              </span>
+            </div>
+          </div>
+          <div className="uptime-info">
+            <span className="uptime-label">Uptime</span>
+            <span className="uptime-value">
+              {formatUptime(sys.uptime_seconds)}
+            </span>
           </div>
         </MetricCard>
       </section>

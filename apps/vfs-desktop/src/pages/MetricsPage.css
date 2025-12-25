@@ -884,3 +884,68 @@
   background: #e9ecef;
   border-color: #dee2e6;
 }
+
+/* ============================================================
+   System Load & Uptime Card
+   ============================================================ */
+.load-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px);
+  background: var(--vfs-bg-primary);
+  border-radius: var(--radius-md, 8px);
+  margin-bottom: var(--space-3, 12px);
+}
+
+.load-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+
+.load-period {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--vfs-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.load-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--vfs-font-mono, 'JetBrains Mono', monospace);
+  color: var(--vfs-text-primary);
+}
+
+.uptime-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3, 12px);
+  background: var(--vfs-bg-primary);
+  border-radius: var(--radius-md, 8px);
+}
+
+.uptime-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--vfs-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.uptime-value {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--vfs-font-mono, 'JetBrains Mono', monospace);
+  color: var(--vfs-success);
+}
+
+/* Light Theme - System Load */
+[data-theme='light'] .load-grid,
+[data-theme='light'] .uptime-info {
+  background: rgba(0, 0, 0, 0.03);
+}
