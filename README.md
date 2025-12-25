@@ -111,10 +111,10 @@ Press `Cmd+K` to instantly search across all your storage. Use powerful operator
 
 ### System Performance Monitor
 
-Real-time performance monitoring with detailed CPU core activity (14 cores), memory usage (26.2/48 GB), GPU metrics (Apple M4 Pro), VRAM, temperature, disk I/O, network stats, and system load averages. Perfect for keeping an eye on renders and heavy workloads.
+Real-time performance monitoring with detailed CPU core activity (14 cores), memory usage (58.4% - 28.0/48 GB), GPU metrics (58% Apple M4 Pro), VRAM (61%), temperature (61°C), disk I/O, network stats (117.7 KB/s), and system load averages (4.48 / 4.55 / 4.63). Perfect for keeping an eye on renders and heavy workloads.
 
 <p align="center">
-  <img src="website/screenshots/vfs-performance-metrics.png" alt="Performance Monitor dashboard showing macOS 15 with 14 Cores Apple M4 Pro, CPU usage (16%), Memory (26.2/48 GB), GPU (72% Apple M4 Pro), VRAM (72%), Temperature (68°C), Load (28%), Disk I/O, Network (513 B/s), and System Load Average (3.86 / 4.21 / 4.47) with real-time graphs and per-core CPU visualization" width="700" />
+  <img src="website/screenshots/vfs-performance-metrics.png" alt="Performance Monitor dashboard showing macOS 15 with 14 Cores Apple M4 Pro, CPU usage (16%), Memory (58.4% - 28.0/48 GB), GPU (58% Apple M4 Pro), VRAM (61%), Temperature (61°C), Load (32% - 4.48), Disk I/O (0 B/s), Network (117.7 KB/s), and System Load Average (4.48 / 4.55 / 4.63) with real-time graphs and per-core CPU visualization" width="700" />
 </p>
 
 ### Keyboard-First Experience
@@ -122,7 +122,7 @@ Real-time performance monitoring with detailed CPU core activity (14 cores), mem
 Every action has a shortcut. Stay in your flow without touching the mouse.
 
 <p align="center">
-  <img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts" width="700" />
+  <img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts dialog showing Navigation (Go back ⌘+[, Go forward ⌘+], Go to parent folder ⌘+↑, Open selected Enter, Navigate files ↑↓←→), Selection (Select all ⌘+A, Toggle selection ⌘+Click, Range select Shift+Click, Clear selection Escape), Clipboard (Copy ⌘+C, Paste ⌘+V, Duplicate ⌘+D), and File Operations (New folder ⌘+Shift+N, Rename Enter, Move to Trash ⌘+Delete, Delete Delete)" width="700" />
 </p>
 
 ---
