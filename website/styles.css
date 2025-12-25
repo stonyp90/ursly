@@ -1343,6 +1343,15 @@ ul {
   gap: 20px;
 }
 
+/* 3-column equal-size feature grid */
+.features-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.features-grid-3 .feature-card {
+  min-height: 320px;
+}
+
 .feature-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2962,6 +2971,14 @@ ul {
   .iam-grid,
   .cloud-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .features-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .features-grid-3 .feature-card {
+    min-height: auto;
   }
 
   .feature-large {
