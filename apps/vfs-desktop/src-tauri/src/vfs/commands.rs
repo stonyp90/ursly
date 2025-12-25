@@ -420,9 +420,9 @@ pub async fn vfs_eject(
         info!("Unmounted volume: {}", path_str);
     }
     
-    // Remove the source from VFS
-    // Note: In a real implementation, the VfsService should have a remove_source method
-    // For now, we just log success - the UI should refresh to show updated sources
+    // Remove the source from VFS internal state
+    service.remove_source(&source_id);
+    info!("Removed source {} from VFS", source_id);
     
     Ok(())
 }
