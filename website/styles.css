@@ -2768,6 +2768,45 @@ ul {
   display: block;
 }
 
+.code-body.open-source-benefits {
+  padding: 28px;
+}
+
+.benefits-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.benefits-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.benefits-list li:last-child {
+  border-bottom: none;
+}
+
+.benefits-list li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 8px;
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+.benefits-list li strong {
+  color: var(--text-primary);
+}
+
 .code-comment {
   color: var(--text-dim);
 }
