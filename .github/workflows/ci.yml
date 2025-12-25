@@ -39,7 +39,7 @@ jobs:
         continue-on-error: true
 
   # ==========================================================================
-  # Build Web & API
+  # Build Web & API (excludes desktop apps)
   # ==========================================================================
   build-web-api:
     name: Build Web & API
@@ -58,8 +58,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build all projects
-        run: npm run build
+      - name: Build web and API projects
+        run: npx nx run-many --target=build --projects=web,api,grpc,agent-core,shared-access-control-access-control --parallel=3
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -67,6 +67,7 @@ jobs:
           name: dist
           path: dist/
           retention-days: 7
+          if-no-files-found: ignore
 
   # ==========================================================================
   # VFS Desktop - Rust Tests
