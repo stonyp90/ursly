@@ -34,6 +34,7 @@ import {
   getFileIcon as getFileIconComponent,
 } from '../components/CyberpunkIcons';
 import { InfoModal } from '../components/InfoModal';
+import { truncateMiddle } from '../utils/file-utils';
 import '../styles/finder.css';
 
 type ViewMode = 'icon' | 'list';
@@ -789,7 +790,7 @@ export function BrowserFinderPage() {
                       </span>
                     </div>
                     <span className="file-name" title={file.name}>
-                      {file.name}
+                      {truncateMiddle(file.name, 28)}
                     </span>
                   </div>
                 ))}

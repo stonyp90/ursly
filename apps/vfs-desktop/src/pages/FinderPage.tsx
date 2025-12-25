@@ -40,6 +40,7 @@ import { ShortcutSettings } from '../components/ShortcutSettings';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { SearchBox } from '../components/SearchBox';
 import { SpotlightSearch } from '../components/SpotlightSearch';
+import { truncateMiddle } from '../utils/file-utils';
 import '../styles/finder.css';
 
 type ViewMode = 'icon' | 'list';
@@ -2405,7 +2406,7 @@ export function FinderPage() {
                     className={`storage-group ${collapsedGroups.has('volumes') ? 'collapsed' : ''}`}
                   >
                     <button
-                      className="storage-group-header"
+                      className="storage-group-header subgroup"
                       onClick={() => toggleGroup('volumes')}
                     >
                       <span className="group-chevron">
@@ -2443,7 +2444,7 @@ export function FinderPage() {
                     className={`storage-group ${collapsedGroups.has('locations') ? 'collapsed' : ''}`}
                   >
                     <button
-                      className="storage-group-header"
+                      className="storage-group-header subgroup"
                       onClick={() => toggleGroup('locations')}
                     >
                       <span className="group-chevron">
@@ -2770,7 +2771,7 @@ export function FinderPage() {
                               onClick={(e) => e.stopPropagation()}
                             />
                           ) : (
-                            file.name
+                            truncateMiddle(file.name, 28)
                           )}
                         </div>
                       </div>
