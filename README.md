@@ -85,16 +85,16 @@ _...and more coming soon!_
 ## Screenshots
 
 <p align="center">
+  <img src="website/screenshots/ursly-deployed-lean.png" alt="System Monitor" width="600" />
+</p>
+
+<p align="center"><em>System monitor — keep an eye on your GPU, CPU, RAM, and network</em></p>
+
+<p align="center">
   <img src="website/screenshots/vfs-theme-customizer-dark.png" alt="Keyboard Shortcuts" width="600" />
 </p>
 
 <p align="center"><em>Keyboard shortcuts — work faster without reaching for your mouse</em></p>
-
-<p align="center">
-  <img src="website/screenshots/ursly-deployed-lean.png" alt="System Metrics" width="600" />
-</p>
-
-<p align="center"><em>System monitor — keep an eye on your GPU, CPU, RAM, and network</em></p>
 
 ---
 
