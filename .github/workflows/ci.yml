@@ -125,6 +125,12 @@ jobs:
       - name: Build Tauri app
         working-directory: apps/agent-desktop
         run: npm run tauri:build
+        env:
+          VITE_KEYCLOAK_URL: https://auth.ursly.io
+          VITE_KEYCLOAK_REALM: agent-orchestrator
+          VITE_KEYCLOAK_CLIENT_ID: agent-web
+          VITE_API_URL: https://api.ursly.io
+          VITE_WS_URL: wss://api.ursly.io
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -169,6 +175,12 @@ jobs:
       - name: Build Tauri app
         working-directory: apps/agent-desktop
         run: npm run tauri:build
+        env:
+          VITE_KEYCLOAK_URL: https://auth.ursly.io
+          VITE_KEYCLOAK_REALM: agent-orchestrator
+          VITE_KEYCLOAK_CLIENT_ID: agent-web
+          VITE_API_URL: https://api.ursly.io
+          VITE_WS_URL: wss://api.ursly.io
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -209,6 +221,12 @@ jobs:
       - name: Build Tauri app
         working-directory: apps/agent-desktop
         run: npm run tauri:build
+        env:
+          VITE_KEYCLOAK_URL: https://auth.ursly.io
+          VITE_KEYCLOAK_REALM: agent-orchestrator
+          VITE_KEYCLOAK_CLIENT_ID: agent-web
+          VITE_API_URL: https://api.ursly.io
+          VITE_WS_URL: wss://api.ursly.io
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -283,6 +301,12 @@ jobs:
       - name: Build Tauri app
         working-directory: apps/vfs-desktop
         run: npm run tauri:build
+        env:
+          VITE_KEYCLOAK_URL: https://auth.ursly.io
+          VITE_KEYCLOAK_REALM: agent-orchestrator
+          VITE_KEYCLOAK_CLIENT_ID: agent-web
+          VITE_API_URL: https://api.ursly.io
+          VITE_WS_URL: wss://api.ursly.io
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -327,6 +351,12 @@ jobs:
       - name: Build Tauri app
         working-directory: apps/vfs-desktop
         run: npm run tauri:build
+        env:
+          VITE_KEYCLOAK_URL: https://auth.ursly.io
+          VITE_KEYCLOAK_REALM: agent-orchestrator
+          VITE_KEYCLOAK_CLIENT_ID: agent-web
+          VITE_API_URL: https://api.ursly.io
+          VITE_WS_URL: wss://api.ursly.io
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -367,6 +397,12 @@ jobs:
       - name: Build Tauri app
         working-directory: apps/vfs-desktop
         run: npm run tauri:build
+        env:
+          VITE_KEYCLOAK_URL: https://auth.ursly.io
+          VITE_KEYCLOAK_REALM: agent-orchestrator
+          VITE_KEYCLOAK_CLIENT_ID: agent-web
+          VITE_API_URL: https://api.ursly.io
+          VITE_WS_URL: wss://api.ursly.io
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
