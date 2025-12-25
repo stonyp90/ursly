@@ -172,67 +172,8 @@ interface SpotlightSearchProps {
   currentSourceId?: string;
 }
 
-// Quick actions available in spotlight
-const QUICK_ACTIONS: SearchResult[] = [
-  {
-    type: 'action',
-    id: 'fullscreen-search',
-    title: 'Open Full Search',
-    subtitle: 'Switch to full-screen search experience',
-    icon: 'expand',
-    iconType: 'action-expand',
-    keywords: ['full', 'fullscreen', 'expand', 'advanced', 'search'],
-  },
-  {
-    type: 'action',
-    id: 'new-folder',
-    title: 'New Folder',
-    subtitle: 'Create a new folder',
-    icon: 'newFolder',
-    iconType: 'action-folder',
-    keywords: ['create', 'folder', 'new', 'mkdir'],
-  },
-  {
-    type: 'action',
-    id: 'toggle-hidden',
-    title: 'Toggle Hidden Files',
-    subtitle: 'Show or hide hidden files',
-    icon: 'hidden',
-    iconType: 'action-view',
-    keywords: ['hidden', 'show', 'hide', 'invisible'],
-  },
-  {
-    type: 'action',
-    id: 'icon-view',
-    title: 'Switch to Icon View',
-    subtitle: 'Grid layout with thumbnails',
-    icon: 'grid',
-    iconType: 'action-view',
-    keywords: ['view', 'grid', 'icon', 'thumbnail'],
-  },
-  {
-    type: 'action',
-    id: 'list-view',
-    title: 'Switch to List View',
-    subtitle: 'Detailed list layout',
-    icon: 'list',
-    iconType: 'action-view',
-    keywords: ['view', 'list', 'details'],
-  },
-  {
-    type: 'action',
-    id: 'refresh',
-    title: 'Refresh',
-    subtitle: 'Reload current folder',
-    icon: 'refresh',
-    iconType: 'action-refresh',
-    keywords: ['refresh', 'reload', 'update'],
-  },
-];
-
-// Search operator hints - matches SearchBox operators
+// Search operator hints - only tag, type, ext, size
 const OPERATOR_HINTS: SearchResult[] = [
-  // Basic Filters
   {
     type: 'operator',
     id: 'op-tag',
@@ -268,81 +209,6 @@ const OPERATOR_HINTS: SearchResult[] = [
     icon: 'size',
     iconType: 'op-size',
     keywords: ['size', 'bytes', 'megabyte', 'gigabyte'],
-  },
-  {
-    type: 'operator',
-    id: 'op-modified',
-    title: 'modified:',
-    subtitle: 'Filter by date (today, yesterday, week, month, year)',
-    icon: 'modified',
-    iconType: 'op-modified',
-    keywords: ['date', 'modified', 'time', 'today', 'yesterday'],
-  },
-  // Advanced Filters
-  {
-    type: 'operator',
-    id: 'op-tier',
-    title: 'tier:',
-    subtitle: 'Filter by storage tier (hot, cold, nearline)',
-    icon: 'tier',
-    iconType: 'op-tier',
-    keywords: ['tier', 'storage', 'hot', 'cold', 'nearline', 'archive'],
-  },
-  {
-    type: 'operator',
-    id: 'op-is',
-    title: 'is:',
-    subtitle: 'Filter by property (folder, file, hidden, cached, tagged)',
-    icon: 'is',
-    iconType: 'op-is',
-    keywords: ['is', 'property', 'folder', 'file', 'hidden', 'cached'],
-  },
-];
-
-// AI-powered search options
-const AI_SEARCH_OPTIONS: SearchResult[] = [
-  {
-    type: 'action',
-    id: 'ai-content',
-    title: 'Search by Content',
-    subtitle: "Find files by what's inside them (AI-powered)",
-    icon: 'ai',
-    iconType: 'ai-search',
-    keywords: ['content', 'ai', 'semantic', 'meaning', 'inside'],
-  },
-  {
-    type: 'action',
-    id: 'ai-transcription',
-    title: 'Search Video Transcripts',
-    subtitle: 'Find videos by spoken words (Whisper)',
-    icon: 'video',
-    iconType: 'ai-video',
-    keywords: [
-      'transcription',
-      'speech',
-      'audio',
-      'whisper',
-      'video',
-      'spoken',
-    ],
-  },
-  {
-    type: 'action',
-    id: 'ai-similar',
-    title: 'Find Similar Files',
-    subtitle: 'Find visually or semantically similar files',
-    icon: 'similar',
-    iconType: 'ai-similar',
-    keywords: ['similar', 'related', 'like', 'matching'],
-  },
-  {
-    type: 'action',
-    id: 'ai-tags',
-    title: 'Auto-Tag Files',
-    subtitle: 'Automatically tag selected files with AI',
-    icon: 'autotag',
-    iconType: 'ai-tag',
-    keywords: ['auto', 'tag', 'ai', 'classify', 'label'],
   },
 ];
 
@@ -401,34 +267,14 @@ export function SpotlightSearch({
     return Array.from(tags);
   }, [files]);
 
-  // Build search results
+  // Build search results - simplified to tag, type, ext, size only
   const results = useMemo((): SearchResult[] => {
     const searchResults: SearchResult[] = [];
     const lowerQuery = query.toLowerCase().trim();
 
     if (!lowerQuery) {
-      // Show recent searches first
-      if (recentSearches.length > 0) {
-        recentSearches.slice(0, 3).forEach((search, i) => {
-          searchResults.push({
-            type: 'recent',
-            id: `recent-${i}`,
-            title: search,
-            subtitle: 'Recent search',
-            icon: '🕐',
-          });
-        });
-      }
-
-      // Show AI search options
-      searchResults.push(...AI_SEARCH_OPTIONS.slice(0, 2));
-
-      // Show operator hints
-      searchResults.push(...OPERATOR_HINTS.slice(0, 4));
-
-      // Show quick actions
-      searchResults.push(...QUICK_ACTIONS.slice(0, 2));
-
+      // Show operator hints when empty (tag, type, ext, size)
+      searchResults.push(...OPERATOR_HINTS);
       return searchResults;
     }
 
@@ -450,7 +296,7 @@ export function SpotlightSearch({
         id: f.path,
         title: f.name,
         subtitle: f.path,
-        icon: f.isDirectory ? '📁' : getFileIcon(f.name),
+        icon: f.isDirectory ? 'folder' : getFileIconKey(f.name),
         path: f.path,
       });
     });
@@ -465,32 +311,21 @@ export function SpotlightSearch({
           id: `tag-${tag}`,
           title: tag,
           subtitle: 'Tag',
-          icon: '🏷️',
+          icon: 'tag',
         });
       });
 
-    // Search actions
-    QUICK_ACTIONS.filter(
-      (a) =>
-        a.title.toLowerCase().includes(lowerQuery) ||
-        a.keywords?.some((k) => k.includes(lowerQuery)),
-    )
-      .slice(0, 3)
-      .forEach((action) => {
-        searchResults.push(action);
-      });
-
-    // Search operators if query starts with a letter
-    if (lowerQuery.length <= 4) {
-      OPERATOR_HINTS.filter((o) => o.title.startsWith(lowerQuery)).forEach(
-        (op) => {
-          searchResults.push(op);
-        },
-      );
-    }
+    // Search operators (tag:, type:, ext:, size:)
+    OPERATOR_HINTS.filter(
+      (o) =>
+        o.title.toLowerCase().includes(lowerQuery) ||
+        o.keywords?.some((k) => k.includes(lowerQuery)),
+    ).forEach((op) => {
+      searchResults.push(op);
+    });
 
     return searchResults.slice(0, 12);
-  }, [query, files, availableTags, recentSearches]);
+  }, [query, files, availableTags]);
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -553,17 +388,6 @@ export function SpotlightSearch({
         case 'operator':
           setQuery(result.title);
           return; // Don't close, let user continue
-
-        case 'action':
-          // Dispatch action via custom event
-          window.dispatchEvent(
-            new CustomEvent('spotlight-action', { detail: result.id }),
-          );
-          break;
-
-        case 'recent':
-          setQuery(result.title);
-          return; // Don't close, let user search
       }
 
       // Save to recent searches
@@ -611,7 +435,7 @@ export function SpotlightSearch({
             ref={inputRef}
             type="text"
             className="spotlight-input"
-            placeholder="Search files, folders, actions..."
+            placeholder="Search files, folders, tags... (tag:, type:, ext:, size:)"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -676,51 +500,51 @@ export function SpotlightSearch({
   );
 }
 
-// Get file icon based on extension
-function getFileIcon(filename: string): string {
+// Get file icon key based on extension
+function getFileIconKey(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase();
   const iconMap: Record<string, string> = {
-    mp4: '🎬',
-    mov: '🎬',
-    avi: '🎬',
-    mkv: '🎬',
-    webm: '🎬',
-    jpg: '🖼️',
-    jpeg: '🖼️',
-    png: '🖼️',
-    gif: '🖼️',
-    webp: '🖼️',
-    svg: '🖼️',
-    mp3: '🎵',
-    wav: '🎵',
-    flac: '🎵',
-    aac: '🎵',
-    pdf: '📕',
-    doc: '📄',
-    docx: '📄',
-    xls: '📊',
-    xlsx: '📊',
-    ppt: '📽️',
-    pptx: '📽️',
-    zip: '📦',
-    rar: '📦',
-    '7z': '📦',
-    tar: '📦',
-    gz: '📦',
-    js: '💻',
-    ts: '💻',
-    tsx: '💻',
-    jsx: '💻',
-    py: '🐍',
-    rs: '🦀',
-    go: '🐹',
-    json: '📋',
-    yaml: '📋',
-    yml: '📋',
-    md: '📝',
-    txt: '📝',
+    mp4: 'video',
+    mov: 'video',
+    avi: 'video',
+    mkv: 'video',
+    webm: 'video',
+    jpg: 'file',
+    jpeg: 'file',
+    png: 'file',
+    gif: 'file',
+    webp: 'file',
+    svg: 'file',
+    mp3: 'file',
+    wav: 'file',
+    flac: 'file',
+    aac: 'file',
+    pdf: 'file',
+    doc: 'file',
+    docx: 'file',
+    xls: 'file',
+    xlsx: 'file',
+    ppt: 'file',
+    pptx: 'file',
+    zip: 'file',
+    rar: 'file',
+    '7z': 'file',
+    tar: 'file',
+    gz: 'file',
+    js: 'file',
+    ts: 'file',
+    tsx: 'file',
+    jsx: 'file',
+    py: 'file',
+    rs: 'file',
+    go: 'file',
+    json: 'file',
+    yaml: 'file',
+    yml: 'file',
+    md: 'file',
+    txt: 'file',
   };
-  return iconMap[ext || ''] || '📄';
+  return iconMap[ext || ''] || 'file';
 }
 
 export default SpotlightSearch;

@@ -8,7 +8,7 @@ import './BottomToolbar.css';
 interface BottomToolbarProps {
   onOpenSettings: () => void;
   onOpenShortcuts: () => void;
-  onOpenActions?: () => void;
+  onOpenSearch?: () => void;
   isShortcutsOpen: boolean;
   onCloseShortcuts: () => void;
 }
@@ -16,7 +16,7 @@ interface BottomToolbarProps {
 export function BottomToolbar({
   onOpenSettings,
   onOpenShortcuts,
-  onOpenActions,
+  onOpenSearch,
   isShortcutsOpen,
   onCloseShortcuts,
 }: BottomToolbarProps) {
@@ -63,12 +63,12 @@ export function BottomToolbar({
 
         <div className="action-divider" />
 
-        {onOpenActions && (
+        {onOpenSearch && (
           <>
             <button
-              className="action-pill actions"
-              onClick={onOpenActions}
-              title="Quick Actions"
+              className="action-pill search"
+              onClick={onOpenSearch}
+              title="Search Files (Cmd+K / Ctrl+K)"
             >
               <div className="pill-glow" />
               <svg
@@ -80,10 +80,10 @@ export function BottomToolbar({
                 stroke="currentColor"
                 strokeWidth="1.5"
               >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 6v6l4 2" />
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
               </svg>
-              <span className="pill-label">Actions</span>
+              <span className="pill-label">Search</span>
             </button>
 
             <div className="action-divider" />

@@ -55,9 +55,17 @@ interface ContextMenuState {
 
 interface FinderPageProps {
   onOpenMetrics?: () => void;
+  onOpenSearch?: () => void;
+  isSearchOpen?: boolean;
+  onCloseSearch?: () => void;
 }
 
-export function FinderPage({ onOpenMetrics }: FinderPageProps) {
+export function FinderPage({
+  onOpenMetrics,
+  onOpenSearch,
+  isSearchOpen: externalSearchOpen,
+  onCloseSearch: externalCloseSearch,
+}: FinderPageProps) {
   const [sources, setSources] = useState<StorageSource[]>([]);
   const [selectedSource, setSelectedSource] = useState<StorageSource | null>(
     null,
@@ -100,8 +108,14 @@ export function FinderPage({ onOpenMetrics }: FinderPageProps) {
     file: null,
   });
 
-  // Spotlight search state
-  const [spotlightOpen, setSpotlightOpen] = useState(false);
+  // Spotlight search state - use external control if provided, otherwise internal
+  const [internalSpotlightOpen, setInternalSpotlightOpen] = useState(false);
+  const spotlightOpen =
+    externalSearchOpen !== undefined
+      ? externalSearchOpen
+      : internalSpotlightOpen;
+  const handleCloseSpotlight =
+    externalCloseSearch || (() => setInternalSpotlightOpen(false));
 
   // Navigation history
   const [navigationHistory, setNavigationHistory] = useState<string[]>(['']);

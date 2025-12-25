@@ -93,6 +93,23 @@
   color: var(--primary, #0a84ff);
 }
 
+/* Search button - Accent color glow */
+.action-pill.search .pill-glow {
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--accent, #ff9f0a) 25%, transparent) 0%,
+    transparent 70%
+  );
+}
+
+.action-pill.search:hover {
+  border-color: color-mix(in srgb, var(--accent, #ff9f0a) 40%, transparent);
+}
+
+.action-pill.search .pill-icon {
+  color: var(--accent, #ff9f0a);
+}
+
 /* Settings button - Secondary color glow */
 .action-pill.settings .pill-glow {
   background: radial-gradient(
@@ -113,7 +130,9 @@
 /* Icon styling */
 .pill-icon {
   flex-shrink: 0;
-  transition: transform 0.2s, color 0.2s;
+  transition:
+    transform 0.2s,
+    color 0.2s;
 }
 
 .action-pill:hover .pill-icon {
