@@ -359,7 +359,7 @@
   transform: translateY(-50%);
   width: 3px;
   height: 0;
-  background: var(--vfs-primary);
+  background: var(--primary, #0a84ff);
   border-radius: 0 2px 2px 0;
   transition: height 0.15s ease;
 }
