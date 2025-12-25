@@ -11,6 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ==========================================================================
+  # Core Tests & Linting
+  # ==========================================================================
   test:
     name: Test & Lint
     runs-on: ubuntu-latest
@@ -35,6 +38,9 @@ jobs:
         run: npm test -- --passWithNoTests
         continue-on-error: true
 
+  # ==========================================================================
+  # Build Web & API
+  # ==========================================================================
   build-web-api:
     name: Build Web & API
     runs-on: ubuntu-latest
@@ -62,186 +68,9 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # ============================================================================
-  # URSLY AGENT - GPU Metrics & AI Agent Monitor
-  # ============================================================================
-
-  agent-rust-tests:
-    name: Agent Rust Tests
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Tauri dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/agent-desktop/src-tauri -> target
-
-      - name: Run Rust tests
-        working-directory: apps/agent-desktop/src-tauri
-        run: cargo test --lib || true
-
-  agent-build-linux:
-    name: Agent Build (Linux)
-    runs-on: ubuntu-22.04
-    needs: [agent-rust-tests]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Tauri dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/agent-desktop/src-tauri -> target
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install desktop dependencies
-        working-directory: apps/agent-desktop
-        run: npm ci
-
-      - name: Build Tauri app
-        working-directory: apps/agent-desktop
-        run: npm run tauri:build
-        env:
-          VITE_KEYCLOAK_URL: https://auth.ursly.io
-          VITE_KEYCLOAK_REALM: agent-orchestrator
-          VITE_KEYCLOAK_CLIENT_ID: agent-web
-          VITE_API_URL: https://api.ursly.io
-          VITE_WS_URL: wss://api.ursly.io
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ursly-agent-linux
-          path: |
-            apps/agent-desktop/src-tauri/target/release/bundle/deb/*.deb
-            apps/agent-desktop/src-tauri/target/release/bundle/appimage/*.AppImage
-          retention-days: 7
-          if-no-files-found: ignore
-
-  agent-build-macos:
-    name: Agent Build (macOS)
-    runs-on: macos-latest
-    needs: [agent-rust-tests]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/agent-desktop/src-tauri -> target
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install desktop dependencies
-        working-directory: apps/agent-desktop
-        run: npm ci
-
-      - name: Build Tauri app
-        working-directory: apps/agent-desktop
-        run: npm run tauri:build
-        env:
-          VITE_KEYCLOAK_URL: https://auth.ursly.io
-          VITE_KEYCLOAK_REALM: agent-orchestrator
-          VITE_KEYCLOAK_CLIENT_ID: agent-web
-          VITE_API_URL: https://api.ursly.io
-          VITE_WS_URL: wss://api.ursly.io
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ursly-agent-macos
-          path: apps/agent-desktop/src-tauri/target/release/bundle/dmg/*.dmg
-          retention-days: 7
-          if-no-files-found: ignore
-
-  agent-build-windows:
-    name: Agent Build (Windows)
-    runs-on: windows-latest
-    needs: [agent-rust-tests]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/agent-desktop/src-tauri -> target
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install desktop dependencies
-        working-directory: apps/agent-desktop
-        run: npm ci
-
-      - name: Build Tauri app
-        working-directory: apps/agent-desktop
-        run: npm run tauri:build
-        env:
-          VITE_KEYCLOAK_URL: https://auth.ursly.io
-          VITE_KEYCLOAK_REALM: agent-orchestrator
-          VITE_KEYCLOAK_CLIENT_ID: agent-web
-          VITE_API_URL: https://api.ursly.io
-          VITE_WS_URL: wss://api.ursly.io
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ursly-agent-windows
-          path: |
-            apps/agent-desktop/src-tauri/target/release/bundle/msi/*.msi
-            apps/agent-desktop/src-tauri/target/release/bundle/nsis/*.exe
-          retention-days: 7
-          if-no-files-found: ignore
-
-  # ============================================================================
-  # URSLY VFS - Virtual Cloud File System
-  # ============================================================================
-
+  # ==========================================================================
+  # VFS Desktop - Rust Tests
+  # ==========================================================================
   vfs-rust-tests:
     name: VFS Rust Tests
     runs-on: ubuntu-22.04
@@ -265,7 +94,10 @@ jobs:
         working-directory: apps/vfs-desktop/src-tauri
         run: cargo test --lib || true
 
-  vfs-build-linux:
+  # ==========================================================================
+  # VFS Desktop - Build (Linux only for CI speed)
+  # ==========================================================================
+  vfs-build:
     name: VFS Build (Linux)
     runs-on: ubuntu-22.04
     needs: [vfs-rust-tests]
@@ -315,101 +147,5 @@ jobs:
           path: |
             apps/vfs-desktop/src-tauri/target/release/bundle/deb/*.deb
             apps/vfs-desktop/src-tauri/target/release/bundle/appimage/*.AppImage
-          retention-days: 7
-          if-no-files-found: ignore
-
-  vfs-build-macos:
-    name: VFS Build (macOS)
-    runs-on: macos-latest
-    needs: [vfs-rust-tests]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/vfs-desktop/src-tauri -> target
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install desktop dependencies
-        working-directory: apps/vfs-desktop
-        run: npm ci
-
-      - name: Build Tauri app
-        working-directory: apps/vfs-desktop
-        run: npm run tauri:build
-        env:
-          VITE_KEYCLOAK_URL: https://auth.ursly.io
-          VITE_KEYCLOAK_REALM: agent-orchestrator
-          VITE_KEYCLOAK_CLIENT_ID: agent-web
-          VITE_API_URL: https://api.ursly.io
-          VITE_WS_URL: wss://api.ursly.io
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ursly-vfs-macos
-          path: apps/vfs-desktop/src-tauri/target/release/bundle/dmg/*.dmg
-          retention-days: 7
-          if-no-files-found: ignore
-
-  vfs-build-windows:
-    name: VFS Build (Windows)
-    runs-on: windows-latest
-    needs: [vfs-rust-tests]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/vfs-desktop/src-tauri -> target
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install desktop dependencies
-        working-directory: apps/vfs-desktop
-        run: npm ci
-
-      - name: Build Tauri app
-        working-directory: apps/vfs-desktop
-        run: npm run tauri:build
-        env:
-          VITE_KEYCLOAK_URL: https://auth.ursly.io
-          VITE_KEYCLOAK_REALM: agent-orchestrator
-          VITE_KEYCLOAK_CLIENT_ID: agent-web
-          VITE_API_URL: https://api.ursly.io
-          VITE_WS_URL: wss://api.ursly.io
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ursly-vfs-windows
-          path: |
-            apps/vfs-desktop/src-tauri/target/release/bundle/msi/*.msi
-            apps/vfs-desktop/src-tauri/target/release/bundle/nsis/*.exe
           retention-days: 7
           if-no-files-found: ignore
