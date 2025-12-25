@@ -6,18 +6,29 @@ import { useState, useEffect, useCallback } from 'react';
 import './AutoUpdater.css';
 
 // Lazy load updater plugin to avoid crashes in dev mode
-let updaterModule: typeof import('@tauri-apps/plugin-updater') | null = null;
-let processModule: typeof import('@tauri-apps/api/process') | null = null;
+let updaterModule: any = null;
+let processModule: any = null;
 
 const loadUpdaterModule = async () => {
   if (updaterModule && processModule) return;
 
+  // Check if we're in a Tauri environment
+  if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) {
+    return;
+  }
+
   try {
     updaterModule = await import('@tauri-apps/plugin-updater');
+  } catch (err) {
+    console.debug('Updater plugin not available (expected in dev mode):', err);
+    return;
+  }
+
+  try {
     processModule = await import('@tauri-apps/api/process');
   } catch (err) {
-    // Plugin not available in dev mode or not configured - this is expected
-    console.debug('Updater plugin not available (expected in dev mode):', err);
+    console.debug('Process API not available:', err);
+    // Continue without process module - updater might still work
   }
 };
 
