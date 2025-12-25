@@ -176,3 +176,8 @@ credentials/
 service-account*.json
 !*example*.json
 
+# Build artifacts
+.nx/cache/**/*.dmg
+.nx/cache/**/*.msi
+.nx/cache/**/*.AppImage
+apps/*/src-tauri/target/release/bundle/**
