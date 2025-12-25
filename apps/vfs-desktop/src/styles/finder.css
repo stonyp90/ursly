@@ -2658,7 +2658,7 @@
   box-shadow: var(--shadow-lg);
   z-index: 1000;
   animation: menu-appear 0.15s var(--ease-out-expo);
-  overflow: hidden;
+  overflow: visible; /* Allow submenus to appear outside */
 }
 
 /* Top accent line */
