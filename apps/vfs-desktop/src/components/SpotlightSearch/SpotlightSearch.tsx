@@ -216,9 +216,9 @@ export function SpotlightSearch({
   isOpen,
   onClose,
   files,
-  sources,
+  sources: _sources,
   onNavigateToFile,
-  onNavigateToPath,
+  onNavigateToPath: _onNavigateToPath,
   onSearchSubmit,
   currentSourceId: _currentSourceId,
 }: SpotlightSearchProps) {

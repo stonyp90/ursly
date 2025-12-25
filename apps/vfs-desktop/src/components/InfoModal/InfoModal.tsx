@@ -23,7 +23,6 @@ import {
   IconFolderCyber,
   getFileIcon as getFileIconComponent,
   IconStar,
-  IconTag,
 } from '../CyberpunkIcons';
 import './InfoModal.css';
 

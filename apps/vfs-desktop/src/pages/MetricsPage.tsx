@@ -123,7 +123,8 @@ const getColor = (v: number, t = 90) => {
   return 'var(--vfs-error, #ff453a)';
 };
 
-// Circular Progress Ring
+// Circular Progress Ring (unused - kept for future use)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Ring = ({
   value,
   max = 100,

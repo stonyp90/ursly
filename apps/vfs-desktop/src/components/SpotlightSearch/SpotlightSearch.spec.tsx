@@ -298,7 +298,6 @@ describe('SpotlightSearch', () => {
     it('should keep search open when operator is selected', async () => {
       const onClose = jest.fn();
       render(<SpotlightSearch {...defaultProps} onClose={onClose} />);
-      const input = screen.getByPlaceholderText(/Search files/i);
 
       const tagOperator = screen.getByText('tag:').closest('button');
       if (tagOperator) {

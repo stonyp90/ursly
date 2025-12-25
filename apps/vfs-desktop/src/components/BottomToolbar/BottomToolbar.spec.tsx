@@ -34,12 +34,14 @@ describe('BottomToolbar', () => {
     const searchButton = screen.getByText('Search').closest('button');
     expect(searchButton).toBeInTheDocument();
 
-    fireEvent.click(searchButton!);
+    if (searchButton) {
+      fireEvent.click(searchButton);
+    }
     expect(onOpenSearch).toHaveBeenCalledTimes(1);
   });
 
   it('should not render Search button when onOpenSearch is not provided', () => {
-    const { onOpenSearch, ...propsWithoutSearch } = defaultProps;
+    const { onOpenSearch: _onOpenSearch, ...propsWithoutSearch } = defaultProps;
     render(<BottomToolbar {...propsWithoutSearch} />);
 
     expect(screen.queryByText('Search')).not.toBeInTheDocument();
@@ -54,7 +56,9 @@ describe('BottomToolbar', () => {
     const shortcutsButton = screen.getByText('Shortcuts').closest('button');
     expect(shortcutsButton).toBeInTheDocument();
 
-    fireEvent.click(shortcutsButton!);
+    if (shortcutsButton) {
+      fireEvent.click(shortcutsButton);
+    }
     expect(onOpenShortcuts).toHaveBeenCalledTimes(1);
   });
 
@@ -65,7 +69,9 @@ describe('BottomToolbar', () => {
     const themeButton = screen.getByText('Theme').closest('button');
     expect(themeButton).toBeInTheDocument();
 
-    fireEvent.click(themeButton!);
+    if (themeButton) {
+      fireEvent.click(themeButton);
+    }
     expect(onOpenSettings).toHaveBeenCalledTimes(1);
   });
 
