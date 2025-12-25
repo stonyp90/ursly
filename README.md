@@ -14,7 +14,6 @@
 
 [![License](https://img.shields.io/badge/License-AGPL_v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/agpl-3.0)
 [![GitHub Stars](https://img.shields.io/github/stars/stonyp90/Ursly?style=for-the-badge&logo=github)](https://github.com/stonyp90/Ursly/stargazers)
-[![CI](https://img.shields.io/github/actions/workflow/status/stonyp90/Ursly/ci.yml?branch=main&style=for-the-badge&logo=github&label=CI)](https://github.com/stonyp90/Ursly/actions/workflows/ci.yml)
 
 <!-- Tech Stack -->
 
