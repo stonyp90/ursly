@@ -220,7 +220,7 @@ export function SpotlightSearch({
   onNavigateToFile,
   onNavigateToPath,
   onSearchSubmit,
-  currentSourceId,
+  currentSourceId: _currentSourceId,
 }: SpotlightSearchProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -267,6 +267,51 @@ export function SpotlightSearch({
     return Array.from(tags);
   }, [files]);
 
+  // Parse query for operators
+  const parseQuery = useCallback((q: string) => {
+    let textSearch = q;
+    let tagFilter: string | undefined;
+    let typeFilter: string | undefined;
+    let extFilter: string | undefined;
+    let sizeFilter: string | undefined;
+
+    // Extract tag: operator
+    const tagMatch = q.match(/tag:(\S+)/i);
+    if (tagMatch) {
+      tagFilter = tagMatch[1].toLowerCase();
+      textSearch = textSearch.replace(tagMatch[0], '').trim();
+    }
+
+    // Extract type: operator
+    const typeMatch = q.match(/type:(\S+)/i);
+    if (typeMatch) {
+      typeFilter = typeMatch[1].toLowerCase();
+      textSearch = textSearch.replace(typeMatch[0], '').trim();
+    }
+
+    // Extract ext: operator
+    const extMatch = q.match(/ext:(\S+)/i);
+    if (extMatch) {
+      extFilter = extMatch[1].toLowerCase().replace(/^\./, '');
+      textSearch = textSearch.replace(extMatch[0], '').trim();
+    }
+
+    // Extract size: operator
+    const sizeMatch = q.match(/size:(\S+)/i);
+    if (sizeMatch) {
+      sizeFilter = sizeMatch[1].toLowerCase();
+      textSearch = textSearch.replace(sizeMatch[0], '').trim();
+    }
+
+    return {
+      textSearch: textSearch.toLowerCase().trim(),
+      tagFilter,
+      typeFilter,
+      extFilter,
+      sizeFilter,
+    };
+  }, []);
+
   // Build search results - simplified to tag, type, ext, size only
   const results = useMemo((): SearchResult[] => {
     const searchResults: SearchResult[] = [];
@@ -278,15 +323,63 @@ export function SpotlightSearch({
       return searchResults;
     }
 
-    // Search files and folders
+    // Parse query for operators
+    const { textSearch, tagFilter, typeFilter, extFilter } = parseQuery(query);
+
+    // Search files and folders with operator-aware filtering
     const matchingFiles = files
       .filter((f) => {
-        const nameMatch = f.name.toLowerCase().includes(lowerQuery);
-        const pathMatch = f.path.toLowerCase().includes(lowerQuery);
-        const tagMatch = (f.tags || []).some((t) =>
-          t.toLowerCase().includes(lowerQuery),
-        );
-        return nameMatch || pathMatch || tagMatch;
+        // Filter by tag operator
+        if (tagFilter) {
+          const fileTags = (f.tags || []).map((t) => t.toLowerCase());
+          if (!fileTags.some((t) => t.includes(tagFilter))) {
+            return false;
+          }
+        }
+
+        // Filter by type operator
+        if (typeFilter) {
+          const mimeType = f.mimeType?.toLowerCase() || '';
+          const isMatch =
+            (typeFilter === 'video' && mimeType.startsWith('video/')) ||
+            (typeFilter === 'image' && mimeType.startsWith('image/')) ||
+            (typeFilter === 'audio' && mimeType.startsWith('audio/')) ||
+            (typeFilter === 'document' &&
+              (mimeType.includes('pdf') ||
+                mimeType.includes('document') ||
+                mimeType.includes('text/'))) ||
+            (typeFilter === 'folder' &&
+              (mimeType === 'folder' || f.isDirectory)) ||
+            (typeFilter === 'archive' &&
+              (mimeType.includes('zip') ||
+                mimeType.includes('tar') ||
+                mimeType.includes('rar') ||
+                mimeType.includes('7z') ||
+                f.name.match(/\.(zip|tar|gz|rar|7z|bz2)$/i)));
+          if (!isMatch) return false;
+        }
+
+        // Filter by ext operator
+        if (extFilter) {
+          const fileExt = f.name.split('.').pop()?.toLowerCase();
+          if (fileExt !== extFilter) return false;
+        }
+
+        // Text search (name, path, tags) - only if there's text left after operators
+        if (textSearch) {
+          const nameMatch = f.name.toLowerCase().includes(textSearch);
+          const pathMatch = f.path.toLowerCase().includes(textSearch);
+          const tagMatch = (f.tags || []).some((t) =>
+            t.toLowerCase().includes(textSearch),
+          );
+          if (!nameMatch && !pathMatch && !tagMatch) {
+            return false;
+          }
+        }
+        // If only operators are used (no text search), file has already passed operator filters
+        // If no operators and no text, this shouldn't happen (empty query shows hints)
+
+        return true;
       })
       .slice(0, 8);
 
@@ -301,31 +394,51 @@ export function SpotlightSearch({
       });
     });
 
-    // Search tags
-    availableTags
-      .filter((t) => t.toLowerCase().includes(lowerQuery))
-      .slice(0, 3)
-      .forEach((tag) => {
-        searchResults.push({
-          type: 'tag',
-          id: `tag-${tag}`,
-          title: tag,
-          subtitle: 'Tag',
-          icon: 'tag',
+    // Search tags - only show if not filtering by specific tag
+    // Use textSearch for tag search, or the original query if no operators were parsed
+    if (!tagFilter && textSearch) {
+      availableTags
+        .filter((t) => t.toLowerCase().includes(textSearch))
+        .slice(0, 3)
+        .forEach((tag) => {
+          searchResults.push({
+            type: 'tag',
+            id: `tag-${tag}`,
+            title: tag,
+            subtitle: 'Tag',
+            icon: 'tag',
+          });
         });
-      });
+    } else if (!tagFilter && !typeFilter && !extFilter) {
+      // If no operators, search tags by the full query
+      availableTags
+        .filter((t) => t.toLowerCase().includes(lowerQuery))
+        .slice(0, 3)
+        .forEach((tag) => {
+          searchResults.push({
+            type: 'tag',
+            id: `tag-${tag}`,
+            title: tag,
+            subtitle: 'Tag',
+            icon: 'tag',
+          });
+        });
+    }
 
-    // Search operators (tag:, type:, ext:, size:)
-    OPERATOR_HINTS.filter(
-      (o) =>
-        o.title.toLowerCase().includes(lowerQuery) ||
-        o.keywords?.some((k) => k.includes(lowerQuery)),
-    ).forEach((op) => {
-      searchResults.push(op);
-    });
+    // Search operators (tag:, type:, ext:, size:) - only show if query doesn't already contain them
+    const hasOperator = tagFilter || typeFilter || extFilter;
+    if (!hasOperator) {
+      OPERATOR_HINTS.filter(
+        (o) =>
+          o.title.toLowerCase().includes(lowerQuery) ||
+          o.keywords?.some((k) => k.includes(lowerQuery)),
+      ).forEach((op) => {
+        searchResults.push(op);
+      });
+    }
 
     return searchResults.slice(0, 12);
-  }, [query, files, availableTags]);
+  }, [query, files, availableTags, parseQuery]);
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {

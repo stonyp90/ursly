@@ -215,20 +215,35 @@ const LiveChart = ({
           ))}
         </div>
       )}
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        className="chart-svg"
+      >
         <defs>
-          <linearGradient id={`grad-${color}`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient
+            id={`grad-${color.replace(/[^a-zA-Z0-9]/g, '-')}`}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
             <stop offset="0%" stopColor={color} stopOpacity="0.4" />
             <stop offset="100%" stopColor={color} stopOpacity="0.05" />
           </linearGradient>
         </defs>
-        <polygon points={area} fill={`url(#grad-${color})`} />
+        <polygon
+          points={area}
+          fill={`url(#grad-${color.replace(/[^a-zA-Z0-9]/g, '-')})`}
+          className="chart-area"
+        />
         <polyline
           points={pts}
           fill="none"
           stroke={color}
           strokeWidth="2"
           strokeLinecap="round"
+          className="chart-line"
         />
       </svg>
       <div className="chart-value" style={{ color }}>
@@ -495,6 +510,18 @@ export function MetricsPage() {
   const [thresholds, setThresholds] = useState<ThresholdConfig>(loadThresholds);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const alertedRef = useRef<Set<string>>(new Set());
+
+  // Show alert thresholds dialog on first login
+  useEffect(() => {
+    const hasSeenThresholds = localStorage.getItem('ursly-thresholds-seen');
+    if (!hasSeenThresholds) {
+      // Small delay to ensure UI is ready
+      setTimeout(() => {
+        setSettingsOpen(true);
+        localStorage.setItem('ursly-thresholds-seen', 'true');
+      }, 500);
+    }
+  }, []);
 
   const [history, setHistory] = useState<{
     cpu: number[];

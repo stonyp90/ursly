@@ -152,6 +152,43 @@
 /* =========================================
    STATUS SECTION
    ========================================= */
+.header-status-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  -webkit-app-region: no-drag;
+}
+
+.header-system-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.system-info-item {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.system-info-cpu {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.system-info-divider {
+  color: var(--text-muted);
+  opacity: 0.5;
+  font-weight: 300;
+}
+
 .header-status {
   display: flex;
   align-items: center;
@@ -160,7 +197,6 @@
   background: rgba(52, 199, 89, 0.1);
   border: 1px solid rgba(52, 199, 89, 0.2);
   border-radius: 100px;
-  -webkit-app-region: no-drag;
 }
 
 .status-dot {
@@ -205,6 +241,10 @@
   }
 
   .status-text {
+    display: none;
+  }
+
+  .header-system-info {
     display: none;
   }
 

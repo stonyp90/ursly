@@ -4,14 +4,15 @@
 
 # Ursly
 
-### One App. All Your Files.
+### The File Manager Built for Creatives
 
-**The modern file manager for creatives.**<br>
-**Connect all your storage. Search with AI. Stay in flow.**
+**One app. All your clouds. Zero friction.**
+
+Connect AWS, Azure, Google Cloud, your NAS, and 15+ more storage services. Search with AI. Stay in flow.
 
 <br />
 
-<img src="website/screenshots/vfs-main-dark.png" alt="Ursly - All your files in one place" width="800" />
+<img src="website/screenshots/vfs-main-dark.png" alt="Ursly VFS file browser on macOS 15 with Apple M4 Pro showing unified file management interface with sidebar navigation, favorites, storage locations, tags, real-time system metrics, and keyboard-first controls" width="800" />
 
 <br />
 <br />
@@ -28,32 +29,35 @@
 
 ---
 
-## Why Ursly?
+## 🚀 Why Ursly?
 
-Your files are scattered everywhere — project files on your NAS, archives in the cloud, renders on local drives. Different apps for each. Wasted time hunting for files.
+Your files are scattered across AWS S3, Azure Blob, Google Cloud, your NAS, local drives, and Dropbox. Each requires a different app. You waste hours hunting for files.
 
-**Ursly brings it all together.** One beautiful app that connects to all your storage. See everything in one place. Move files anywhere with drag & drop. Find anything instantly with AI.
+**Ursly changes everything.** One beautiful, native app that unifies all your storage. See everything in one place. Move files anywhere with drag & drop. Find anything instantly with AI-powered search that runs 100% locally.
 
 ---
 
-## ✨ Features
+## ✨ What Makes Ursly Different
 
-|     | Feature                 | Description                                                  |
-| --- | ----------------------- | ------------------------------------------------------------ |
-| 🔗  | **15+ Connections**     | AWS, Azure, Google Cloud, Dropbox, NAS, SFTP, and more       |
-| 🔍  | **AI-Powered Search**   | Find files by content, not just names. Runs 100% locally.    |
-| 🎬  | **Video Transcription** | Auto-transcribe videos in 99 languages. Search spoken words. |
-| 🏷️  | **Smart Tagging**       | Auto-tag photos and images with AI                           |
-| ⌨️  | **Keyboard First**      | Every action has a shortcut. Stay in your flow.              |
-| 📊  | **System Monitor**      | GPU, CPU, RAM at a glance — perfect for renders              |
-| 🔒  | **100% Private**        | AI runs locally. Your files never leave your machine.        |
-| 🚀  | **Blazing Fast**        | Native app, not a slow web wrapper                           |
+| Feature                    | What You Get                                                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 🔗 **Multi-Cloud Unified** | Connect AWS S3, Azure Blob, Google Cloud Storage, Dropbox, Google Drive, OneDrive, NAS, SFTP, WebDAV, and more — all in one view                 |
+| 🔍 **Spotlight Search**    | Press `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux) for instant search across files, folders, tags, and operators (`tag:`, `type:`, `ext:`, `size:`) |
+| 🤖 **AI-Powered Search**   | Find files by content, not just names. Runs 100% locally with Ollama — your data never leaves your machine                                       |
+| 🎬 **Video Transcription** | Auto-transcribe videos in 99 languages with Whisper. Search spoken words across your entire library                                              |
+| 🏷️ **Smart Tagging**       | AI auto-tags photos and images. Organize with color-coded tags that sync across all storage                                                      |
+| ⌨️ **Keyboard-First**      | Every action has a shortcut. Built for power users who value speed                                                                               |
+| 📊 **System Monitor**      | Real-time GPU, CPU, RAM metrics. Perfect for monitoring renders and heavy workloads                                                              |
+| 🎯 **Onboarding Tour**     | Interactive tour guides you through Search, Metrics, Shortcuts, Favorites, and Asset Management                                                  |
+| 🔄 **Auto-Updates**        | Seamless updates with progress tracking. Always stay on the latest version                                                                       |
+| 🔒 **100% Private**        | All AI processing runs locally. Zero cloud dependencies. Your files never leave your machine                                                     |
+| 🚀 **Blazing Fast**        | Built with Tauri 2.0 + Rust. Native performance, not a slow web wrapper                                                                          |
 
 ---
 
 ## 📥 Download
 
-Free for personal use. No account required.
+**Free for personal use. No account required. No credit card.**
 
 | Platform    | Download                                                                                            | Requirements  |
 | ----------- | --------------------------------------------------------------------------------------------------- | ------------- |
@@ -67,87 +71,100 @@ Free for personal use. No account required.
 
 ## 🔌 Supported Storage
 
-<table>
-<tr>
-<td width="33%">
+### ☁️ Cloud Storage
 
-**☁️ Cloud**
+- **AWS S3** (all regions)
+- **Google Cloud Storage**
+- **Azure Blob Storage**
+- **Dropbox**
+- **Google Drive**
+- **OneDrive**
 
-- AWS S3
-- Google Cloud Storage
-- Azure Blob
-- Dropbox
-- Google Drive
-- OneDrive
+### 🏠 Network & Local
 
-</td>
-<td width="33%">
+- **NAS** (Synology, QNAP, and more)
+- **SMB/CIFS** Shares
+- **NFS** Mounts
+- **SFTP** Servers
+- **WebDAV**
+- **Local Drives**
 
-**🏠 Network & Local**
+### 🏢 Enterprise
 
-- NAS (Synology, QNAP)
-- SMB/CIFS Shares
-- NFS Mounts
-- SFTP Servers
-- WebDAV
-- Local Drives
-
-</td>
-<td width="33%">
-
-**🏢 Enterprise**
-
-- AWS FSx for ONTAP
-- Backblaze B2
-- Wasabi
-- MinIO
-- DigitalOcean Spaces
-
-</td>
-</tr>
-</table>
+- **AWS FSx for ONTAP**
+- **Backblaze B2**
+- **Wasabi**
+- **MinIO**
+- **DigitalOcean Spaces**
 
 ---
 
-## 🖼️ Screenshots
+## 🖼️ See It in Action
+
+### Spotlight Search
+
+Press `Cmd+K` to instantly search across all your storage. Use powerful operators like `tag:important`, `type:video`, `ext:mp4`, or `size:>1gb`.
 
 <p align="center">
-  <img src="website/screenshots/vfs-performance-metrics.png" alt="System Monitor" width="600" />
+  <img src="website/screenshots/vfs-spotlight-search.png" alt="Spotlight Search" width="700" />
 </p>
-<p align="center"><em>System Monitor — Keep an eye on GPU, CPU, RAM while you work</em></p>
+
+### System Performance Monitor
+
+Real-time performance monitoring with detailed CPU core activity (14 cores), memory usage (26.2/48 GB), GPU metrics (Apple M4 Pro), VRAM, temperature, disk I/O, network stats, and system load averages. Perfect for keeping an eye on renders and heavy workloads.
 
 <p align="center">
-  <img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts" width="600" />
+  <img src="website/screenshots/vfs-performance-metrics.png" alt="Performance Monitor dashboard showing macOS 15 with 14 Cores Apple M4 Pro, CPU usage (16%), Memory (26.2/48 GB), GPU (72% Apple M4 Pro), VRAM (72%), Temperature (68°C), Load (28%), Disk I/O, Network (513 B/s), and System Load Average (3.86 / 4.21 / 4.47) with real-time graphs and per-core CPU visualization" width="700" />
 </p>
-<p align="center"><em>Keyboard First — Every action has a shortcut</em></p>
+
+### Keyboard-First Experience
+
+Every action has a shortcut. Stay in your flow without touching the mouse.
 
 <p align="center">
-  <img src="website/screenshots/vfs-spotlight-search.png" alt="Spotlight Search" width="600" />
+  <img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts" width="700" />
 </p>
-<p align="center"><em>Spotlight Search — Press Cmd+K to instantly search files, folders, tags, and AI-powered options</em></p>
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Built With Modern Tech
 
-| Layer            | Technology         |
-| ---------------- | ------------------ |
-| **Desktop App**  | Tauri 2.0 + Rust   |
-| **Frontend**     | React + TypeScript |
-| **Local AI**     | Ollama + Whisper   |
-| **Build System** | Nx Monorepo        |
+| Layer            | Technology                   |
+| ---------------- | ---------------------------- |
+| **Desktop App**  | Tauri 2.0 + Rust             |
+| **Frontend**     | React 18 + TypeScript        |
+| **Local AI**     | Ollama + Whisper             |
+| **Build System** | Nx Monorepo                  |
+| **Styling**      | Tailwind CSS + CSS Variables |
+
+---
+
+## 🚦 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/stonyp90/Ursly.git
+cd Ursly
+
+# Install dependencies
+npm install
+
+# Run the desktop app
+cd apps/vfs-desktop
+npm run tauri:dev
+```
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! See our [documentation](./agents.md) for architecture details.
+We welcome contributions! Check out our [architecture documentation](./agents.md) to get started.
 
-```bash
-git clone https://github.com/stonyp90/Ursly.git
-cd ursly && npm install
-cd apps/vfs-desktop && npm run tauri dev
-```
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
@@ -158,6 +175,8 @@ cd apps/vfs-desktop && npm run tauri dev
 - [ ] VS Code extension
 - [ ] Real-time collaboration
 - [ ] Team workspaces
+- [ ] Advanced search operators
+- [ ] Custom storage providers
 
 ---
 

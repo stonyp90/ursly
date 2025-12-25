@@ -11,7 +11,9 @@ const isTauriAvailable = (): boolean => {
 };
 
 // Lazy load updater plugin to avoid crashes in dev mode
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let updaterModule: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let processModule: any = null;
 let modulesLoaded = false;
 
@@ -140,7 +142,7 @@ export function AutoUpdater() {
       );
 
       unlistenPromise = updaterModule.onUpdaterEvent(
-        ({ event, payload }: { event: string; payload: any }) => {
+        ({ event, payload }: { event: string; payload: unknown }) => {
           switch (event) {
             case 'UPDATE_AVAILABLE':
               setUpdateAvailable(payload as UpdateManifest);

@@ -9,6 +9,7 @@ import { ToastProvider } from './components/Toast';
 import { ErrorDialogProvider } from './components/ErrorDialog';
 import { BottomToolbar } from './components/BottomToolbar';
 import { AutoUpdater } from './components/AutoUpdater';
+import { OnboardingTour } from './components/OnboardingTour';
 
 export type AppTab = 'files' | 'metrics';
 
@@ -102,7 +103,13 @@ function App() {
             <BottomToolbar
               onOpenSettings={() => setIsThemeCustomizerOpen(true)}
               onOpenShortcuts={() => setIsShortcutsOpen(true)}
-              onOpenSearch={() => setIsSearchOpen(true)}
+              onOpenSearch={() => {
+                // Switch to Files tab if on Metrics tab
+                if (activeTab !== 'files') {
+                  setActiveTab('files');
+                }
+                setIsSearchOpen(true);
+              }}
               isShortcutsOpen={isShortcutsOpen}
               onCloseShortcuts={() => setIsShortcutsOpen(false)}
             />
@@ -113,6 +120,8 @@ function App() {
             />
 
             <AutoUpdater />
+
+            <OnboardingTour autoStart={true} />
           </div>
         </ErrorDialogProvider>
       </ToastProvider>

@@ -8,6 +8,7 @@ import {
   themeColors,
   ThemeColorKey,
 } from '../../contexts/ThemeContext';
+import { startOnboardingTour } from '../OnboardingTour';
 import './ThemeCustomizer.css';
 
 interface ThemeCustomizerProps {
@@ -34,7 +35,7 @@ export function ThemeCustomizer({ isOpen, onClose }: ThemeCustomizerProps) {
   // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -156,6 +157,33 @@ export function ThemeCustomizer({ isOpen, onClose }: ThemeCustomizerProps) {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Onboarding Tour */}
+          <div className="customizer-section">
+            <h3>Onboarding</h3>
+            <button
+              className="tour-btn"
+              onClick={() => {
+                startOnboardingTour();
+                onClose();
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span>Start Feature Tour</span>
+            </button>
+            <p className="tour-description">
+              Take a quick tour to learn about Ursly VFS features and keyboard
+              shortcuts.
+            </p>
           </div>
         </div>
       </div>

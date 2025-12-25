@@ -67,8 +67,13 @@ export function BottomToolbar({
           <>
             <button
               className="action-pill search"
-              onClick={onOpenSearch}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onOpenSearch();
+              }}
               title="Search Files (Cmd+K / Ctrl+K)"
+              type="button"
             >
               <div className="pill-glow" />
               <svg

@@ -1,0 +1,161 @@
+/**
+ * OnboardingTour Styles
+ * Custom styles for react-joyride tour overlay
+ */
+
+/* Override joyride styles to match theme */
+.react-joyride__tooltip {
+  background: var(--surface, #3a3a3c) !important;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1)) !important;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset !important;
+}
+
+.react-joyride__tooltip h3 {
+  color: var(--text-primary, #f5f5f7) !important;
+  margin: 0 0 8px 0 !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+.react-joyride__tooltip p {
+  color: var(--text-secondary, #a1a1a6) !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+}
+
+.react-joyride__tooltip code {
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.05)) !important;
+  color: var(--primary, #0a84ff) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace !important;
+  font-size: 12px !important;
+}
+
+.react-joyride__tooltip kbd {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  padding: 0 4px !important;
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.05)) !important;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1)) !important;
+  border-radius: 4px !important;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary, #a1a1a6) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+  margin: 0 2px !important;
+}
+
+.react-joyride__button--primary {
+  background: var(--primary, #0a84ff) !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.react-joyride__button--primary:hover {
+  background: rgba(var(--primary-rgb, 10, 132, 255), 0.9) !important;
+  transform: translateY(-1px) !important;
+}
+
+.react-joyride__button--back {
+  color: var(--text-secondary, #a1a1a6) !important;
+  border-color: var(--border, rgba(255, 255, 255, 0.1)) !important;
+  transition: all 0.15s ease !important;
+}
+
+.react-joyride__button--back:hover {
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.05)) !important;
+  border-color: var(--border-hover, rgba(255, 255, 255, 0.18)) !important;
+}
+
+.react-joyride__button--skip {
+  color: var(--text-muted, #8e8e93) !important;
+  transition: all 0.15s ease !important;
+}
+
+.react-joyride__button--skip:hover {
+  color: var(--text-secondary, #a1a1a6) !important;
+}
+
+.react-joyride__button--close {
+  color: var(--text-muted, #8e8e93) !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+}
+
+.react-joyride__button--close:hover {
+  color: var(--text-primary, #f5f5f7) !important;
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.05)) !important;
+}
+
+.react-joyride__beacon {
+  background: var(--primary, #0a84ff) !important;
+  border-color: var(--primary, #0a84ff) !important;
+}
+
+.react-joyride__beacon__inner {
+  background: rgba(var(--primary-rgb, 10, 132, 255), 0.3) !important;
+}
+
+/* Light theme overrides */
+[data-theme='light'] .react-joyride__tooltip {
+  background: var(--surface, #ffffff) !important;
+  border-color: var(--border, rgba(0, 0, 0, 0.08)) !important;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05) inset !important;
+}
+
+[data-theme='light'] .react-joyride__tooltip h3 {
+  color: var(--text-primary, #1d1d1f) !important;
+}
+
+[data-theme='light'] .react-joyride__tooltip p {
+  color: var(--text-secondary, #6e6e73) !important;
+}
+
+[data-theme='light'] .react-joyride__tooltip code {
+  background: var(--surface-elevated, rgba(0, 0, 0, 0.03)) !important;
+  color: var(--primary, #0a84ff) !important;
+}
+
+[data-theme='light'] .react-joyride__tooltip kbd {
+  background: var(--surface, #ffffff) !important;
+  border-color: var(--border, rgba(0, 0, 0, 0.08)) !important;
+  color: var(--text-secondary, #6e6e73) !important;
+}
+
+[data-theme='light'] .react-joyride__button--back {
+  border-color: var(--border, rgba(0, 0, 0, 0.08)) !important;
+}
+
+[data-theme='light'] .react-joyride__button--back:hover {
+  background: var(--surface-elevated, rgba(0, 0, 0, 0.03)) !important;
+}
+
+[data-theme='light'] .react-joyride__button--close {
+  color: var(--text-muted, #8e8e93) !important;
+}
+
+[data-theme='light'] .react-joyride__button--close:hover {
+  color: var(--text-primary, #1d1d1f) !important;
+  background: var(--surface-elevated, rgba(0, 0, 0, 0.03)) !important;
+}

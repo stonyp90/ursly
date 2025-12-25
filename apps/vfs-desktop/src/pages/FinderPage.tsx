@@ -62,7 +62,7 @@ interface FinderPageProps {
 
 export function FinderPage({
   onOpenMetrics,
-  onOpenSearch,
+  onOpenSearch: _onOpenSearch,
   isSearchOpen: externalSearchOpen,
   onCloseSearch: externalCloseSearch,
 }: FinderPageProps) {
@@ -336,7 +336,13 @@ export function FinderPage({
       // Spotlight Search - Cmd/Ctrl+K
       if (shortcuts.matchesShortcut(e, 'spotlight')) {
         e.preventDefault();
-        setSpotlightOpen(true);
+        if (_onOpenSearch) {
+          // Use external handler if provided
+          _onOpenSearch();
+        } else {
+          // Use internal state if no external control
+          setInternalSpotlightOpen(true);
+        }
       }
     };
 
@@ -813,18 +819,52 @@ export function FinderPage({
 
   // Open file with specific application
   const handleOpenFileWith = async (file: FileMetadata, appPath: string) => {
-    if (!selectedSource) return;
+    if (!selectedSource) {
+      DialogService.error('No storage source selected', 'Open Error');
+      return;
+    }
+
+    if (!appPath || appPath.trim() === '') {
+      DialogService.error('No application selected', 'Open Error');
+      return;
+    }
 
     try {
       const { invoke } = await import('@tauri-apps/api/core');
+
+      // On macOS, normalize .app bundle paths
+      // The dialog might return the executable path inside the bundle, but we need the .app bundle path
+      let normalizedAppPath = appPath.trim();
+
+      if (navigator.platform.includes('Mac')) {
+        // If path contains .app/Contents/MacOS, extract just the .app bundle path
+        const appBundleMatch = normalizedAppPath.match(/^(.+\.app)/);
+        if (appBundleMatch) {
+          normalizedAppPath = appBundleMatch[1];
+        }
+        // Ensure it ends with .app
+        if (!normalizedAppPath.endsWith('.app')) {
+          // Try to find the .app bundle in the path
+          const parts = normalizedAppPath.split('/');
+          const appIndex = parts.findIndex((part) => part.endsWith('.app'));
+          if (appIndex !== -1) {
+            normalizedAppPath = parts.slice(0, appIndex + 1).join('/');
+          }
+        }
+      }
+
       await invoke('vfs_open_file_with', {
         sourceId: selectedSource.id,
         filePath: file.path,
-        appPath,
+        appPath: normalizedAppPath,
       });
     } catch (err) {
       console.error('Failed to open file with app:', err);
-      DialogService.error(`Failed to open file: ${err}`, 'Open Error');
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      DialogService.error(
+        `Failed to open file with application: ${errorMessage}`,
+        'Open Error',
+      );
     }
   };
 
@@ -2404,7 +2444,7 @@ export function FinderPage({
         {/* Sidebar */}
         <aside className="finder-sidebar">
           <div
-            className={`sidebar-section ${dropTarget === 'favorites' ? 'drop-target' : ''}`}
+            className={`sidebar-section favorites-section ${dropTarget === 'favorites' ? 'drop-target' : ''}`}
             onDragOver={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2717,7 +2757,8 @@ export function FinderPage({
             </button>
           </div>
 
-          <div className="sidebar-section">
+          {/* Tags Section - Using same list design as Storage */}
+          <div className="sidebar-section storage-section">
             <div className="section-header">
               <IconTag size={14} glow={false} />
               <span>Tags</span>
@@ -2726,43 +2767,53 @@ export function FinderPage({
               )}
             </div>
             {filterByTag && (
-              <button
-                className="sidebar-item active filter-active"
-                onClick={() => setFilterByTag(null)}
-              >
-                <span
-                  className="tag-dot"
-                  style={{
-                    background:
-                      allTags.find((t) => t.name === filterByTag)?.color ||
-                      'var(--vfs-primary)',
-                  }}
-                />
-                <span>{filterByTag}</span>
-                <span className="clear-filter">✕</span>
-              </button>
+              <div className="storage-group-items">
+                <button
+                  className="sidebar-item storage-item active filter-active"
+                  onClick={() => setFilterByTag(null)}
+                >
+                  <span className="item-icon">
+                    <span
+                      className="tag-dot"
+                      style={{
+                        background:
+                          allTags.find((t) => t.name === filterByTag)?.color ||
+                          'var(--vfs-primary)',
+                      }}
+                    />
+                  </span>
+                  <span className="item-name">{filterByTag}</span>
+                  <span className="clear-filter">✕</span>
+                </button>
+              </div>
             )}
             {allTags.length === 0 ? (
               <div className="sidebar-empty">
                 <span className="empty-text">No tags yet</span>
               </div>
             ) : (
-              allTags
-                .filter((t) => t.name !== filterByTag)
-                .slice(0, 8)
-                .map((tag) => (
-                  <button
-                    key={tag.name}
-                    className={`sidebar-item ${filterByTag === tag.name ? 'active' : ''}`}
-                    onClick={() => setFilterByTag(tag.name)}
-                  >
-                    <span
-                      className="tag-dot"
-                      style={{ background: tag.color || 'var(--vfs-primary)' }}
-                    />
-                    <span>{tag.name}</span>
-                  </button>
-                ))
+              <div className="storage-group-items">
+                {allTags
+                  .filter((t) => t.name !== filterByTag)
+                  .slice(0, 8)
+                  .map((tag) => (
+                    <button
+                      key={tag.name}
+                      className={`sidebar-item storage-item ${filterByTag === tag.name ? 'active' : ''}`}
+                      onClick={() => setFilterByTag(tag.name)}
+                    >
+                      <span className="item-icon">
+                        <span
+                          className="tag-dot"
+                          style={{
+                            background: tag.color || 'var(--vfs-primary)',
+                          }}
+                        />
+                      </span>
+                      <span className="item-name">{tag.name}</span>
+                    </button>
+                  ))}
+              </div>
             )}
           </div>
 
@@ -2772,7 +2823,7 @@ export function FinderPage({
 
         {/* Main Content */}
         <main
-          className="finder-content"
+          className="finder-content file-browser"
           onContextMenu={(e) => handleContextMenu(e)}
           onDragOver={(e) => handleDragOver(e)}
           onDragLeave={handleDragLeave}
@@ -3379,10 +3430,15 @@ export function FinderPage({
                           className="context-item"
                           onClick={async (e) => {
                             e.stopPropagation();
+                            // Don't close menu immediately - wait for user selection
                             if (contextMenu.targetFile) {
                               try {
                                 const { open } =
                                   await import('@tauri-apps/plugin-dialog');
+
+                                // Close the context menu before opening dialog
+                                closeContextMenu();
+
                                 // Open file picker to choose an application
                                 const selectedApp = await open({
                                   title: 'Choose Application',
@@ -3412,13 +3468,29 @@ export function FinderPage({
                                       : '/usr/bin',
                                 });
 
-                                if (
-                                  selectedApp &&
-                                  typeof selectedApp === 'string'
+                                // Handle different return types from dialog
+                                let appPath: string | null = null;
+
+                                if (selectedApp === null) {
+                                  // User cancelled
+                                  return;
+                                } else if (typeof selectedApp === 'string') {
+                                  appPath = selectedApp;
+                                } else if (
+                                  Array.isArray(selectedApp) &&
+                                  selectedApp.length > 0
                                 ) {
-                                  handleOpenFileWith(
+                                  // Dialog might return an array
+                                  appPath =
+                                    typeof selectedApp[0] === 'string'
+                                      ? selectedApp[0]
+                                      : null;
+                                }
+
+                                if (appPath) {
+                                  await handleOpenFileWith(
                                     contextMenu.targetFile,
-                                    selectedApp,
+                                    appPath,
                                   );
                                 }
                               } catch (err) {
@@ -3426,9 +3498,14 @@ export function FinderPage({
                                   'Failed to open app picker:',
                                   err,
                                 );
+                                DialogService.error(
+                                  `Failed to open application picker: ${err}`,
+                                  'Open With Error',
+                                );
                               }
+                            } else {
+                              closeContextMenu();
                             }
-                            closeContextMenu();
                           }}
                         >
                           Other...
@@ -3436,6 +3513,68 @@ export function FinderPage({
                       </div>
                     )}
                   </div>
+                )}
+
+              {/* Asset Details - Get Info */}
+              {contextMenu.targetFile && (
+                <>
+                  <div className="context-divider" />
+                  <button
+                    className="context-item"
+                    onClick={() => {
+                      if (contextMenu.targetFile) {
+                        setInfoModal({
+                          visible: true,
+                          file: contextMenu.targetFile,
+                        });
+                      }
+                      closeContextMenu();
+                    }}
+                  >
+                    <svg
+                      className="context-icon"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                    >
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                      <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                    </svg>
+                    Asset Details
+                    <span className="context-shortcut">⌘I</span>
+                  </button>
+                </>
+              )}
+
+              {/* Move to Storage Class - Only for folders */}
+              {contextMenu.targetFile &&
+                (contextMenu.targetFile.mimeType === 'folder' ||
+                  contextMenu.targetFile.path.endsWith('/') ||
+                  contextMenu.targetFile.isDirectory) && (
+                  <>
+                    <div className="context-divider" />
+                    <button
+                      className="context-item"
+                      onClick={() => {
+                        toast.showToast({
+                          type: 'info',
+                          message:
+                            'Move to Storage Class: This feature is under development and will be available soon.',
+                          duration: 4000,
+                        });
+                        closeContextMenu();
+                      }}
+                    >
+                      <svg
+                        className="context-icon"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                      >
+                        <path d="M.5 3l.04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9.81a2 2 0 0 0 1.991-1.819l.637-7a1.99 1.99 0 0 0-.342-1.311L12.5 3H.5zm.217 1h11.566l-.166 2.894a.5.5 0 0 1-.421.45l-5.5.894a.5.5 0 0 1-.578-.45L1.717 4zM14 2H2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zM2 1a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2H2z" />
+                        <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-1z" />
+                      </svg>
+                      Move to Storage Class
+                    </button>
+                  </>
                 )}
 
               <div className="context-divider" />
@@ -3565,53 +3704,30 @@ export function FinderPage({
             </>
           )}
 
-          <div className="context-divider" />
-
-          {/* New Folder - only on empty space or when right-clicking a folder */}
-          {(!contextMenu.targetFile ||
-            contextMenu.targetFile.mimeType === 'folder' ||
-            contextMenu.targetFile.path.endsWith('/')) && (
-            <button
-              className="context-item"
-              onClick={() => {
-                // If right-clicked on a folder, create inside it; otherwise use current path
-                const targetPath = contextMenu.targetFile?.path;
-                handleNewFolder(targetPath);
-                closeContextMenu();
-              }}
-            >
-              <svg
-                className="context-icon"
-                viewBox="0 0 16 16"
-                fill="currentColor"
+          {/* New Folder - only on empty space, not when right-clicking on a folder */}
+          {!contextMenu.targetFile && (
+            <>
+              <div className="context-divider" />
+              <button
+                className="context-item"
+                onClick={() => {
+                  // Create folder in current directory
+                  handleNewFolder();
+                  closeContextMenu();
+                }}
               >
-                <path d="m.5 3 .04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2zm5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672z" />
-                <path d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z" />
-              </svg>
-              New Folder
-            </button>
-          )}
-
-          {contextMenu.targetFile && (
-            <button
-              className="context-item"
-              onClick={() => {
-                if (contextMenu.targetFile) {
-                  setInfoModal({ visible: true, file: contextMenu.targetFile });
-                }
-                closeContextMenu();
-              }}
-            >
-              <svg
-                className="context-icon"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
-              </svg>
-              Asset Details
-            </button>
+                <svg
+                  className="context-icon"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="m.5 3 .04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2zm5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672z" />
+                  <path d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z" />
+                </svg>
+                New Folder
+                <span className="context-shortcut">⌘⇧N</span>
+              </button>
+            </>
           )}
 
           {/* Tier actions - only for cloud/remote storage with cold/archive files */}
@@ -3978,7 +4094,7 @@ export function FinderPage({
             // Open info modal
             setInfoModal({ visible: true, file });
           }
-          setSpotlightOpen(false);
+          handleCloseSpotlight();
         }}
         onNavigateToPath={(sourceId, path) => {
           const source = sources.find((s) => s.id === sourceId);
@@ -3986,11 +4102,11 @@ export function FinderPage({
             selectSource(source);
             navigateTo(path);
           }
-          setSpotlightOpen(false);
+          handleCloseSpotlight();
         }}
         onSearchSubmit={(query) => {
           setSearchQuery(query);
-          setSpotlightOpen(false);
+          handleCloseSpotlight();
         }}
       />
 

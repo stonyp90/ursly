@@ -297,7 +297,7 @@ ul {
 }
 
 .nav-links .btn-nav-icon + .btn-nav-icon {
-  margin-left: -16px;
+  margin-left: -28px;
 }
 
 .nav-links a {
@@ -3247,7 +3247,7 @@ ul {
 
   /* Social icons closer on mobile too */
   .nav-links .btn-nav-icon + .btn-nav-icon {
-    margin-left: -12px;
+    margin-left: -20px;
   }
 
   .btn-nav-icon {
