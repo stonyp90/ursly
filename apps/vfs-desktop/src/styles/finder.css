@@ -1799,19 +1799,12 @@
 /* Hover - keep text style unchanged, use native title for tooltip */
 /* Removed: dark background effect on hover that made text hard to read */
 
-/* Selected file name - accent highlight pill with full name */
+/* Selected file name - macOS-style accent highlight pill */
 .file-item.selected .file-name {
-  -webkit-line-clamp: unset;
-  display: block;
-  max-height: none;
   background: var(--finder-accent);
   color: #fff;
   font-weight: 500;
-  border-radius: 4px;
-  padding: 4px 6px;
   box-shadow: 0 2px 8px rgba(var(--primary-rgb, 10, 132, 255), 0.3);
-  position: relative;
-  z-index: 5;
 }
 
 /* =========================================

@@ -756,13 +756,21 @@
   background: var(--vfs-bg-primary);
 }
 
+/* Rings section - softer appearance in light mode */
+[data-theme='light'] .rings-section {
+  background: #ffffff;
+  border-color: var(--vfs-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
 [data-theme='light'] .ring-container {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #f8f9fa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 [data-theme='light'] .ring-bg {
-  stroke: var(--vfs-border);
-  opacity: 0.3;
+  stroke: #dee2e6;
+  opacity: 1;
 }
 
 [data-theme='light'] .ring-value {
@@ -777,50 +785,102 @@
   box-shadow: none;
 }
 
+/* Metric cards - white cards with subtle borders */
 [data-theme='light'] .metric-card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  border-color: #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 [data-theme='light'] .metric-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-[data-theme='light'] .chart-container {
-  background: var(--vfs-bg-primary);
-}
-
-[data-theme='light'] .chart-value {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-[data-theme='light'] .cores-grid {
-  background: var(--vfs-bg-primary);
-}
-
-[data-theme='light'] .core-bar > div:first-child {
-  background: var(--vfs-bg-tertiary);
-}
-
-[data-theme='light'] .gpu-stat {
-  background: var(--vfs-bg-primary);
-}
-
-[data-theme='light'] .swap-info {
-  background: var(--vfs-bg-primary);
-}
-
-[data-theme='light'] .io-stat {
-  background: var(--vfs-bg-primary);
-}
-
-[data-theme='light'] .modal-overlay {
-  background: rgba(255, 255, 255, 0.8);
+  border-color: #dee2e6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 [data-theme='light'] .card-header {
-  background: var(--vfs-bg-primary);
+  background: #f8f9fa;
+  border-color: #e9ecef;
+}
+
+[data-theme='light'] .card-body {
+  background: #ffffff;
 }
 
 [data-theme='light'] .card-icon {
-  background: var(--vfs-bg-tertiary);
+  background: #ffffff;
+  border-color: #e9ecef;
+}
+
+/* Charts - light gray background instead of dark */
+[data-theme='light'] .chart-container {
+  background: #f1f3f5;
+  border-color: #e9ecef;
+}
+
+[data-theme='light'] .chart-value {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--vfs-text-primary);
+}
+
+[data-theme='light'] .grid-line {
+  background: #dee2e6;
+}
+
+/* CPU cores - light background */
+[data-theme='light'] .cores-grid {
+  background: #f8f9fa;
+  border-color: #e9ecef;
+}
+
+[data-theme='light'] .core-bar > div:first-child {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+/* GPU stats - clean light cards */
+[data-theme='light'] .gpu-stat {
+  background: #f8f9fa;
+  border-color: #e9ecef;
+}
+
+/* Swap info - consistent styling */
+[data-theme='light'] .swap-info {
+  background: #f8f9fa;
+  border-color: #e9ecef;
+}
+
+/* I/O stats - light cards */
+[data-theme='light'] .io-stat {
+  background: #f8f9fa;
+}
+
+[data-theme='light'] .io-icon {
+  background: #ffffff;
+  border-color: #e9ecef;
+}
+
+/* Modal - frosted glass on light */
+[data-theme='light'] .modal-overlay {
+  background: rgba(248, 249, 250, 0.85);
+}
+
+[data-theme='light'] .modal-box {
+  background: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Settings button */
+[data-theme='light'] .settings-btn {
+  background: #ffffff;
+  border-color: #e9ecef;
+}
+
+[data-theme='light'] .settings-btn:hover {
+  background: #f8f9fa;
+}
+
+/* Threshold slider */
+[data-theme='light'] .threshold-row input[type='range'] {
+  background: #e9ecef;
+  border-color: #dee2e6;
 }
