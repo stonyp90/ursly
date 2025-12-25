@@ -28,9 +28,9 @@ Browse files across all connected storage sources with a native desktop experien
 
 ---
 
-## AI-Powered Search
+## Keyboard-First Experience
 
-Search powered by local AI models. No cloud API costs, no data leaving your network. Leverages Ollama for semantic search and Whisper for audio/video transcription.
+Full keyboard navigation for power users. Every action has a shortcut. Navigate, select, copy, paste, rename — all without touching your mouse. Fully customizable to match your workflow.
 
 <p align="center">
   <img src="website/screenshots/vfs-shortcuts.png" alt="Ursly VFS Keyboard Shortcuts" width="600" />
@@ -62,16 +62,16 @@ No vendor lock-in. No per-token API costs. Your media, your infrastructure.
 
 ## Features
 
-| Feature              | Description                                                        |
-| -------------------- | ------------------------------------------------------------------ |
-| **Multi-Cloud VFS**  | Connect S3, GCS, Azure Blob, SMB, NFS, SFTP, WebDAV, FSx for ONTAP |
-| **Storage Tiering**  | Hot, warm, cold tiers with intelligent NVMe caching                |
-| **AI Transcription** | Whisper-powered transcription in 99 languages                      |
-| **Smart Tagging**    | AI-generated metadata with Elasticsearch search                    |
-| **Media Preview**    | HLS streaming and thumbnail generation                             |
-| **Theme Customizer** | Dark/light modes with 10 accent colors                             |
-| **Enterprise RBAC**  | Role-based access control with Keycloak                            |
-| **GPU Metrics**      | Real-time monitoring with native Rust APIs                         |
+| Feature                | Description                                                        |
+| ---------------------- | ------------------------------------------------------------------ |
+| **Multi-Cloud VFS**    | Connect S3, GCS, Azure Blob, SMB, NFS, SFTP, WebDAV, FSx for ONTAP |
+| **Keyboard-First**     | Full keyboard navigation — every action has a shortcut             |
+| **Fully Customizable** | Dark/light modes, 10 accent colors, configurable shortcuts         |
+| **Storage Tiering**    | Hot, warm, cold tiers with intelligent NVMe caching                |
+| **AI Transcription**   | Whisper-powered transcription in 99 languages                      |
+| **Smart Search**       | AI-powered semantic search via local Ollama models                 |
+| **GPU Metrics**        | Real-time CPU/GPU/RAM monitoring with native Rust APIs             |
+| **Enterprise RBAC**    | Role-based access control with Keycloak                            |
 
 ---
 
