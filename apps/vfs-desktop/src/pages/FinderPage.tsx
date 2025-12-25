@@ -3363,9 +3363,57 @@ export function FinderPage({ onOpenMetrics }: FinderPageProps) {
                         <div className="context-divider" />
                         <button
                           className="context-item"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            // TODO: Open native "Open With" dialog
+                            if (contextMenu.targetFile) {
+                              try {
+                                const { open } =
+                                  await import('@tauri-apps/plugin-dialog');
+                                // Open file picker to choose an application
+                                const selectedApp = await open({
+                                  title: 'Choose Application',
+                                  directory: false,
+                                  multiple: false,
+                                  filters: navigator.platform.includes('Mac')
+                                    ? [
+                                        {
+                                          name: 'Applications',
+                                          extensions: ['app'],
+                                        },
+                                      ]
+                                    : navigator.platform.includes('Win')
+                                      ? [
+                                          {
+                                            name: 'Executables',
+                                            extensions: ['exe'],
+                                          },
+                                        ]
+                                      : [],
+                                  defaultPath: navigator.platform.includes(
+                                    'Mac',
+                                  )
+                                    ? '/Applications'
+                                    : navigator.platform.includes('Win')
+                                      ? 'C:\\Program Files'
+                                      : '/usr/bin',
+                                });
+
+                                if (
+                                  selectedApp &&
+                                  typeof selectedApp === 'string'
+                                ) {
+                                  handleOpenFileWith(
+                                    contextMenu.targetFile,
+                                    selectedApp,
+                                  );
+                                }
+                              } catch (err) {
+                                console.error(
+                                  'Failed to open app picker:',
+                                  err,
+                                );
+                              }
+                            }
                             closeContextMenu();
                           }}
                         >

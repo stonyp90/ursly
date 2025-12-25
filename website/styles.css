@@ -2963,11 +2963,35 @@ ul {
   padding-top: 32px;
   border-top: 1px solid var(--border-subtle);
   text-align: center;
+  position: relative;
 }
 
 .footer-bottom p {
   color: var(--text-dim);
   font-size: 0.85rem;
+}
+
+.footer-linkedin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  opacity: 0.3;
+  color: var(--text-dim);
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease;
+  text-decoration: none;
+}
+
+.footer-linkedin:hover {
+  opacity: 0.6;
+  color: var(--text-secondary);
+}
+
+.footer-linkedin svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* ================================ */
