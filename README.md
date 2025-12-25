@@ -1,89 +1,119 @@
 <div align="center">
 
-# Ursly.io
+# Ursly
 
-**AI Agent Orchestration Platform with Cloud-Agnostic Virtual File System**
+### Agent Media Asset Management
 
-[![Website](https://img.shields.io/badge/Website-ursly.io-00ff88?style=flat&logo=safari)](https://ursly.io)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Rust](https://img.shields.io/badge/Rust-1.75+-orange?logo=rust)](https://www.rust-lang.org/)
-[![NestJS](https://img.shields.io/badge/NestJS-10.x-e0234e?logo=nestjs)](https://nestjs.com/)
-[![Nx](https://img.shields.io/badge/Nx-18.x-143055?logo=nx)](https://nx.dev/)
+**Unified cloud storage meets AI. One interface for all your media assets.**
 
-[🌐 Website](https://ursly.io) · [Demo](https://app.ursly.io) · [Documentation](./agents.md) · [Report Bug](https://github.com/stonyp90/ursly/issues)
+[![Website](https://img.shields.io/badge/Website-ursly.io-00d4ff?style=flat-square)](https://ursly.io)
+[![Demo](https://img.shields.io/badge/Demo-app.ursly.io-ff00ea?style=flat-square)](https://app.ursly.io)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.75+-dea584?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+
+[Website](https://ursly.io) &bull; [Live Demo](https://app.ursly.io) &bull; [Documentation](./agents.md) &bull; [Discord](https://discord.gg/cree8)
+
+<br />
+
+<img src="website/screenshots/vfs-main-dark.png" alt="Ursly VFS Desktop App" width="800" />
 
 </div>
 
 ---
 
-## Overview
+## What is Ursly?
 
-Ursly.io is an open-source platform for orchestrating AI agents with enterprise-grade security and a unified virtual file system that works across any cloud provider.
+Ursly is an **Agent Media Asset Management (AMAM)** platform that combines:
 
-### Key Features
+- **Unified Cloud Storage** &mdash; Access AWS S3, Google Cloud, Azure, NAS, and local drives through one interface
+- **Open Source AI** &mdash; Run Ollama, Whisper, and LLaMA on your own hardware
+- **Native Desktop App** &mdash; Built with Tauri and Rust for performance
 
-- **Agent Lifecycle Management** — Create, deploy, and monitor AI agents with automatic context window management
-- **Multi-Model Support** — LLaMA 3.x, Mistral, CodeLlama, Phi3, Gemma, Qwen via Ollama
-- **Cloud-Agnostic VFS** — Unified access to S3, GCS, Azure, NAS, and local storage
-- **Enterprise Security** — RBAC, granular permissions, multi-org support with Keycloak OIDC
-- **Real-time Metrics** — GPU/CPU monitoring with native Rust APIs
+No vendor lock-in. No per-token API costs. Your media, your infrastructure.
 
 ---
 
-## Desktop Applications
+## Features
 
-Two native desktop apps built with Tauri and Rust, each focused on a distinct use case:
-
-| App             | Description            | Features                                                               |
-| --------------- | ---------------------- | ---------------------------------------------------------------------- |
-| **Ursly Agent** | AI agent orchestration | Agent management, model control, GPU metrics, performance monitoring   |
-| **Ursly VFS**   | Virtual file system    | Finder-style browser, multi-tier storage, file operations, GPU metrics |
-
-### Architecture Separation
-
-- **Agent Desktop** — Embeds the web app for AI/agent features. Storage/File System section is hidden.
-- **VFS Desktop** — Dedicated file browser with native Rust VFS operations. Includes collapsible metrics panel.
-
-Both apps share Keycloak authentication for unified identity management.
-
----
-
-## Tech Stack
-
-| Layer        | Technologies                                     |
-| ------------ | ------------------------------------------------ |
-| **Backend**  | NestJS · TypeScript · MongoDB · gRPC · WebSocket |
-| **Frontend** | React · MUI · Tailwind CSS · Vite                |
-| **Desktop**  | Tauri · Rust · wgpu · Metal/DirectX              |
-| **AI/ML**    | Ollama · LLaMA 3.x · Mistral · Phi3              |
-| **Auth**     | Keycloak · OIDC · JWT                            |
-| **Build**    | Nx Monorepo · Docker                             |
+| Feature              | Description                                                        |
+| -------------------- | ------------------------------------------------------------------ |
+| **Multi-Cloud VFS**  | Connect S3, GCS, Azure Blob, SMB, NFS, SFTP, WebDAV, FSx for ONTAP |
+| **Storage Tiering**  | Hot, warm, cold tiers with intelligent NVMe caching                |
+| **AI Transcription** | Whisper-powered transcription in 99 languages                      |
+| **Smart Tagging**    | AI-generated metadata with Elasticsearch search                    |
+| **Media Preview**    | HLS streaming and thumbnail generation                             |
+| **Theme Customizer** | Dark/light modes with 10 accent colors                             |
+| **Enterprise RBAC**  | Role-based access control with Keycloak                            |
+| **GPU Metrics**      | Real-time monitoring with native Rust APIs                         |
 
 ---
 
 ## Quick Start
 
+### Docker Compose (Recommended)
+
 ```bash
-# Clone and install
+# Clone the repository
 git clone https://github.com/stonyp90/ursly.git
 cd ursly
+
+# Start all services
+docker-compose up -d
+
+# Open the dashboard
+open http://localhost:4200
+```
+
+### Development Setup
+
+```bash
+# Install dependencies
 npm install
 
 # Start infrastructure
-docker-compose up -d
+docker-compose up -d mongodb keycloak
 
 # Run development servers
 npm run dev
 ```
 
-### Service Ports
+### Desktop App
 
-| Service | Port  |
-| ------- | ----- |
-| Web UI  | 4200  |
-| API     | 3000  |
-| gRPC    | 50051 |
+```bash
+# VFS Desktop (File Browser)
+cd apps/vfs-desktop
+npm run tauri dev
+
+# Agent Desktop (AI Management)
+cd apps/agent-desktop
+npm run tauri dev
+```
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Desktop Apps (Tauri + Rust)                  │
+│              ┌─────────────────┬─────────────────┐              │
+│              │   Ursly VFS     │  Ursly Agent    │              │
+│              │  File Browser   │  AI Management  │              │
+│              │  + GPU Metrics  │  + GPU Metrics  │              │
+│              └─────────────────┴─────────────────┘              │
+├─────────────────────────────────────────────────────────────────┤
+│                     Web UI (React + MUI)                        │
+├─────────────────────────────────────────────────────────────────┤
+│                    API Gateway (NestJS)                         │
+├──────────────┬──────────────┬───────────────────────────────────┤
+│ VFS Engine   │ Audit Logger │ Entitlements (RBAC)               │
+├──────────────┴──────────────┴───────────────────────────────────┤
+│                  gRPC Service → Ollama                          │
+├─────────────────────────────────────────────────────────────────┤
+│              Keycloak (Identity) │ MongoDB (Data)               │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -92,120 +122,155 @@ npm run dev
 ```
 apps/
 ├── api/              # NestJS REST API
-├── web/              # React web application
+├── web/              # React web dashboard
 ├── grpc/             # Ollama gRPC bridge
-├── agent-desktop/    # Tauri agent management app
-└── vfs-desktop/      # Tauri virtual file system app
+├── vfs-desktop/      # Tauri file browser app
+└── agent-desktop/    # Tauri AI management app
 
 libs/
 ├── agent-core/       # Context window management
-├── audit-logger/     # Type-safe logging
+├── audit-logger/     # Type-safe audit logging
 └── shared/
-    ├── types/        # Zod schemas & types
-    └── access-control/ # Permissions engine
+    ├── types/        # Zod schemas & shared types
+    └── access-control/ # RBAC permissions engine
+
+website/              # Landing page (ursly.io)
 ```
 
 ---
 
-## Development
+## Tech Stack
+
+| Layer        | Technologies                                 |
+| ------------ | -------------------------------------------- |
+| **Backend**  | NestJS, TypeScript, MongoDB, gRPC, WebSocket |
+| **Frontend** | React 18, MUI 6, Tailwind CSS, Vite          |
+| **Desktop**  | Tauri 2.0, Rust, wgpu                        |
+| **AI/ML**    | Ollama, Whisper, LLaMA 3, Mistral, Phi-3     |
+| **Auth**     | Keycloak, OIDC, JWT                          |
+| **Build**    | Nx Monorepo, Docker, pnpm                    |
+
+---
+
+## Storage Backends
+
+| Provider                 | Status    | Features                                     |
+| ------------------------ | --------- | -------------------------------------------- |
+| **AWS S3**               | Supported | Transfer acceleration, versioning, lifecycle |
+| **Google Cloud Storage** | Supported | Multi-region, bucket policies                |
+| **Azure Blob Storage**   | Supported | Hot/cool/archive tiers                       |
+| **FSx for ONTAP**        | Supported | NVMe cache, Fabric Pool tiering              |
+| **SMB/CIFS**             | Supported | Windows shares, Active Directory             |
+| **NFS**                  | Supported | NFSv3/v4, Unix permissions                   |
+| **SFTP**                 | Supported | Key-based authentication                     |
+| **WebDAV**               | Supported | HTTP-based file access                       |
+| **Local**                | Supported | Direct filesystem with caching               |
+
+---
+
+## Service Ports
+
+| Service  | Port  | Description       |
+| -------- | ----- | ----------------- |
+| Web UI   | 4200  | React dashboard   |
+| API      | 3000  | REST API          |
+| gRPC     | 50051 | Ollama bridge     |
+| Keycloak | 8080  | Identity provider |
+| MongoDB  | 27017 | Database          |
+| Ollama   | 11434 | LLM inference     |
+
+---
+
+## Environment Variables
 
 ```bash
-# All services
-npm run dev
+# .env
+MONGODB_URI=mongodb://localhost:27017/ursly
+KEYCLOAK_URL=http://localhost:8080
+KEYCLOAK_REALM=agent-orchestrator
+KEYCLOAK_CLIENT_ID=agent-api
+OLLAMA_URL=http://localhost:11434
+```
 
-# Individual apps
-npm run start:web        # Web UI
-npm run start:api        # API server
-npm run start:agent      # Agent Desktop (Tauri)
-npm run start:vfs        # VFS Desktop (Tauri)
+---
+
+## Scripts
+
+```bash
+# Development
+npm run dev              # Start all services
+npm run start:web        # Web UI only
+npm run start:api        # API server only
+npm run start:vfs        # VFS Desktop app
+npm run start:agent      # Agent Desktop app
 
 # Testing
 npm test                 # Run all tests
+npm run test:e2e         # End-to-end tests
 npm run lint             # Lint codebase
 
 # Build
 npm run build            # Production build
-npm run build:agent      # Build Agent Desktop
-npm run build:vfs        # Build VFS Desktop
-```
-
----
-
-## Virtual File System
-
-The Rust-based VFS provides unified access across storage providers:
-
-| Storage                  | Features                                       |
-| ------------------------ | ---------------------------------------------- |
-| **AWS S3**               | Real-time sync, versioning, lifecycle policies |
-| **Google Cloud Storage** | Multi-region, bucket policies                  |
-| **Azure Blob Storage**   | Hot/cool/archive tiers                         |
-| **On-Premise NAS**       | SMB/NFS, local network optimization            |
-| **Local Storage**        | Direct filesystem with NVMe caching            |
-
-**Capabilities:**
-
-- Unified namespace across all backends
-- Automatic failover and replication
-- Media asset transcoding
-- Intelligent tiering and hydration
-- Role-based access per storage location
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Desktop Apps (Tauri + Rust)                   │
-│              ┌─────────────────┬─────────────────┐              │
-│              │  Ursly Agent    │    Ursly VFS    │              │
-│              │  (Web App +     │  (File Browser  │              │
-│              │   GPU Metrics)  │   + Metrics)    │              │
-│              └─────────────────┴─────────────────┘              │
-├─────────────────────────────────────────────────────────────────┤
-│                     Web UI (React + MUI)                         │
-├─────────────────────────────────────────────────────────────────┤
-│                    API Gateway (NestJS)                          │
-├──────────────┬──────────────┬───────────────────────────────────┤
-│ Agent Engine │ Audit Logger │ Entitlements (RBAC)               │
-├──────────────┴──────────────┴───────────────────────────────────┤
-│                  gRPC Service → Ollama                           │
-├─────────────────────────────────────────────────────────────────┤
-│              Keycloak (Identity) │ MongoDB (Data)                │
-└─────────────────────────────────────────────────────────────────┘
+npm run build:docker     # Build Docker images
 ```
 
 ---
 
 ## Contributing
 
-We welcome contributions! Please follow these steps:
+We welcome contributions! Please see our contribution guidelines:
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Make your changes with tests
+4. Commit: `git commit -m 'feat: add my feature'`
+5. Push: `git push origin feature/my-feature`
+6. Open a Pull Request
 
-### Guidelines
+### Development Guidelines
 
-- All code requires tests
-- Follow existing code style (ESLint + Prettier)
-- Update documentation as needed
+- All new code requires tests
+- Follow [Conventional Commits](https://www.conventionalcommits.org/)
+- Run `npm run lint` before committing
+- Update documentation for new features
+
+---
+
+## Roadmap
+
+- [ ] Adobe Premiere Pro UXP plugin
+- [ ] DaVinci Resolve integration
+- [ ] VS Code extension
+- [ ] Kubernetes Helm charts
+- [ ] S3 Glacier Deep Archive support
+- [ ] Real-time collaboration
 
 ---
 
 ## License
 
-AGPL-3.0 License - see [LICENSE](LICENSE) for details.
+This project is licensed under the **GNU Affero General Public License v3.0** (AGPL-3.0).
 
-This project is licensed under the GNU Affero General Public License v3.0, the same license used by [Spacedrive](https://www.spacedrive.com/). This ensures that the software remains open source and any modifications or network deployments must also be open source.
+This ensures the software remains open source and any modifications or network deployments must also be open source. See [LICENSE](LICENSE) for details.
+
+---
+
+## Acknowledgments
+
+Built with amazing open source projects:
+
+- [Tauri](https://tauri.app/) - Desktop app framework
+- [Ollama](https://ollama.ai/) - Local LLM inference
+- [Whisper](https://github.com/openai/whisper) - Speech recognition
+- [NestJS](https://nestjs.com/) - Backend framework
+- [Keycloak](https://www.keycloak.org/) - Identity management
 
 ---
 
 <div align="center">
 
-**[ursly.io](https://ursly.io)** · Built with ❤️ by the Ursly team
+**[ursly.io](https://ursly.io)**
+
+[Website](https://ursly.io) &bull; [Demo](https://app.ursly.io) &bull; [Discord](https://discord.gg/cree8) &bull; [GitHub](https://github.com/stonyp90/ursly)
 
 </div>

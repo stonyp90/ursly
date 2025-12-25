@@ -246,6 +246,29 @@ export class StorageService {
     };
   }
 
+  /**
+   * Get thumbnail for a file
+   * Returns data URL for the thumbnail or null if not available
+   */
+  static async getThumbnail(
+    sourceId: string,
+    filePath: string,
+    size?: number,
+  ): Promise<string | null> {
+    await this.init();
+    try {
+      const thumbnail = await invoke<string | null>('vfs_get_thumbnail', {
+        sourceId,
+        filePath,
+        size: size || 128,
+      });
+      return thumbnail;
+    } catch (error) {
+      console.debug('Failed to get thumbnail:', error);
+      return null;
+    }
+  }
+
   // =========================================================================
   // Clipboard Operations
   // =========================================================================

@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <!-- Primary Meta Tags -->
-  <title>Ursly - Open Source LLM Orchestrator for M&E Studios | Self-Hosted AI</title>
-  <meta name="title" content="Ursly - Open Source LLM Orchestrator for M&E Studios | Self-Hosted AI">
-  <meta name="description" content="Run AI on your existing GPU workstations. Open source LLM orchestrator with enterprise RBAC for video production, game development, and creative teams. MIT Licensed.">
-  <meta name="keywords" content="LLM orchestrator, AI video production, self-hosted AI, Ollama, Whisper transcription, RBAC, media asset management, open source AI, GPU inference, creative AI tools">
+  <title>Ursly - Agent Media Asset Management | Open Source AI-Powered MAM</title>
+  <meta name="title" content="Ursly - Agent Media Asset Management | Open Source AI-Powered MAM">
+  <meta name="description" content="AMAM: Agent-powered Media Asset Management. Unified cloud storage with AI capabilities. Connect AWS, Azure, GCS, and on-premise storage. Run open-source LLMs locally. MIT Licensed.">
+  <meta name="keywords" content="media asset management, MAM, DAM, virtual file system, VFS, cloud storage, AI transcription, Ollama, Whisper, open source, video production, creative workflow, multi-cloud storage">
   <meta name="author" content="Ursly">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ursly.io">
@@ -16,8 +16,8 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ursly.io/">
-  <meta property="og:title" content="Ursly - Open Source LLM Orchestrator for Creative Teams">
-  <meta property="og:description" content="Run AI on your existing GPU workstations. Enterprise access control without the enterprise price tag. 100% open source, MIT licensed.">
+  <meta property="og:title" content="Ursly - Agent Media Asset Management">
+  <meta property="og:description" content="AMAM: Unified cloud storage meets AI. Connect any storage, run open-source LLMs locally. 100% open source, MIT licensed.">
   <meta property="og:image" content="https://ursly.io/og-image.png">
   <meta property="og:site_name" content="Ursly">
   <meta property="og:locale" content="en_US">
@@ -25,8 +25,8 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://ursly.io/">
-  <meta name="twitter:title" content="Ursly - Open Source LLM Orchestrator for Creative Teams">
-  <meta name="twitter:description" content="Run AI on your existing GPU workstations. Enterprise access control without the enterprise price tag. 100% open source.">
+  <meta name="twitter:title" content="Ursly - Agent Media Asset Management">
+  <meta name="twitter:description" content="AMAM: Unified cloud storage meets AI. Connect any storage, run open-source LLMs locally. 100% open source.">
   <meta name="twitter:image" content="https://ursly.io/og-image.png">
   
   <!-- Favicon -->
@@ -37,7 +37,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   
   <!-- Structured Data -->
@@ -46,12 +46,12 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Ursly",
-    "applicationCategory": "DeveloperApplication",
+    "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Linux, macOS, Windows, Docker",
-    "description": "Open source LLM orchestrator for media and entertainment studios. Run AI agents on your GPU workstations with enterprise-grade access control.",
+    "description": "Agent Media Asset Management (AMAM). Open source platform combining unified cloud storage with AI-powered media processing. Run Ollama and Whisper on your infrastructure.",
     "url": "https://ursly.io",
     "downloadUrl": "https://github.com/stonyp90/ursly",
-    "license": "https://opensource.org/licenses/MIT",
+    "license": "https://www.gnu.org/licenses/agpl-3.0",
     "author": {
       "@type": "Organization",
       "name": "Ursly",
@@ -63,13 +63,13 @@
       "priceCurrency": "USD"
     },
     "featureList": [
-      "Role-Based Access Control (RBAC)",
+      "Multi-Cloud Virtual File System",
+      "AWS S3, Azure, GCS, On-Premise Support",
       "Local LLM Inference via Ollama",
       "Whisper Transcription",
-      "Adobe Premiere Pro Integration",
-      "Real-time WebSocket Updates",
-      "Multi-tenant Architecture",
-      "Docker & Kubernetes Ready"
+      "Storage Tiering (Hot/Warm/Cold)",
+      "AI-Powered Asset Tagging",
+      "Open Source MIT Licensed"
     ]
   }
   </script>
@@ -87,9 +87,8 @@
       </a>
       <div class="nav-links" role="menubar">
         <a href="#features" role="menuitem">Features</a>
-        <a href="#security" role="menuitem">Security</a>
-        <a href="#how-it-works" role="menuitem">How It Works</a>
-        <a href="#integrations" role="menuitem">Integrations</a>
+        <a href="#product" role="menuitem">Product</a>
+        <a href="#open-source" role="menuitem">Open Source</a>
         <a href="#deployment" role="menuitem">Deployment</a>
         <a href="https://github.com/stonyp90/ursly" class="btn-nav" target="_blank" rel="noopener noreferrer" aria-label="View Ursly on GitHub">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
@@ -111,9 +110,8 @@
   <!-- Mobile Menu -->
   <div id="mobile-menu" class="mobile-menu" role="menu" aria-label="Mobile navigation">
     <a href="#features" role="menuitem">Features</a>
-    <a href="#security" role="menuitem">Security</a>
-    <a href="#how-it-works" role="menuitem">How It Works</a>
-    <a href="#integrations" role="menuitem">Integrations</a>
+    <a href="#product" role="menuitem">Product</a>
+    <a href="#open-source" role="menuitem">Open Source</a>
     <a href="#deployment" role="menuitem">Deployment</a>
     <a href="https://github.com/stonyp90/ursly" target="_blank" rel="noopener noreferrer" role="menuitem">GitHub</a>
     <a href="https://app.ursly.io" class="mobile-app-link" target="_blank" rel="noopener noreferrer" role="menuitem">Try Demo</a>
@@ -128,41 +126,40 @@
     <div class="hero-grid"></div>
     <div class="hero-content">
       <div class="badge-container">
-        <span class="badge">M&E + GAMING</span>
-        <span class="badge badge-secondary">MIT Licensed</span>
+        <span class="badge">AMAM</span>
+        <span class="badge badge-secondary">AGPL-3.0</span>
       </div>
       <h1 class="hero-title" itemprop="headline">
-        <span class="gradient-text">Open Source</span>
-        <span class="gradient-text-secondary">LLM</span><br>
-        Orchestrator
+        <span class="gradient-text">Agent Media</span><br>
+        <span class="gradient-text-secondary">Asset Management</span>
       </h1>
       <p class="hero-description" itemprop="description">
-        Run AI on your existing GPU workstations and cloud instances. Share media assets seamlessly across AWS, Google Cloud, Azure, or on-premise storage with our cloud-agnostic Rust vFS. 
-        Built for M&E studios and game developers. Enterprise access control without the enterprise price tag.
+        Unified cloud storage meets AI. Connect AWS, Azure, Google Cloud, and on-premise storage through a single interface. 
+        Run open-source LLMs locally on your hardware. Your media, your infrastructure, your control.
       </p>
       <div class="hero-actions">
         <a href="#getting-started" class="btn-primary">
           Get Started
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
-        <a href="#how-it-works" class="btn-secondary">
-          See How It Works
+        <a href="#product" class="btn-secondary">
+          See Product
         </a>
       </div>
       <div class="hero-stats">
         <div class="stat">
-          <span class="stat-value">Your GPUs</span>
-          <span class="stat-label">Workstations & Cloud</span>
+          <span class="stat-value">Multi-Cloud</span>
+          <span class="stat-label">S3, Azure, GCS, NAS</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat">
-          <span class="stat-value">LLM + Whisper</span>
-          <span class="stat-label">Ollama Powered</span>
+          <span class="stat-value">Open Source AI</span>
+          <span class="stat-label">Ollama + Whisper</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat">
           <span class="stat-value">100% Open</span>
-          <span class="stat-label">MIT Licensed</span>
+          <span class="stat-label">AGPL-3.0 Licensed</span>
         </div>
       </div>
     </div>
@@ -173,20 +170,20 @@
         <div class="illustration-ring ring-3"></div>
         <div class="illustration-center">
           <div class="agent-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m6 0h10M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"/></svg>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><path d="M8 16l4-4 4 4M12 12v9"/></svg>
           </div>
         </div>
         <div class="floating-card card-1">
           <div class="card-icon success"></div>
-          <span>Agent Active</span>
+          <span>S3 Connected</span>
         </div>
         <div class="floating-card card-2">
           <div class="card-icon warning"></div>
-          <span>Task Running</span>
+          <span>Transcribing...</span>
         </div>
         <div class="floating-card card-3">
           <div class="card-icon primary"></div>
-          <span>Access Granted</span>
+          <span>Assets Synced</span>
         </div>
       </div>
     </div>
@@ -198,34 +195,35 @@
       <div class="what-is-content">
         <div class="what-is-text">
           <span class="section-tag">// WHAT IS URSLY</span>
-          <h2 class="section-title">AI for Creative Teams,<br>Under Your Control</h2>
+          <h2 class="section-title">Media Assets, Unified<br>AI-Enhanced</h2>
           <p class="lead-text">
-            Ursly orchestrates AI agents for media production workflows. Automate transcription, 
-            captioning, scene analysis, and asset tagging while keeping full control over access.
+            Ursly is an Agent Media Asset Management platform that combines unified cloud storage 
+            with AI capabilities. Access files across any cloud or on-premise storage through a single, 
+            beautiful interface.
           </p>
           <p>
-            Built for studios, post-production houses, and creative teams who need AI power 
-            without sacrificing security. Role-based access ensures only authorized team members 
-            can trigger AI workflows on your sensitive media assets.
+            Built with Rust for performance, powered by open-source LLMs for intelligence. 
+            Transcribe videos with Whisper, tag assets with LLaMA, and manage petabytes of media 
+            without vendor lock-in.
           </p>
         </div>
         <div class="what-is-highlights">
           <div class="highlight">
             <div class="highlight-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><path d="M8 16l4-4 4 4M12 12v9"/></svg>
             </div>
             <div>
-              <h4>Media-First</h4>
-              <p>Built for video, audio, and creative assets</p>
+              <h4>Cloud-Agnostic VFS</h4>
+              <p>One interface for all your storage backends</p>
             </div>
           </div>
           <div class="highlight">
             <div class="highlight-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m6 0h10M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"/></svg>
             </div>
             <div>
-              <h4>RBAC Protected</h4>
-              <p>Role-based access for sensitive content</p>
+              <h4>Open Source AI</h4>
+              <p>Ollama, Whisper, LLaMA on your GPUs</p>
             </div>
           </div>
           <div class="highlight">
@@ -233,8 +231,8 @@
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
             </div>
             <div>
-              <h4>Local Inference</h4>
-              <p>Run AI on your servers, footage never leaves</p>
+              <h4>Storage Tiering</h4>
+              <p>Hot, warm, cold tiers with smart caching</p>
             </div>
           </div>
         </div>
@@ -242,95 +240,56 @@
     </div>
   </section>
 
-  <!-- Cloud vFS Section -->
-  <section class="cloud-vfs">
+  <!-- Product Screenshots Section -->
+  <section id="product" class="product-section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">// UNIVERSAL FILE SYSTEM</span>
-        <h2 class="section-title">Media Assets, Seamlessly Unified</h2>
+        <span class="section-tag">// THE PRODUCT</span>
+        <h2 class="section-title">Beautiful. Powerful. Open.</h2>
         <p class="section-description">
-          Our OS-agnostic Rust vFS abstracts away cloud complexity. Access your media from AWS, Google Cloud, Azure, on-premise storage, or local drives through a single, unified interface.
+          A native desktop app built with Tauri and Rust. Fast, lightweight, and designed for creative professionals.
         </p>
       </div>
 
-      <div class="vfs-grid">
-        <div class="vfs-card vfs-primary">
-          <div class="vfs-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          </div>
-          <h3>Cloud-Agnostic</h3>
-          <p>AWS S3, Google Cloud Storage, Azure Blob, or on-premise NAS. Choose your backend. We handle the abstraction.</p>
-          <ul class="vfs-features">
-            <li>AWS S3 with S3 Transfer Acceleration</li>
-            <li>Google Cloud Storage multi-region</li>
-            <li>Azure Blob Storage with tiering</li>
-            <li>On-premise SMB/NFS support</li>
-          </ul>
-        </div>
-
-        <div class="vfs-card">
-          <div class="vfs-icon vfs-icon-secondary">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2-15H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2z"/></svg>
-          </div>
-          <h3>Unified Namespace</h3>
-          <p>Single mount point for all your storage backends. No more path juggling or provider-specific syntax.</p>
-          <ul class="vfs-features">
-            <li>POSIX-compliant operations</li>
-            <li>Transparent cloud routing</li>
-            <li>Automatic failover</li>
-            <li>Cross-cloud replication</li>
-          </ul>
-        </div>
-
-        <div class="vfs-card">
-          <div class="vfs-icon vfs-icon-success">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          </div>
-          <h3>Media Optimization</h3>
-          <p>Automatic transcoding, compression, and intelligent tiering keeps your assets ready for any workflow.</p>
-          <ul class="vfs-features">
-            <li>On-the-fly transcoding</li>
-            <li>Smart compression</li>
-            <li>Hot/cold tier management</li>
-            <li>Bandwidth optimization</li>
-          </ul>
-        </div>
-
-        <div class="vfs-card">
-          <div class="vfs-icon vfs-icon-accent">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"/></svg>
-          </div>
-          <h3>Enterprise-Ready</h3>
-          <p>Role-based access, encryption, audit logs, and compliance tracking for every file operation.</p>
-          <ul class="vfs-features">
-            <li>Granular RBAC</li>
-            <li>End-to-end encryption</li>
-            <li>Compliance audits</li>
-            <li>Data sovereignty</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="vfs-diagram">
-        <div class="diagram-container">
-          <div class="diagram-title">Unified Storage Architecture</div>
-          <div class="diagram-flow">
-            <div class="flow-box flow-app">
-              <span>Ursly App</span>
+      <div class="product-showcase">
+        <div class="product-screenshot main-screenshot">
+          <div class="screenshot-frame">
+            <div class="screenshot-header">
+              <div class="screenshot-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span class="screenshot-title">Ursly VFS - File Browser</span>
             </div>
-            <div class="flow-arrow"></div>
-            <div class="flow-box flow-vfs">
-              <span>Rust vFS Layer</span>
+            <img src="screenshots/vfs-main-dark.png" alt="Ursly VFS main interface showing file browser with sidebar, favorites, storage sources, and tags" loading="lazy">
+          </div>
+          <div class="screenshot-caption">
+            <h3>Unified File Browser</h3>
+            <p>Browse files across all connected storage sources. Favorites, tags, and smart search built-in.</p>
+          </div>
+        </div>
+
+        <div class="product-features-grid">
+          <div class="product-feature-card">
+            <div class="screenshot-frame small">
+              <img src="screenshots/vfs-add-storage-dark.png" alt="Add Storage modal showing cloud providers - AWS S3, Google Cloud, Azure, and network options" loading="lazy">
             </div>
-            <div class="flow-arrow"></div>
-            <div class="flow-group">
-              <div class="flow-box flow-storage">AWS S3</div>
-              <div class="flow-box flow-storage">Google Cloud</div>
-              <div class="flow-box flow-storage">Azure Blob</div>
-              <div class="flow-box flow-storage">On-Premise</div>
+            <div class="feature-info">
+              <h4>Multi-Cloud Storage</h4>
+              <p>Connect AWS S3, Google Cloud Storage, Azure Blob, SMB/NFS shares, SFTP, WebDAV, FSx for ONTAP, and more.</p>
             </div>
           </div>
-          <p class="diagram-subtitle">One API, infinite storage possibilities</p>
+
+          <div class="product-feature-card">
+            <div class="screenshot-frame small">
+              <img src="screenshots/vfs-theme-customizer-dark.png" alt="Theme customizer with accent color options and dark/light mode toggle" loading="lazy">
+            </div>
+            <div class="feature-info">
+              <h4>Customizable Themes</h4>
+              <p>Dark and light modes with 10 accent colors. Make it yours.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -341,36 +300,36 @@
     <div class="container">
       <div class="section-header">
         <span class="section-tag">// KEY FEATURES</span>
-        <h2 class="section-title">AI Power for Media Production</h2>
+        <h2 class="section-title">Everything You Need for Media Management</h2>
         <p class="section-description">
-          From transcription to asset management, automate your creative workflows with enterprise-grade security.
+          From storage unification to AI-powered processing, built for creative teams at any scale.
         </p>
       </div>
       
       <div class="features-grid">
         <div class="feature-card feature-large">
           <div class="feature-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><path d="M8 16l4-4 4 4M12 12v9"/></svg>
           </div>
-          <h3 class="feature-title">Role-Based Access Control</h3>
+          <h3 class="feature-title">Universal Storage Layer</h3>
           <p class="feature-description">
-            Protect sensitive media assets with granular permissions. Producers, editors, 
-            and assistants get exactly the access they need. No more sharing API keys 
-            or worrying about unauthorized AI access to unreleased content.
+            Connect any storage backend through our Rust-powered virtual file system. 
+            AWS S3, Google Cloud Storage, Azure Blob, FSx for ONTAP, SMB, NFS, SFTP, WebDAV - 
+            all accessible through one unified interface.
           </p>
           <div class="feature-visual">
-            <div class="role-demo">
-              <div class="role-item">
-                <span class="role-badge admin">Producer</span>
-                <span class="role-perms">Full Access</span>
+            <div class="storage-demo">
+              <div class="storage-item">
+                <span class="storage-badge s3">S3</span>
+                <span class="storage-name">production-assets</span>
               </div>
-              <div class="role-item">
-                <span class="role-badge operator">Editor</span>
-                <span class="role-perms">Execute, View</span>
+              <div class="storage-item">
+                <span class="storage-badge azure">Azure</span>
+                <span class="storage-name">archive-2024</span>
               </div>
-              <div class="role-item">
-                <span class="role-badge viewer">Assistant</span>
-                <span class="role-perms">View Only</span>
+              <div class="storage-item">
+                <span class="storage-badge nas">NAS</span>
+                <span class="storage-name">local-renders</span>
               </div>
             </div>
           </div>
@@ -380,216 +339,129 @@
           <div class="feature-icon feature-icon-secondary">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m6 0h10M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"/></svg>
           </div>
-          <h3 class="feature-title">Media AI Agents</h3>
+          <h3 class="feature-title">AI-Powered Processing</h3>
           <p class="feature-description">
-            Deploy specialized agents for your creative workflows. 
-            Transcription, captioning, scene detection, and more.
+            Leverage open-source models running on your own hardware. 
+            No API costs, no data leaving your network.
           </p>
           <ul class="feature-list">
-            <li>Auto-transcription & captions</li>
+            <li>Whisper transcription</li>
+            <li>LLaMA asset tagging</li>
             <li>Scene analysis</li>
-            <li>Asset tagging & metadata</li>
           </ul>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon feature-icon-success">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           </div>
-          <h3 class="feature-title">Batch Processing</h3>
+          <h3 class="feature-title">Storage Tiering</h3>
           <p class="feature-description">
-            Queue media files for AI processing. Track progress 
-            across your entire library in real-time.
+            Automatic data lifecycle management. Hot, warm, cold, 
+            and archive tiers with intelligent caching.
           </p>
           <ul class="feature-list">
-            <li>Bulk transcription</li>
-            <li>Watch folders</li>
-            <li>Progress notifications</li>
+            <li>NVMe local cache</li>
+            <li>S3 Glacier integration</li>
+            <li>Smart prefetching</li>
           </ul>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon feature-icon-warning">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
           </div>
-          <h3 class="feature-title">Audit & Compliance</h3>
+          <h3 class="feature-title">Smart Tagging</h3>
           <p class="feature-description">
-            Every AI interaction is logged. Know who accessed what, 
-            when, and why. Essential for client confidentiality.
+            AI-generated metadata stored in Elasticsearch. 
+            Search across petabytes of assets instantly.
           </p>
           <ul class="feature-list">
-            <li>Complete access history</li>
-            <li>User attribution</li>
-            <li>Client project isolation</li>
+            <li>Auto-generated tags</li>
+            <li>Full-text search</li>
+            <li>Custom metadata fields</li>
           </ul>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
           </div>
-          <h3 class="feature-title">Local Models</h3>
+          <h3 class="feature-title">Media Preview</h3>
           <p class="feature-description">
-            Run Whisper, LLaMA, and other models on your hardware. 
-            Your footage never leaves your network.
+            HLS streaming for video playback. Thumbnail generation 
+            for quick browsing. No full downloads needed.
           </p>
           <ul class="feature-list">
-            <li>Ollama integration</li>
-            <li>GPU acceleration</li>
-            <li>Air-gapped support</li>
+            <li>Video streaming</li>
+            <li>Thumbnail generation</li>
+            <li>Proxy workflows</li>
           </ul>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- IAM & Security Section -->
-  <section id="security" class="security-section">
+  <!-- Open Source Models Section -->
+  <section id="open-source" class="open-source-section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">// IDENTITY & ACCESS MANAGEMENT</span>
-        <h2 class="section-title">Protect Your Media Assets</h2>
+        <span class="section-tag">// POWERED BY OPEN SOURCE</span>
+        <h2 class="section-title">Run AI on Your Infrastructure</h2>
         <p class="section-description">
-          Client footage, unreleased content, sensitive projects. Control who can run AI on what with fine-grained RBAC.
+          No API keys. No per-token costs. No data leaving your network. 
+          Leverage the best open-source models on your own hardware.
         </p>
       </div>
 
-      <div class="iam-grid">
-        <div class="iam-card">
-          <div class="iam-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <div class="models-grid">
+        <div class="model-card">
+          <div class="model-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           </div>
-          <h3>Role-Based Access Control (RBAC)</h3>
-          <p>Producers, editors, assistants, clients. Each role gets exactly the AI access they need. No more or less.</p>
-          <div class="iam-features">
-            <span class="iam-tag">Team Hierarchy</span>
-            <span class="iam-tag">Permission Levels</span>
-            <span class="iam-tag">Group Management</span>
-          </div>
-        </div>
-
-        <div class="iam-card">
-          <div class="iam-icon iam-icon-accent">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M14.5 10l3-4M9.5 14l-3 4M14.5 14l3 4"/></svg>
-          </div>
-          <h3>Project-Based Access (ReBAC)</h3>
-          <p>Assigned to a project? Access its assets. Moved off the project? Access revoked. Client work stays isolated automatically.</p>
-          <div class="iam-features">
-            <span class="iam-tag">Project Isolation</span>
-            <span class="iam-tag">Client Boundaries</span>
-            <span class="iam-tag">Asset Hierarchies</span>
+          <h3>Ollama</h3>
+          <p>Run LLaMA, Mistral, Phi, and 100+ open-source LLMs locally. GPU-accelerated inference with simple deployment.</p>
+          <div class="model-tags">
+            <span>LLaMA 3</span>
+            <span>Mistral</span>
+            <span>Phi-3</span>
+            <span>CodeLlama</span>
           </div>
         </div>
 
-        <div class="iam-card">
-          <div class="iam-icon iam-icon-success">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><circle cx="12" cy="16" r="1"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div class="model-card">
+          <div class="model-icon model-icon-accent">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </div>
-          <h3>Studio SSO Integration</h3>
-          <p>Connect your existing identity system. Frame.io, Okta, Azure AD, Google Workspace. One login for your whole team.</p>
-          <div class="iam-features">
-            <span class="iam-tag">SSO Ready</span>
-            <span class="iam-tag">OIDC / SAML</span>
-            <span class="iam-tag">MFA Support</span>
+          <h3>Whisper</h3>
+          <p>OpenAI's speech recognition model running locally. Transcribe videos and audio in 99 languages with high accuracy.</p>
+          <div class="model-tags">
+            <span>Transcription</span>
+            <span>99 Languages</span>
+            <span>Timestamps</span>
           </div>
         </div>
 
-        <div class="iam-card">
-          <div class="iam-icon iam-icon-warning">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+        <div class="model-card">
+          <div class="model-icon model-icon-success">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
           </div>
-          <h3>Compliance Ready</h3>
-          <p>Full audit trails for every AI action. Know who processed what content and when. Export reports for client deliverables.</p>
-          <div class="iam-features">
-            <span class="iam-tag">Audit Logs</span>
-            <span class="iam-tag">Access Reports</span>
-            <span class="iam-tag">Client Exports</span>
+          <h3>Vision Models</h3>
+          <p>LLaVA and multimodal models for image understanding. Auto-tag images, detect scenes, extract text from visuals.</p>
+          <div class="model-tags">
+            <span>LLaVA</span>
+            <span>Scene Detection</span>
+            <span>OCR</span>
           </div>
         </div>
       </div>
 
-      <div class="iam-visual">
-        <div class="iam-diagram">
-          <div class="iam-diagram-header">
-            <span class="iam-diagram-title">Access Decision Flow</span>
-          </div>
-          <div class="iam-diagram-content">
-            <div class="iam-flow">
-              <div class="iam-flow-node iam-flow-user">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span>User Request</span>
-              </div>
-              <div class="iam-flow-arrow"></div>
-              <div class="iam-flow-node iam-flow-check">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span>Policy Engine</span>
-              </div>
-              <div class="iam-flow-arrow"></div>
-              <div class="iam-flow-node iam-flow-result">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <span>Allow / Deny</span>
-              </div>
-            </div>
-            <div class="iam-checks">
-              <div class="iam-check">
-                <span class="iam-check-icon check-pass"></span>
-                <span>user.role == "editor"</span>
-              </div>
-              <div class="iam-check">
-                <span class="iam-check-icon check-pass"></span>
-                <span>user.projects.includes(asset.project)</span>
-              </div>
-              <div class="iam-check">
-                <span class="iam-check-icon check-pass"></span>
-                <span>asset.client == user.assignedClient</span>
-              </div>
-            </div>
-          </div>
+      <div class="open-source-cta">
+        <div class="oss-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          <span>AGPL-3.0</span>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- How It Works Section -->
-  <section id="how-it-works" class="how-it-works">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">// HOW IT WORKS</span>
-        <h2 class="section-title">From Raw Footage to AI-Enhanced Assets</h2>
-      </div>
-
-      <div class="steps-visual">
-        <div class="step-card">
-          <div class="step-number">01</div>
-          <h3>Deploy On Your Servers</h3>
-          <p>
-            Install Ursly on your studio infrastructure. Your footage stays on your network, always.
-          </p>
-        </div>
-
-        <div class="step-card">
-          <div class="step-number">02</div>
-          <h3>Set Up Your Team</h3>
-          <p>
-            Configure roles for producers, editors, and assistants. Assign project-based access to client work.
-          </p>
-        </div>
-
-        <div class="step-card">
-          <div class="step-number">03</div>
-          <h3>Connect Your NLE</h3>
-          <p>
-            Install our Premiere Pro or Resolve plugin. AI agents appear right in your timeline.
-          </p>
-        </div>
-
-        <div class="step-card">
-          <div class="step-number">04</div>
-          <h3>Automate Your Workflow</h3>
-          <p>
-            Transcribe, caption, analyze. Let AI handle the tedious work while your team focuses on creative decisions.
-          </p>
-        </div>
+        <p>Ursly is 100% open source. Inspect the code, contribute features, or fork for your own use.</p>
       </div>
     </div>
   </section>
@@ -599,353 +471,49 @@
     <div class="container">
       <div class="section-header">
         <span class="section-tag">// DEPLOYMENT</span>
-        <h2 class="section-title">Run Anywhere, Your Way</h2>
+        <h2 class="section-title">Run Anywhere</h2>
         <p class="section-description">
-          Deploy as a managed service on any major cloud provider or run on your own infrastructure.
+          Desktop app for daily use. Server deployment for team access. Your choice.
         </p>
       </div>
 
-      <div class="cloud-grid">
-        <div class="cloud-card">
-          <div class="cloud-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M18.75 11.35a4.32 4.32 0 0 0-.79-2.32c.02-.1.04-.2.04-.31V8.5c0-2.76-2.24-5-5-5-2.33 0-4.29 1.59-4.84 3.75A3.5 3.5 0 0 0 5 10.5c0 1.93 1.57 3.5 3.5 3.5h9.75c1.52 0 2.75-1.23 2.75-2.75 0-1.42-1.08-2.59-2.25-2.9z"/><path d="M12.5 17v4M8.5 17v4M16.5 17v4"/></svg>
+      <div class="deployment-options">
+        <div class="deploy-card">
+          <div class="deploy-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
-          <h4>AWS</h4>
-          <p>Deploy on ECS, EKS, or EC2</p>
+          <h3>Desktop App</h3>
+          <p>Native Tauri app for macOS, Windows, and Linux. Connect your storage, browse files, run AI locally.</p>
+          <a href="https://github.com/stonyp90/ursly/releases" class="btn-deploy" target="_blank">Download</a>
         </div>
 
-        <div class="cloud-card">
-          <div class="cloud-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="deploy-card">
+          <div class="deploy-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
-          <h4>Google Cloud</h4>
-          <p>Cloud Run, GKE, or Compute</p>
+          <h3>Docker / Kubernetes</h3>
+          <p>Deploy the full stack with Docker Compose or Helm charts. Scale horizontally as your team grows.</p>
+          <a href="#getting-started" class="btn-deploy">Get Started</a>
         </div>
 
-        <div class="cloud-card">
-          <div class="cloud-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M22.38 9.85l-8.5-4.91a2 2 0 0 0-2 0l-8.5 4.91a2 2 0 0 0-1 1.73v4.91a2 2 0 0 0 1 1.73l8.5 4.91a2 2 0 0 0 2 0l8.5-4.91a2 2 0 0 0 1-1.73v-4.91a2 2 0 0 0-1-1.73z"/></svg>
+        <div class="deploy-card">
+          <div class="deploy-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
           </div>
-          <h4>Azure</h4>
-          <p>Container Apps, AKS, or VMs</p>
-        </div>
-
-        <div class="cloud-card">
-          <div class="cloud-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 7h10M7 12h10M7 17h10" stroke="var(--background)" stroke-width="2"/></svg>
-          </div>
-          <h4>On-Premise</h4>
-          <p>Your servers, your control</p>
-        </div>
-      </div>
-
-      <div class="deployment-features">
-        <div class="deploy-feature">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>Docker & Kubernetes ready</span>
-        </div>
-        <div class="deploy-feature">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>Infrastructure as Code templates</span>
-        </div>
-        <div class="deploy-feature">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>Auto-scaling support</span>
-        </div>
-        <div class="deploy-feature">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>Connect any LLM provider</span>
+          <h3>Cloud GPU</h3>
+          <p>Deploy on AWS, GCP, or Azure with GPU instances. Windows Server 2025 with NVMe cache for performance.</p>
+          <a href="#getting-started" class="btn-deploy">Deploy</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Try the App Section -->
-  <section id="getting-started" class="try-app">
-    <div class="container">
-      <div class="try-app-container">
-        <div class="try-app-content">
-          <span class="section-tag">// GET STARTED</span>
-          <h2 class="section-title">Try Ursly Now</h2>
-          <p class="try-app-description">
-            Experience the power of AI agent orchestration. 
-            Access the live platform and start creating, managing, 
-            and deploying intelligent agents in minutes.
-          </p>
-          <div class="try-app-features">
-            <div class="try-app-feature">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>No installation required</span>
-            </div>
-            <div class="try-app-feature">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Full-featured dashboard</span>
-            </div>
-            <div class="try-app-feature">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Secure authentication</span>
-            </div>
-          </div>
-          <div class="try-app-actions">
-            <a href="https://app.ursly.io" class="btn-launch" target="_blank" rel="noopener">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-              Try Demo
-            </a>
-            <a href="#self-hosted" class="btn-secondary">
-              Self-Host Instead
-            </a>
-          </div>
-        </div>
-        <div class="try-app-visual">
-          <div class="app-preview">
-            <div class="preview-header">
-              <div class="preview-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <span class="preview-url">app.ursly.io</span>
-            </div>
-            <div class="preview-content">
-              <div class="preview-sidebar">
-                <div class="preview-nav-item active"></div>
-                <div class="preview-nav-item"></div>
-                <div class="preview-nav-item"></div>
-                <div class="preview-nav-item"></div>
-              </div>
-              <div class="preview-main">
-                <div class="preview-card-row">
-                  <div class="preview-stat-card"></div>
-                  <div class="preview-stat-card"></div>
-                  <div class="preview-stat-card"></div>
-                </div>
-                <div class="preview-table">
-                  <div class="preview-table-row"></div>
-                  <div class="preview-table-row"></div>
-                  <div class="preview-table-row"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="app-glow"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Integrations Section -->
-  <section id="integrations" class="integrations">
+  <!-- Getting Started Section -->
+  <section id="getting-started" class="getting-started">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">// INTEGRATIONS</span>
-        <h2 class="section-title">Extend Your Creative Workflow</h2>
-        <p class="section-description">
-          Connect Ursly to your favorite creative tools. Run AI agents directly in your workflow, powered by your local models.
-        </p>
-      </div>
-
-      <div class="integrations-grid" role="list">
-        <!-- Adobe Premiere Pro Integration Card - Full Width -->
-        <div class="integration-card integration-featured" role="listitem">
-          <div class="integration-content">
-            <div class="integration-header">
-              <div class="integration-logo adobe-premiere">
-                <svg viewBox="0 0 240 234" width="48" height="48">
-                  <path fill="#00005B" d="M42.5 0h155C221 0 240 19 240 42.5v149c0 23.5-19 42.5-42.5 42.5h-155C19 234 0 215 0 191.5v-149C0 19 19 0 42.5 0z"/>
-                  <path fill="#9999FF" d="M99 164H79l-5-24H54l-5 24H30l24-104h20l25 104zm-28-42l-8-39h-1l-8 39h17zm85-62v104h-18v-12h-1c-4 8-11 14-22 14-17 0-28-13-28-33 0-21 12-35 30-35 10 0 17 5 20 12h1V60h18zm-18 71v-14c0-10-6-17-15-17-10 0-16 8-16 19s6 19 16 19c9 0 15-7 15-17zm77-26c0 21-12 35-30 35-10 0-18-5-21-12h-1v12h-18V60h18v44h1c4-8 11-13 21-13 18 0 30 14 30 34v2zm-19 0c0-11-6-19-16-19s-16 8-16 19 6 19 16 19 16-8 16-19z"/>
-                </svg>
-              </div>
-              <div class="integration-meta">
-                <span class="integration-badge">UXP Plugin</span>
-                <span class="integration-badge badge-new">Coming Soon</span>
-              </div>
-            </div>
-            <h3 class="integration-title">Adobe Premiere Pro</h3>
-            <p class="integration-description">
-              Bring AI-powered automation directly into your video editing workflow. 
-              Our UXP plugin connects Premiere Pro to your local Ursly instance, 
-              enabling real-time AI assistance without cloud dependencies.
-            </p>
-            
-            <div class="integration-features">
-              <div class="int-feature">
-                <div class="int-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                </div>
-                <div class="int-feature-text">
-                  <strong>Local Model Inference</strong>
-                  <span>Run LLMs on your hardware via Ollama</span>
-                </div>
-              </div>
-              <div class="int-feature">
-                <div class="int-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                </div>
-                <div class="int-feature-text">
-                  <strong>Auto-Captions & Transcription</strong>
-                  <span>Generate accurate captions with local Whisper</span>
-                </div>
-              </div>
-              <div class="int-feature">
-                <div class="int-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-                </div>
-                <div class="int-feature-text">
-                  <strong>Scene Analysis</strong>
-                  <span>Intelligent clip suggestions and metadata</span>
-                </div>
-              </div>
-              <div class="int-feature">
-                <div class="int-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-                <div class="int-feature-text">
-                  <strong>Privacy First</strong>
-                  <span>Your footage never leaves your network</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="integration-code-preview">
-              <div class="code-header">
-                <span>manifest.json</span>
-              </div>
-              <div class="code-body">
-                <code>{
-  "id": "ursly.premiere.plugin",
-  "name": "Ursly AI Assistant",
-  "host": {
-    "app": "Premiere Pro",
-    "minVersion": "25.6"
-  },
-  "urslyEndpoint": "http://localhost:3000"
-}</code>
-              </div>
-            </div>
-
-            <div class="integration-actions">
-              <a href="https://developer.adobe.com/premiere-pro/uxp/introduction/" class="btn-integration" target="_blank" rel="noopener">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
-                UXP Developer Docs
-              </a>
-              <a href="https://github.com/stonyp90/ursly" class="btn-secondary-sm">
-                View Integration
-              </a>
-            </div>
-          </div>
-
-          <div class="integration-visual">
-            <div class="premiere-mockup">
-              <div class="mockup-timeline">
-                <div class="timeline-track track-video">
-                  <div class="track-label">V1</div>
-                  <div class="track-clip clip-1"></div>
-                  <div class="track-clip clip-2"></div>
-                  <div class="track-clip clip-3"></div>
-                </div>
-                <div class="timeline-track track-audio">
-                  <div class="track-label">A1</div>
-                  <div class="audio-waveform"></div>
-                </div>
-                <div class="timeline-track track-captions">
-                  <div class="track-label">CC</div>
-                  <div class="caption-block">AI Generated</div>
-                </div>
-              </div>
-              <div class="ursly-panel">
-                <div class="panel-header">
-                  <span class="panel-logo">U</span>
-                  <span>Ursly AI</span>
-                  <span class="panel-status connected"></span>
-                </div>
-                <div class="panel-action active">
-                  <span class="action-icon"></span>
-                  <span>Generate Captions</span>
-                </div>
-                <div class="panel-action">
-                  <span class="action-icon"></span>
-                  <span>Analyze Scene</span>
-                </div>
-                <div class="panel-action">
-                  <span class="action-icon"></span>
-                  <span>Smart Cut</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- More Integrations Coming Soon - 3 column grid -->
-        <div class="integration-card integration-coming" role="listitem">
-          <div class="integration-header">
-            <div class="integration-logo davinci">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M8 12l3 3 5-5" stroke="#000" stroke-width="2" fill="none"/>
-              </svg>
-            </div>
-          </div>
-          <div class="integration-content">
-            <h3 class="integration-title">DaVinci Resolve</h3>
-            <p class="integration-description">
-              Scripted automation for Resolve's powerful editing and color grading tools.
-            </p>
-            <span class="coming-soon-badge">Coming Soon</span>
-          </div>
-        </div>
-
-        <div class="integration-card integration-coming" role="listitem">
-          <div class="integration-header">
-            <div class="integration-logo aftereffects">
-              <svg viewBox="0 0 240 234" width="40" height="40">
-                <path fill="#00005B" d="M42.5 0h155C221 0 240 19 240 42.5v149c0 23.5-19 42.5-42.5 42.5h-155C19 234 0 215 0 191.5v-149C0 19 19 0 42.5 0z"/>
-                <path fill="#9999FF" d="M90 168H70l-5-26H44l-5 26H20l26-112h19l25 112zm-28-45l-9-42h-1l-9 42h19zm102-67h20l-35 112h-20l-35-112h21l24 85h1l24-85z"/>
-              </svg>
-            </div>
-          </div>
-          <div class="integration-content">
-            <h3 class="integration-title">After Effects</h3>
-            <p class="integration-description">
-              AI-assisted motion graphics and visual effects automation.
-            </p>
-            <span class="coming-soon-badge">Coming Soon</span>
-          </div>
-        </div>
-
-        <div class="integration-card integration-coming" role="listitem">
-          <div class="integration-header">
-            <div class="integration-logo vscode">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zm-5.146 14.861L10.826 12l7.178-5.448v10.896z"/>
-              </svg>
-            </div>
-          </div>
-          <div class="integration-content">
-            <h3 class="integration-title">VS Code Extension</h3>
-            <p class="integration-description">
-              Code generation and refactoring with your local models directly in your editor.
-            </p>
-            <span class="coming-soon-badge">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="integration-cta">
-        <p>Want to build an integration?</p>
-        <a href="https://github.com/stonyp90/ursly" target="_blank" rel="noopener" class="btn-secondary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-          Explore the API
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Self-Hosted Section -->
-  <section id="self-hosted" class="getting-started">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">// SELF-HOSTED</span>
-        <h2 class="section-title">Or Run It Yourself</h2>
+        <span class="section-tag">// GET STARTED</span>
+        <h2 class="section-title">Up and Running in Minutes</h2>
       </div>
 
       <div class="quick-start">
@@ -957,7 +525,7 @@
             <code><span class="code-comment"># Clone the repository</span>
 git clone https://github.com/stonyp90/ursly.git
 
-<span class="code-comment"># Install and start</span>
+<span class="code-comment"># Start with Docker Compose</span>
 cd ursly
 docker-compose up -d
 
@@ -969,13 +537,14 @@ open http://localhost:4200</code>
           <h3>Full control, your infrastructure</h3>
           <p>
             Get Ursly running locally in under 5 minutes. 
-            The Docker Compose setup includes everything you need 
-            to start creating and managing AI agents.
+            The Docker Compose setup includes everything you need:
           </p>
           <ul>
-            <li>Pre-configured with demo users and roles</li>
-            <li>Sample agents ready to test</li>
-            <li>Full documentation included</li>
+            <li>Web dashboard with dark theme</li>
+            <li>API server with RBAC</li>
+            <li>Keycloak for authentication</li>
+            <li>MongoDB for metadata</li>
+            <li>Ollama integration ready</li>
           </ul>
           <a href="https://github.com/stonyp90/ursly" class="btn-primary" target="_blank" rel="noopener">
             View on GitHub
@@ -990,8 +559,8 @@ open http://localhost:4200</code>
   <section class="cta" aria-labelledby="cta-heading">
     <div class="container">
       <div class="cta-content">
-        <h2 id="cta-heading">Ready to Own Your AI Infrastructure?</h2>
-        <p>Stop paying per-token. Run unlimited AI workflows on hardware you already own.</p>
+        <h2 id="cta-heading">Ready to Unify Your Media Assets?</h2>
+        <p>Join teams using Ursly for agent-powered media asset management.</p>
         <div class="cta-actions">
           <a href="https://github.com/stonyp90/ursly" class="btn-primary" target="_blank" rel="noopener noreferrer" aria-label="Star Ursly on GitHub">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
@@ -1017,16 +586,15 @@ open http://localhost:4200</code>
             <span class="logo-icon">U</span>
             <span class="logo-text">URSLY</span>
           </a>
-          <p>AI Media Asset Orchestration</p>
+          <p>Agent Media Asset Management</p>
         </div>
         <div class="footer-links">
           <div class="footer-column">
             <h5>Product</h5>
             <a href="#features">Features</a>
-            <a href="#how-it-works">How It Works</a>
-            <a href="#integrations">Integrations</a>
+            <a href="#product">Screenshots</a>
+            <a href="#open-source">Open Source AI</a>
             <a href="#deployment">Deployment</a>
-            <a href="https://app.ursly.io" target="_blank" rel="noopener">Try Demo</a>
           </div>
           <div class="footer-column">
             <h5>Resources</h5>
@@ -1037,7 +605,7 @@ open http://localhost:4200</code>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>MIT License. Open source and free to use.</p>
+        <p>AGPL-3.0 License. Open source and free to use.</p>
       </div>
     </div>
   </footer>
@@ -1073,7 +641,6 @@ open http://localhost:4200</code>
         const target = document.querySelector(targetId);
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          // Set focus for accessibility
           target.setAttribute('tabindex', '-1');
           target.focus({ preventScroll: true });
         }

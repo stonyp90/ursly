@@ -48,6 +48,8 @@ pub struct VfsFileMetadataResponse {
     pub can_transcode: bool,
     pub transcode_status: Option<String>,
     pub transcode_progress: Option<u8>,
+    pub thumbnail: Option<String>,  // Base64 data URL or API URL
+    pub mime_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -459,6 +461,38 @@ pub async fn vfs_list_files(
         // Check if file is hidden (starts with . on Unix, or has hidden attribute)
         let is_hidden = f.name.starts_with('.') || f.is_hidden.unwrap_or(false);
         
+        // Determine MIME type from extension
+        let mime_type = f.path.extension()
+            .and_then(|e| e.to_str())
+            .map(|ext| match ext.to_lowercase().as_str() {
+                "jpg" | "jpeg" => "image/jpeg",
+                "png" => "image/png",
+                "gif" => "image/gif",
+                "webp" => "image/webp",
+                "svg" => "image/svg+xml",
+                "heic" | "heif" => "image/heic",
+                "pdf" => "application/pdf",
+                "mp4" => "video/mp4",
+                "mov" => "video/quicktime",
+                "avi" => "video/x-msvideo",
+                "mkv" => "video/x-matroska",
+                "webm" => "video/webm",
+                "mp3" => "audio/mpeg",
+                "wav" => "audio/wav",
+                "flac" => "audio/flac",
+                "txt" => "text/plain",
+                "json" => "application/json",
+                "xml" => "application/xml",
+                "html" | "htm" => "text/html",
+                "css" => "text/css",
+                "js" => "application/javascript",
+                "ts" | "tsx" => "text/typescript",
+                "md" => "text/markdown",
+                "zip" => "application/zip",
+                "tar" | "gz" | "bz2" => "application/x-compressed",
+                _ => "application/octet-stream",
+            }.to_string());
+        
         VfsFileMetadataResponse {
             id: f.id,
             name: f.name,
@@ -474,6 +508,8 @@ pub async fn vfs_list_files(
             can_transcode,
             transcode_status,
             transcode_progress,
+            thumbnail: None, // Thumbnails loaded on demand via vfs_get_thumbnail
+            mime_type,
         }
     }).collect())
 }
@@ -3094,4 +3130,74 @@ fn get_windows_preferences() -> Result<OsPreferences, String> {
         sort_ascending: true,
         platform: "windows".to_string(),
     })
+}
+
+/// Get thumbnail for a file
+/// Returns base64-encoded data URL for the thumbnail
+#[tauri::command]
+pub async fn vfs_get_thumbnail(
+    source_id: String,
+    file_path: String,
+    size: Option<u32>,
+    state: State<'_, VfsStateWrapper>,
+) -> Result<Option<String>, String> {
+    use crate::vfs::adapters::native_thumbnail::{NativeThumbnailAdapter, ThumbnailType};
+    use data_encoding::BASE64;
+    
+    let service = state.get_service()
+        .ok_or_else(|| "VFS not initialized".to_string())?;
+    
+    let thumb_size = size.unwrap_or(128);
+    let path = std::path::Path::new(&file_path);
+    
+    // Check if file type supports thumbnails
+    let ext = path.extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("");
+    
+    let thumb_type = ThumbnailType::from_extension(ext);
+    if !thumb_type.is_supported() {
+        return Ok(None);
+    }
+    
+    // Get the source to determine how to get the thumbnail
+    let source = service.get_source(&source_id)
+        .ok_or_else(|| "Source not found".to_string())?;
+    
+    // For local/mounted sources, use native OS thumbnail generation
+    if let Some(ref mount_point) = source.mount_point {
+        let full_path = mount_point.join(path);
+        
+        if full_path.exists() {
+            // Create thumbnail adapter
+            let cache_dir = dirs::cache_dir()
+                .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
+                .join("ursly-thumbnails");
+            
+            match NativeThumbnailAdapter::new(cache_dir).await {
+                Ok(adapter) => {
+                    match adapter.generate_thumbnail(&full_path, thumb_size).await {
+                        Ok(thumb_data) => {
+                            // Convert to base64 data URL
+                            let base64_data = BASE64.encode(&thumb_data.data);
+                            let data_url = format!("data:image/png;base64,{}", base64_data);
+                            return Ok(Some(data_url));
+                        }
+                        Err(e) => {
+                            tracing::debug!("Failed to generate native thumbnail for {}: {}", file_path, e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::debug!("Failed to create thumbnail adapter: {}", e);
+                }
+            }
+        }
+    }
+    
+    // For network/object storage without local mount, could call API
+    // For now, return None and let frontend handle with a placeholder
+    // TODO: Add API-based thumbnail fetching for cloud storage
+    
+    Ok(None)
 }

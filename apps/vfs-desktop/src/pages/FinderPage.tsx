@@ -417,6 +417,39 @@ export function FinderPage() {
     }
   }, [selectedSource?.id, currentPath]);
 
+  // Load thumbnails when switching to grid view
+  useEffect(() => {
+    if (viewMode === 'grid' && selectedSource?.id && files.length > 0) {
+      // Check if any files need thumbnails
+      const needsThumbnails = files.some(
+        (f) => !f.isDirectory && !f.thumbnail && canHaveThumbnail(f.name),
+      );
+      if (needsThumbnails) {
+        loadThumbnailsForFiles(selectedSource.id, files);
+      }
+    }
+  }, [viewMode]);
+
+  // Helper to check if file can have a thumbnail
+  const canHaveThumbnail = (filename: string): boolean => {
+    const thumbnailTypes = [
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'webp',
+      'heic',
+      'pdf',
+      'mp4',
+      'mov',
+      'avi',
+      'mkv',
+      'webm',
+    ];
+    const ext = filename.split('.').pop()?.toLowerCase() || '';
+    return thumbnailTypes.includes(ext);
+  };
+
   const loadSourcesList = async () => {
     try {
       const list = await StorageService.listSources();
@@ -442,11 +475,73 @@ export function FinderPage() {
       const list = await StorageService.listFiles(sourceId, path);
       console.log('[VFS] Loaded', list.length, 'files');
       setFiles(list);
+
+      // Load thumbnails for image/video files in the background
+      if (viewMode === 'grid') {
+        loadThumbnailsForFiles(sourceId, list);
+      }
     } catch (err) {
       console.error('[VFS] Failed to load files:', err);
       setFiles([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load thumbnails for files that support them
+  const loadThumbnailsForFiles = async (
+    sourceId: string,
+    fileList: FileMetadata[],
+  ) => {
+    const thumbnailTypes = [
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'webp',
+      'heic',
+      'pdf',
+      'mp4',
+      'mov',
+      'avi',
+      'mkv',
+      'webm',
+    ];
+
+    // Filter files that can have thumbnails
+    const filesToLoad = fileList.filter((f) => {
+      if (f.isDirectory || f.thumbnail) return false;
+      const ext = f.name.split('.').pop()?.toLowerCase() || '';
+      return thumbnailTypes.includes(ext);
+    });
+
+    // Load thumbnails in batches to avoid overwhelming the system
+    const batchSize = 5;
+    for (let i = 0; i < filesToLoad.length; i += batchSize) {
+      const batch = filesToLoad.slice(i, i + batchSize);
+
+      await Promise.all(
+        batch.map(async (file) => {
+          try {
+            const thumbnail = await StorageService.getThumbnail(
+              sourceId,
+              file.path,
+              128,
+            );
+            if (thumbnail) {
+              // Update the file with thumbnail
+              setFiles((prev) =>
+                prev.map((f) =>
+                  f.path === file.path ? { ...f, thumbnail } : f,
+                ),
+              );
+            }
+          } catch (error) {
+            // Silently ignore thumbnail errors
+            console.debug('Thumbnail load failed for:', file.name);
+          }
+        }),
+      );
     }
   };
 
