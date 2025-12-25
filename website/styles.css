@@ -838,8 +838,8 @@ ul {
 }
 
 .what-is-text h2 {
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  margin-bottom: 24px;
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  margin-bottom: 16px;
   line-height: 1.2;
 }
 
@@ -2826,8 +2826,8 @@ ul {
 /* Tablets */
 @media (max-width: 768px) {
   :root {
-    --section-padding: 60px;
-    --card-padding: 20px;
+    --section-padding: 48px;
+    --card-padding: 16px;
   }
 
   .nav-links {

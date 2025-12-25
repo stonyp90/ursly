@@ -55,6 +55,9 @@ export class StorageService {
           region: s.region,
         },
         status,
+        // Volume vs Location flags
+        isEjectable: s.is_ejectable ?? false,
+        isSystemLocation: s.is_system_location ?? false,
         // Backward compatibility
         type: providerId,
         connected: status === 'connected',
@@ -400,6 +403,8 @@ export interface VfsStorageSource {
   path?: string;
   bucket?: string;
   region?: string;
+  is_ejectable?: boolean;
+  is_system_location?: boolean;
 }
 
 export interface VfsFileMetadata {

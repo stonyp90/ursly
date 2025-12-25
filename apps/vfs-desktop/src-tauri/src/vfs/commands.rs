@@ -26,6 +26,10 @@ pub struct VfsStorageSourceResponse {
     pub path: Option<String>,
     pub bucket: Option<String>,
     pub region: Option<String>,
+    /// Whether this is a mounted volume that can be ejected (DMG, external drive, etc.)
+    pub is_ejectable: bool,
+    /// Whether this is a system location (Home, Documents, etc.)
+    pub is_system_location: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -242,15 +246,38 @@ pub async fn vfs_list_sources(
     
     let sources = service.list_sources();
     
-    Ok(sources.into_iter().map(|s| VfsStorageSourceResponse {
-        id: s.id,
-        name: s.name,
-        source_type: format!("{:?}", s.source_type),
-        mounted: s.mounted,
-        status: format!("{:?}", s.status),
-        path: s.mount_point.map(|p| p.to_string_lossy().to_string()),
-        bucket: Some(s.config.path_or_bucket),
-        region: s.config.region,
+    Ok(sources.into_iter().map(|s| {
+        let path_str = s.mount_point.as_ref().map(|p| p.to_string_lossy().to_string());
+        
+        // Determine if this is an ejectable volume or a system location
+        let (is_ejectable, is_system_location) = if let Some(ref path) = path_str {
+            // On macOS, /Volumes/ contains mounted volumes (except Macintosh HD)
+            // DMG mounts and external drives appear here
+            let is_volume_mount = path.starts_with("/Volumes/") && !path.contains("Macintosh HD");
+            
+            // System locations are user home directories and their subdirectories
+            let home_dir = std::env::var("HOME").unwrap_or_default();
+            let is_home_or_subdir = path.starts_with(&home_dir) || 
+                                    path == "/" ||
+                                    path == "/Applications";
+            
+            (is_volume_mount, is_home_or_subdir && !is_volume_mount)
+        } else {
+            (false, false)
+        };
+        
+        VfsStorageSourceResponse {
+            id: s.id,
+            name: s.name,
+            source_type: format!("{:?}", s.source_type),
+            mounted: s.mounted,
+            status: format!("{:?}", s.status),
+            path: path_str,
+            bucket: Some(s.config.path_or_bucket),
+            region: s.config.region,
+            is_ejectable,
+            is_system_location,
+        }
     }).collect())
 }
 
@@ -270,6 +297,11 @@ pub async fn vfs_mount_local(
     
     info!("Mounted local storage: {} at {}", source.name, path);
     
+    // Determine if this is an ejectable volume
+    let is_ejectable = path.starts_with("/Volumes/") && !path.contains("Macintosh HD");
+    let home_dir = std::env::var("HOME").unwrap_or_default();
+    let is_system_location = (path.starts_with(&home_dir) || path == "/" || path == "/Applications") && !is_ejectable;
+    
     Ok(VfsStorageSourceResponse {
         id: source.id,
         name: source.name,
@@ -279,6 +311,8 @@ pub async fn vfs_mount_local(
         path: Some(path),
         bucket: None,
         region: None,
+        is_ejectable,
+        is_system_location,
     })
 }
 

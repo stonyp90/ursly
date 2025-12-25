@@ -489,6 +489,12 @@ export interface StorageSource {
   /** Storage tier status */
   tierStatus?: 'hot' | 'warm' | 'cold' | 'archive';
 
+  /** Whether this is a mounted volume that can be ejected (DMG, external drive, etc.) */
+  isEjectable?: boolean;
+
+  /** Whether this is a system location (Home, Documents, etc.) - not ejectable */
+  isSystemLocation?: boolean;
+
   // =========================================================================
   // Backward compatibility properties
   // =========================================================================

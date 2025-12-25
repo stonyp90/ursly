@@ -739,6 +739,16 @@
   background: rgba(16, 185, 129, 0.15);
 }
 
+.group-icon.volumes {
+  color: var(--vfs-warning, #ff9f0a);
+  background: rgba(255, 159, 10, 0.15);
+}
+
+.group-icon.locations {
+  color: var(--tier-hot, #10b981);
+  background: rgba(16, 185, 129, 0.15);
+}
+
 .group-icon.network {
   color: var(--finder-accent, #0a84ff);
   background: rgba(10, 132, 255, 0.15);

@@ -2192,36 +2192,84 @@ export function FinderPage() {
               <span className="section-count">({sources.length})</span>
             </div>
 
-            {/* Local Storage */}
+            {/* Local Storage - Split into Volumes and Locations */}
             {sources.filter((s) => s.category === 'local').length > 0 && (
-              <div
-                className={`storage-group ${collapsedGroups.has('local') ? 'collapsed' : ''}`}
-              >
-                <button
-                  className="storage-group-header"
-                  onClick={() => toggleGroup('local')}
-                >
-                  <span className="group-chevron">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                    </svg>
-                  </span>
-                  <span className="group-icon local">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
-                    </svg>
-                  </span>
-                  <span className="group-label">Local</span>
-                  <span className="group-count">
-                    {sources.filter((s) => s.category === 'local').length}
-                  </span>
-                </button>
-                <div className="storage-group-items">
-                  {sources
-                    .filter((s) => s.category === 'local')
-                    .map((source) => renderStorageItem(source))}
-                </div>
-              </div>
+              <>
+                {/* Mounted Volumes (ejectable) */}
+                {sources.filter((s) => s.category === 'local' && s.isEjectable)
+                  .length > 0 && (
+                  <div
+                    className={`storage-group ${collapsedGroups.has('volumes') ? 'collapsed' : ''}`}
+                  >
+                    <button
+                      className="storage-group-header"
+                      onClick={() => toggleGroup('volumes')}
+                    >
+                      <span className="group-chevron">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg>
+                      </span>
+                      <span className="group-icon volumes">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v2A1.5 1.5 0 0 1 14.5 5h-13A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-13z" />
+                          <path d="M2 2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm10 0a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0z" />
+                        </svg>
+                      </span>
+                      <span className="group-label">Volumes</span>
+                      <span className="group-count">
+                        {
+                          sources.filter(
+                            (s) => s.category === 'local' && s.isEjectable,
+                          ).length
+                        }
+                      </span>
+                    </button>
+                    <div className="storage-group-items">
+                      {sources
+                        .filter((s) => s.category === 'local' && s.isEjectable)
+                        .map((source) => renderStorageItem(source))}
+                    </div>
+                  </div>
+                )}
+
+                {/* System Locations (non-ejectable) */}
+                {sources.filter((s) => s.category === 'local' && !s.isEjectable)
+                  .length > 0 && (
+                  <div
+                    className={`storage-group ${collapsedGroups.has('locations') ? 'collapsed' : ''}`}
+                  >
+                    <button
+                      className="storage-group-header"
+                      onClick={() => toggleGroup('locations')}
+                    >
+                      <span className="group-chevron">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg>
+                      </span>
+                      <span className="group-icon locations">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z" />
+                        </svg>
+                      </span>
+                      <span className="group-label">Locations</span>
+                      <span className="group-count">
+                        {
+                          sources.filter(
+                            (s) => s.category === 'local' && !s.isEjectable,
+                          ).length
+                        }
+                      </span>
+                    </button>
+                    <div className="storage-group-items">
+                      {sources
+                        .filter((s) => s.category === 'local' && !s.isEjectable)
+                        .map((source) => renderStorageItem(source))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Network Storage (NFS, SMB, NAS) */}
