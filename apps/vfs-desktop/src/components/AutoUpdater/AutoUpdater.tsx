@@ -3,10 +3,25 @@
  * Checks for updates and shows progress during download/install
  */
 import { useState, useEffect, useCallback } from 'react';
-import { check, install, onUpdaterEvent } from '@tauri-apps/plugin-updater';
-import { relaunch } from '@tauri-apps/api/process';
-import type { UpdateManifest } from '@tauri-apps/plugin-updater';
 import './AutoUpdater.css';
+
+// Lazy load updater plugin to avoid crashes in dev mode
+let updaterModule: typeof import('@tauri-apps/plugin-updater') | null = null;
+let processModule: typeof import('@tauri-apps/api/process') | null = null;
+
+const loadUpdaterModule = async () => {
+  if (updaterModule && processModule) return;
+
+  try {
+    updaterModule = await import('@tauri-apps/plugin-updater');
+    processModule = await import('@tauri-apps/api/process');
+  } catch (err) {
+    // Plugin not available in dev mode or not configured - this is expected
+    console.debug('Updater plugin not available (expected in dev mode):', err);
+  }
+};
+
+type UpdateManifest = import('@tauri-apps/plugin-updater').UpdateManifest;
 
 export function AutoUpdater() {
   const [isChecking, setIsChecking] = useState(true);
@@ -20,10 +35,17 @@ export function AutoUpdater() {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const checkForUpdates = useCallback(async () => {
+    await loadUpdaterModule();
+
+    if (!updaterModule) {
+      setIsChecking(false);
+      return;
+    }
+
     setIsChecking(true);
     setError(null);
     try {
-      const { shouldUpdate, manifest } = await check();
+      const { shouldUpdate, manifest } = await updaterModule.check();
       if (shouldUpdate && manifest) {
         setUpdateAvailable(manifest);
       } else {
@@ -41,12 +63,12 @@ export function AutoUpdater() {
   }, []);
 
   const applyUpdate = useCallback(async () => {
-    if (!updateAvailable) return;
+    if (!updateAvailable || !updaterModule || !processModule) return;
     setIsUpdating(true);
     setError(null);
     try {
-      await install();
-      await relaunch();
+      await updaterModule.install();
+      await processModule.relaunch();
     } catch (err) {
       console.error('Failed to install update:', err);
       setError(
@@ -57,58 +79,73 @@ export function AutoUpdater() {
   }, [updateAvailable]);
 
   useEffect(() => {
-    checkForUpdates();
+    let interval: NodeJS.Timeout | null = null;
+    let unlistenPromise: Promise<() => void> | null = null;
 
-    // Check for updates every 6 hours
-    const interval = setInterval(
-      () => {
-        checkForUpdates();
-      },
-      6 * 60 * 60 * 1000,
-    );
-
-    const unlisten = onUpdaterEvent(({ event, payload }) => {
-      switch (event) {
-        case 'UPDATE_AVAILABLE':
-          setUpdateAvailable(payload as UpdateManifest);
-          break;
-        case 'DOWNLOAD_PROGRESS': {
-          const progress = payload as {
-            chunkLength: number;
-            contentLength: number;
-          };
-          setDownloadProgress(
-            progress.contentLength > 0
-              ? (progress.chunkLength / progress.contentLength) * 100
-              : 0,
-          );
-          setDownloadedBytes(progress.chunkLength);
-          setTotalBytes(progress.contentLength);
-          break;
-        }
-        case 'DOWNLOAD_FINISHED': {
-          const finished = payload as { contentLength: number };
-          setDownloadProgress(100);
-          setDownloadedBytes(finished.contentLength);
-          setTotalBytes(finished.contentLength);
-          break;
-        }
-        case 'INSTALL_PROGRESS':
-          // Not typically used for Tauri, install is fast
-          break;
-        case 'UPDATE_INSTALLED':
-          relaunch();
-          break;
-        case 'ERROR':
-          setError(payload as string);
-          setIsUpdating(false);
-          break;
+    loadUpdaterModule().then(() => {
+      if (!updaterModule) {
+        return; // Plugin not available, skip setup
       }
+
+      checkForUpdates();
+
+      // Check for updates every 6 hours
+      interval = setInterval(
+        () => {
+          checkForUpdates();
+        },
+        6 * 60 * 60 * 1000,
+      );
+
+      unlistenPromise = updaterModule.onUpdaterEvent(({ event, payload }) => {
+        switch (event) {
+          case 'UPDATE_AVAILABLE':
+            setUpdateAvailable(payload as UpdateManifest);
+            break;
+          case 'DOWNLOAD_PROGRESS': {
+            const progress = payload as {
+              chunkLength: number;
+              contentLength: number;
+            };
+            setDownloadProgress(
+              progress.contentLength > 0
+                ? (progress.chunkLength / progress.contentLength) * 100
+                : 0,
+            );
+            setDownloadedBytes(progress.chunkLength);
+            setTotalBytes(progress.contentLength);
+            break;
+          }
+          case 'DOWNLOAD_FINISHED': {
+            const finished = payload as { contentLength: number };
+            setDownloadProgress(100);
+            setDownloadedBytes(finished.contentLength);
+            setTotalBytes(finished.contentLength);
+            break;
+          }
+          case 'INSTALL_PROGRESS':
+            // Not typically used for Tauri, install is fast
+            break;
+          case 'UPDATE_INSTALLED':
+            if (processModule) {
+              processModule.relaunch();
+            }
+            break;
+          case 'ERROR':
+            setError(payload as string);
+            setIsUpdating(false);
+            break;
+        }
+      });
     });
 
     return () => {
-      clearInterval(interval);
-      unlisten.then((f) => f());
+      if (interval) {
+        clearInterval(interval);
+      }
+      if (unlistenPromise) {
+        unlistenPromise.then((f) => f());
+      }
     };
   }, [checkForUpdates]);
 
