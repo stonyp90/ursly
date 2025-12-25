@@ -118,9 +118,9 @@ const formatUptime = (s: number) => {
 };
 
 const getColor = (v: number, t = 90) => {
-  if (v < t * 0.6) return 'var(--metric-good)';
-  if (v < t * 0.85) return 'var(--metric-warn)';
-  return 'var(--metric-crit)';
+  if (v < t * 0.6) return 'var(--vfs-success, #30d158)';
+  if (v < t * 0.85) return 'var(--vfs-warning, #ff9f0a)';
+  return 'var(--vfs-error, #ff453a)';
 };
 
 // Circular Progress Ring
@@ -600,7 +600,7 @@ export function MetricsPage() {
   const memColor = getColor(sys.memory_usage_percent, thresholds.memory);
   const gpuColor = gpu
     ? getColor(gpu.current.gpu_utilization, thresholds.gpu)
-    : 'var(--metric-good)';
+    : 'var(--vfs-success, #30d158)';
 
   return (
     <div className="metrics-page">
@@ -775,25 +775,25 @@ export function MetricsPage() {
               label="Read"
               value={formatThroughput(sys.disk_read_bytes_sec)}
               icon={<UpIcon />}
-              color="var(--metric-good)"
+              color="var(--vfs-success, #30d158)"
             />
             <IOStat
               label="Write"
               value={formatThroughput(sys.disk_write_bytes_sec)}
               icon={<DownIcon />}
-              color="var(--metric-warn)"
+              color="var(--vfs-warning, #ff9f0a)"
             />
           </div>
           <div className="io-charts">
             <LiveChart
               data={history.diskR}
-              color="var(--metric-good)"
+              color="var(--vfs-success, #30d158)"
               height={50}
               showGrid={false}
             />
             <LiveChart
               data={history.diskW}
-              color="var(--metric-warn)"
+              color="var(--vfs-warning, #ff9f0a)"
               height={50}
               showGrid={false}
             />
@@ -818,25 +818,25 @@ export function MetricsPage() {
               label="Download"
               value={formatThroughput(sys.network_rx_bytes_sec)}
               icon={<DownIcon />}
-              color="var(--primary)"
+              color="var(--vfs-primary, #0a84ff)"
             />
             <IOStat
               label="Upload"
               value={formatThroughput(sys.network_tx_bytes_sec)}
               icon={<UpIcon />}
-              color="var(--secondary)"
+              color="var(--vfs-secondary, #5e5ce6)"
             />
           </div>
           <div className="io-charts">
             <LiveChart
               data={history.netRx}
-              color="var(--primary)"
+              color="var(--vfs-primary, #0a84ff)"
               height={50}
               showGrid={false}
             />
             <LiveChart
               data={history.netTx}
-              color="var(--secondary)"
+              color="var(--vfs-secondary, #5e5ce6)"
               height={50}
               showGrid={false}
             />
