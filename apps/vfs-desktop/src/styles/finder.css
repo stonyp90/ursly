@@ -2748,6 +2748,9 @@
 /* Submenu support */
 .context-item.has-submenu {
   position: relative;
+  display: flex;
+  align-items: center;
+  cursor: default;
 }
 
 .context-arrow {
@@ -2755,35 +2758,82 @@
   height: 10px;
   margin-left: auto;
   color: var(--finder-text-quaternary);
+  flex-shrink: 0;
+}
+
+.context-item.has-submenu:hover {
+  background: var(--finder-selection);
 }
 
 .context-item.has-submenu:hover .context-arrow {
   color: var(--finder-text-secondary);
 }
 
+/* Submenu container */
 .context-submenu {
   position: absolute;
-  left: 100%;
+  left: calc(100% + 2px);
   top: -4px;
-  min-width: 180px;
-  max-width: 250px;
-  background: var(--finder-bg-secondary);
+  min-width: 200px;
+  max-width: 280px;
+  background: var(--vfs-bg-secondary);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--finder-border);
-  border-radius: 8px;
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--vfs-border);
+  border-radius: var(--finder-radius-md, 8px);
+  box-shadow: var(--vfs-shadow-xl);
   padding: 4px 0;
-  z-index: 10001;
+  z-index: 10002;
+  animation: submenu-appear 0.15s ease-out;
+}
+
+@keyframes submenu-appear {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .context-submenu .context-item {
-  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
   font-size: 12px;
+  color: var(--vfs-text-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease;
 }
 
 .context-submenu .context-item:hover:not(:disabled) {
-  background: var(--finder-selection);
+  background: var(--vfs-primary);
+  color: white;
+}
+
+.context-submenu .context-item.disabled,
+.context-submenu .context-item:disabled {
+  color: var(--vfs-text-muted);
+  cursor: default;
+}
+
+.context-submenu .context-divider {
+  height: 1px;
+  background: var(--vfs-separator);
+  margin: 4px 8px;
+}
+
+/* Light theme */
+[data-theme='light'] .context-submenu {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* =========================================

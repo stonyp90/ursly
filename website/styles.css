@@ -44,12 +44,12 @@
   --text-muted: #6a6a7a;
   --text-dim: #4a4a5a;
 
-  /* Spacing - Compact startup style */
-  --nav-height: 64px;
-  --container-max: 1140px;
-  --section-padding: 80px;
-  --card-radius: 12px;
-  --card-padding: 24px;
+  /* Spacing - Ultra-compact startup style */
+  --nav-height: 60px;
+  --container-max: 1100px;
+  --section-padding: 64px;
+  --card-radius: 10px;
+  --card-padding: 20px;
 
   /* Fonts */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -386,9 +386,9 @@ ul {
   min-height: auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 48px;
+  gap: 40px;
   align-items: center;
-  padding: calc(var(--nav-height) + 48px) 24px 48px;
+  padding: calc(var(--nav-height) + 40px) 24px 40px;
   max-width: var(--container-max);
   margin: 0 auto;
   position: relative;
@@ -722,8 +722,8 @@ ul {
 
 .section-header {
   text-align: center;
-  max-width: 640px;
-  margin: 0 auto 48px;
+  max-width: 600px;
+  margin: 0 auto 36px;
 }
 
 .section-title {
