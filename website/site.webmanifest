@@ -1,0 +1,27 @@
+{
+  "name": "Ursly - Cloud-Native Virtual File System",
+  "short_name": "Ursly",
+  "description": "One interface for all your cloud storage. Connect S3, Azure, GCS, and NAS.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08080c",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "favicon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "favicon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
+
