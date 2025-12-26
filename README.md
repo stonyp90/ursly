@@ -8,6 +8,8 @@
 
 **One app. All your clouds. Zero friction.**
 
+✅ **Enterprise-Grade**: Production-ready desktop application with native performance, comprehensive testing, and enterprise-quality code.
+
 Connect AWS, Azure, Google Cloud, your NAS, and 15+ more storage services. Search with AI. Stay in flow.
 
 <br />
