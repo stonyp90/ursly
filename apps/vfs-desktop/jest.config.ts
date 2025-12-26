@@ -19,10 +19,8 @@ export default {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',
-    'useDeploymentMode.spec.ts', // Temporarily skip - needs Vitest to Jest conversion
-    'useDraggableSection.spec.tsx', // Temporarily skip - React hooks setup issue
-    'useDraggablePanel.spec.tsx', // Temporarily skip - React hooks setup issue
-    'FinderPage.spec.tsx', // Temporarily skip - React hooks setup issue
+    'FinderPage.spec.tsx', // Complex component with many dependencies - needs extensive mocking
+    'useDraggablePanel.spec.tsx', // React hooks test environment issue
   ],
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {

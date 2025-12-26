@@ -9,7 +9,7 @@ interface ImportMetaMock {
 
 export function getEnvVar(key: string): string | undefined {
   // Try to access via globalThis mock (set up in setupTests.ts)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+
   const globalImport = (globalThis as { import?: { meta?: ImportMetaMock } })
     .import;
   if (globalImport?.meta?.env?.[key]) {
@@ -18,7 +18,6 @@ export function getEnvVar(key: string): string | undefined {
 
   // Try direct access (works in Vite, fails silently in Jest)
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
     const meta =
       typeof (globalThis as { importMeta?: ImportMetaMock }).importMeta !==
       'undefined'

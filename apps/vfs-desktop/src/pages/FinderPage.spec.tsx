@@ -6,10 +6,8 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { FinderPage } from './FinderPage';
-import * as tauriCore from '@tauri-apps/api/core';
 
-// Mock Tauri API
+// Mock all Tauri APIs before imports
 jest.mock('@tauri-apps/api/core', () => ({
   invoke: jest.fn(),
 }));
@@ -21,6 +19,88 @@ jest.mock('@tauri-apps/api/event', () => ({
     }),
   ),
 }));
+
+jest.mock('@tauri-apps/api/dialog', () => ({
+  open: jest.fn(),
+  save: jest.fn(),
+}));
+
+jest.mock('@tauri-apps/api/shell', () => ({
+  open: jest.fn(),
+}));
+
+jest.mock('@tauri-apps/plugin-dialog', () => ({
+  open: jest.fn(),
+  save: jest.fn(),
+}));
+
+// Mock all services
+jest.mock('../services/storage.service', () => ({
+  StorageService: {
+    getSources: jest.fn(() => Promise.resolve([])),
+    getFiles: jest.fn(() => Promise.resolve([])),
+  },
+  VfsService: {
+    getAppsForFile: jest.fn(() => Promise.resolve([])),
+  },
+}));
+
+jest.mock('../services/dialog.service', () => ({
+  DialogService: {
+    showOpenDialog: jest.fn(),
+    showSaveDialog: jest.fn(),
+  },
+}));
+
+// Mock all hooks
+jest.mock('../hooks/useKeyboardShortcuts', () => ({
+  useKeyboardShortcuts: jest.fn(() => ({})),
+}));
+
+jest.mock('../components/Toast', () => ({
+  useToast: jest.fn(() => ({
+    showToast: jest.fn(),
+  })),
+}));
+
+jest.mock('../components/KeyboardShortcutHelper', () => ({
+  useKeyboardShortcutHelper: jest.fn(() => ({})),
+  KeyboardShortcutHelper: () => null,
+}));
+
+// Mock all components
+jest.mock('../components/Breadcrumbs', () => ({
+  Breadcrumbs: () => <div data-testid="breadcrumbs">Breadcrumbs</div>,
+}));
+
+jest.mock('../components/SearchBox', () => ({
+  SearchBox: () => <div data-testid="search-box">SearchBox</div>,
+}));
+
+jest.mock('../components/SpotlightSearch', () => ({
+  SpotlightSearch: () => (
+    <div data-testid="spotlight-search">SpotlightSearch</div>
+  ),
+}));
+
+jest.mock('../components/MetricsPreview', () => ({
+  MetricsPreview: () => <div data-testid="metrics-preview">MetricsPreview</div>,
+}));
+
+jest.mock('../components/InfoModal', () => ({
+  InfoModal: () => null,
+}));
+
+jest.mock('../components/AddStorageModal', () => ({
+  AddStorageModal: () => null,
+}));
+
+jest.mock('../components/ShortcutSettings', () => ({
+  ShortcutSettings: () => null,
+}));
+
+import { FinderPage } from './FinderPage';
+import * as tauriCore from '@tauri-apps/api/core';
 
 describe('FinderPage - Open With Menu', () => {
   const defaultProps = {

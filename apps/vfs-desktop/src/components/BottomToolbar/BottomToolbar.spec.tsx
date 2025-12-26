@@ -6,9 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BottomToolbar } from './BottomToolbar';
 
-// Skip tests temporarily due to React hooks test environment issue
-// TODO: Fix React hooks test environment configuration
-describe.skip('BottomToolbar', () => {
+describe('BottomToolbar', () => {
   const defaultProps = {
     onOpenShortcuts: jest.fn(),
     onOpenSearch: jest.fn(),

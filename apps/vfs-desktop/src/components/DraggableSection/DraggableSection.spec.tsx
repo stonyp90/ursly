@@ -22,9 +22,7 @@ jest.mock('../../hooks/useDraggableSection', () => ({
   })),
 }));
 
-// Skip tests temporarily due to React hooks test environment issue
-// TODO: Fix React hooks test environment configuration
-describe.skip('DraggableSection', () => {
+describe('DraggableSection', () => {
   const defaultProps = {
     id: 'test-section',
     index: 0,
@@ -60,7 +58,9 @@ describe.skip('DraggableSection', () => {
 
   it('should call onReorder when section is dropped', () => {
     const onReorder = jest.fn();
-    (useDraggableSectionModule.useDraggableSection as jest.Mock).mockReturnValue({
+    (
+      useDraggableSectionModule.useDraggableSection as jest.Mock
+    ).mockReturnValue({
       isDragging: false,
       dragOverId: null,
       handlers: {
@@ -71,11 +71,11 @@ describe.skip('DraggableSection', () => {
       },
     });
 
-    render(
-      <DraggableSection {...defaultProps} onReorder={onReorder} />,
-    );
+    render(<DraggableSection {...defaultProps} onReorder={onReorder} />);
 
-    const section = screen.getByText('Test Section').closest('.draggable-section');
+    const section = screen
+      .getByText('Test Section')
+      .closest('.draggable-section');
     if (section) {
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
@@ -86,7 +86,9 @@ describe.skip('DraggableSection', () => {
   });
 
   it('should show drag-over indicator when dragOverId matches', () => {
-    (useDraggableSectionModule.useDraggableSection as jest.Mock).mockReturnValue({
+    (
+      useDraggableSectionModule.useDraggableSection as jest.Mock
+    ).mockReturnValue({
       isDragging: true,
       dragOverId: 'test-section',
       handlers: {
@@ -99,11 +101,15 @@ describe.skip('DraggableSection', () => {
 
     const { container } = render(<DraggableSection {...defaultProps} />);
 
-    expect(container.querySelector('.draggable-section.drag-over')).toBeInTheDocument();
+    expect(
+      container.querySelector('.draggable-section.drag-over'),
+    ).toBeInTheDocument();
   });
 
   it('should show dragging state when isDragging is true', () => {
-    (useDraggableSectionModule.useDraggableSection as jest.Mock).mockReturnValue({
+    (
+      useDraggableSectionModule.useDraggableSection as jest.Mock
+    ).mockReturnValue({
       isDragging: true,
       dragOverId: null,
       handlers: {
@@ -116,7 +122,8 @@ describe.skip('DraggableSection', () => {
 
     const { container } = render(<DraggableSection {...defaultProps} />);
 
-    expect(container.querySelector('.draggable-section.dragging')).toBeInTheDocument();
+    expect(
+      container.querySelector('.draggable-section.dragging'),
+    ).toBeInTheDocument();
   });
 });
-

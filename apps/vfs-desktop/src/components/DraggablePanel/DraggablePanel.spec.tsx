@@ -29,9 +29,7 @@ jest.mock('../../hooks/useDraggablePanel', () => ({
   })),
 }));
 
-// Skip tests temporarily due to React hooks test environment issue
-// TODO: Fix React hooks test environment configuration
-describe.skip('DraggablePanel', () => {
+describe('DraggablePanel', () => {
   const defaultProps = {
     id: 'test-panel',
     title: 'Test Panel',
@@ -139,7 +137,9 @@ describe.skip('DraggablePanel', () => {
 
     const { container } = render(<DraggablePanel {...defaultProps} />);
 
-    expect(container.querySelector('.draggable-panel.pinned')).toBeInTheDocument();
+    expect(
+      container.querySelector('.draggable-panel.pinned'),
+    ).toBeInTheDocument();
   });
 
   it('should not render resize handles when pinned', () => {
@@ -166,4 +166,3 @@ describe.skip('DraggablePanel', () => {
     expect(container.querySelector('.resize-handle')).not.toBeInTheDocument();
   });
 });
-

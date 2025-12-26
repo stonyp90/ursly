@@ -8,7 +8,7 @@ import { useDraggablePanel, DraggablePanelConfig } from './useDraggablePanel';
 
 // Wrapper component for testing hooks
 const wrapper = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>;
+  return <React.Fragment>{children}</React.Fragment>;
 };
 
 describe('useDraggablePanel', () => {

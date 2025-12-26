@@ -1,4 +1,10 @@
 import '@testing-library/jest-dom';
+import React from 'react';
+
+// Ensure React is available globally for tests
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).React = React;
+}
 
 // Mock Tauri API
 if (typeof window !== 'undefined') {
@@ -74,6 +80,21 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock Element.prototype.closest for jsdom
+if (!Element.prototype.closest) {
+  Element.prototype.closest = function (selector: string) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let element: Element | null = this;
+    while (element) {
+      if (element.matches(selector)) {
+        return element;
+      }
+      element = element.parentElement;
+    }
+    return null;
+  };
+}
+
 // Mock DragEvent for jsdom (not available by default)
 if (typeof DragEvent === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,7 +107,7 @@ if (typeof DragEvent === 'undefined') {
     constructor(type: string, eventInitDict?: DragEventInit) {
       super(type, eventInitDict);
       this.dataTransfer = eventInitDict?.dataTransfer || null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       this.effectAllowed =
         (eventInitDict as any)?.effectAllowed || 'uninitialized';
       this.dropEffect = 'none';
