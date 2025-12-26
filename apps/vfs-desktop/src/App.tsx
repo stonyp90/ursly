@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Header } from './components/Header';
 import { FinderPage } from './pages/FinderPage';
 import { MetricsPage } from './pages/MetricsPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ThemeCustomizer } from './components/ThemeCustomizer';
 import { ToastProvider } from './components/Toast';
@@ -11,7 +12,7 @@ import { BottomToolbar } from './components/BottomToolbar';
 import { AutoUpdater } from './components/AutoUpdater';
 import { OnboardingTour } from './components/OnboardingTour';
 
-export type AppTab = 'files' | 'metrics';
+export type AppTab = 'files' | 'metrics' | 'settings';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -98,10 +99,13 @@ function App() {
                 />
               )}
               {activeTab === 'metrics' && <MetricsPage />}
+              {activeTab === 'settings' && (
+                <SettingsPage onClose={() => setActiveTab('files')} />
+              )}
             </main>
 
             <BottomToolbar
-              onOpenSettings={() => setIsThemeCustomizerOpen(true)}
+              onOpenSettings={() => setActiveTab('settings')}
               onOpenShortcuts={() => setIsShortcutsOpen(true)}
               onOpenSearch={() => {
                 // Switch to Files tab if on Metrics tab
@@ -114,10 +118,12 @@ function App() {
               onCloseShortcuts={() => setIsShortcutsOpen(false)}
             />
 
-            <ThemeCustomizer
-              isOpen={isThemeCustomizerOpen}
-              onClose={() => setIsThemeCustomizerOpen(false)}
-            />
+            {activeTab !== 'settings' && (
+              <ThemeCustomizer
+                isOpen={isThemeCustomizerOpen}
+                onClose={() => setIsThemeCustomizerOpen(false)}
+              />
+            )}
 
             <AutoUpdater />
 

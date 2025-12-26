@@ -102,6 +102,25 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
           </svg>
           <span>Metrics</span>
         </button>
+        <button
+          className={`header-tab ${activeTab === 'settings' ? 'active' : ''}`}
+          onClick={() => onTabChange('settings')}
+          data-tab="settings"
+          type="button"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243m-4.242 0L5.636 17.364m12.728 0l-4.243-4.243m-4.242 0L5.636 6.636" />
+          </svg>
+          <span>Settings</span>
+        </button>
       </nav>
 
       <div className="header-status-group">
