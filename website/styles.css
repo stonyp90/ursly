@@ -3481,6 +3481,18 @@ ul {
     line-height: 1.2;
   }
 
+  /* Better social icon spacing on small mobile */
+  .nav-links .btn-nav-icon + .btn-nav-icon {
+    margin-left: 6px;
+  }
+
+  .btn-nav-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+
   .hero-description {
     font-size: 0.9rem;
     line-height: 1.6;
@@ -3699,9 +3711,21 @@ ul {
   /* Touch-friendly targets for tablets */
   .btn-primary,
   .btn-secondary,
-  .btn-launch {
+  .btn-launch,
+  .btn-nav-icon {
     min-height: 44px;
+    min-width: 44px;
     padding: 12px 24px;
+  }
+
+  /* Proper spacing for social icons on tablets */
+  .nav-links .btn-nav-icon + .btn-nav-icon {
+    margin-left: 8px;
+  }
+
+  /* Better navigation spacing */
+  .nav-links {
+    gap: 12px;
   }
 
   /* Better grid layouts for tablets */
