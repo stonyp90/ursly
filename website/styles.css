@@ -1610,6 +1610,15 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
   gap: 16px;
 }
 
+/* 2-column equal-size feature grid */
+.features-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.features-grid-2 .feature-card {
+  min-height: 320px;
+}
+
 /* 3-column equal-size feature grid */
 .features-grid-3 {
   grid-template-columns: repeat(3, 1fr);
@@ -3335,10 +3344,12 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .features-grid-2,
   .features-grid-3 {
     grid-template-columns: 1fr;
   }
 
+  .features-grid-2 .feature-card,
   .features-grid-3 .feature-card {
     min-height: auto;
   }
