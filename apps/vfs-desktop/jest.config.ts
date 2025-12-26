@@ -9,11 +9,12 @@ export default {
         tsconfig: {
           jsx: 'react-jsx',
         },
-        isolatedModules: true,
       },
     ],
   },
-  transformIgnorePatterns: ['/node_modules/(?!(react-joyride|@tauri-apps)/)'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!(react-joyride|@tauri-apps|@testing-library)/)',
+  ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/vfs-desktop',
   testMatch: ['**/*.spec.ts', '**/*.spec.tsx'], // Include both TS and TSX test files
@@ -30,6 +31,8 @@ export default {
     '\\.module\\.css$': 'identity-obj-proxy',
     '^react$': '<rootDir>/../../node_modules/react',
     '^react-dom$': '<rootDir>/../../node_modules/react-dom',
+    '^@testing-library/user-event$':
+      '<rootDir>/../../node_modules/@testing-library/user-event',
   },
   testEnvironmentOptions: {
     customExportConditions: [''],
