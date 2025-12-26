@@ -19,17 +19,51 @@ Connect AWS, Azure, Google Cloud, your NAS, and 15+ more storage services. Searc
 <br />
 <br />
 
+<!-- CI/CD & Build Status -->
+
 [![CI](https://github.com/stonyp90/Ursly/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/stonyp90/Ursly/actions/workflows/ci.yml)
 [![Release](https://github.com/stonyp90/Ursly/actions/workflows/release.yml/badge.svg)](https://github.com/stonyp90/Ursly/actions/workflows/release.yml)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](https://github.com/stonyp90/Ursly/actions)
 [![Code Quality](https://img.shields.io/badge/code%20quality-enterprise--grade-success?style=flat-square)](https://github.com/stonyp90/Ursly)
-[![Download](https://img.shields.io/badge/Download-Free-00d4ff?style=for-the-badge)](https://github.com/stonyp90/Ursly/releases/latest)
-[![License](https://img.shields.io/badge/License-AGPL_v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/agpl-3.0)
+
+<!-- Platform Support -->
+
+[![macOS](https://img.shields.io/badge/platform-macOS-lightgrey?style=flat-square&logo=apple)](https://github.com/stonyp90/Ursly/releases)
+[![Windows](https://img.shields.io/badge/platform-Windows-blue?style=flat-square&logo=windows)](https://github.com/stonyp90/Ursly/releases)
+[![Linux](https://img.shields.io/badge/platform-Linux-orange?style=flat-square&logo=linux)](https://github.com/stonyp90/Ursly/releases)
+
+<!-- Project Stats -->
+
 [![GitHub Stars](https://img.shields.io/github/stars/stonyp90/Ursly?style=for-the-badge&logo=github)](https://github.com/stonyp90/Ursly/stargazers)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev/)
-[![Tauri](https://img.shields.io/badge/Tauri-2.0-24C8D8?style=flat-square&logo=tauri)](https://tauri.app/)
-[![Rust](https://img.shields.io/badge/Rust-Stable-orange?style=flat-square&logo=rust)](https://www.rust-lang.org/)
+[![GitHub Forks](https://img.shields.io/github/forks/stonyp90/Ursly?style=flat-square&logo=github)](https://github.com/stonyp90/Ursly/network/members)
+[![GitHub Issues](https://img.shields.io/github/issues/stonyp90/Ursly?style=flat-square)](https://github.com/stonyp90/Ursly/issues)
+[![GitHub PRs](https://img.shields.io/github/issues-pr/stonyp90/Ursly?style=flat-square)](https://github.com/stonyp90/Ursly/pulls)
+[![Contributors](https://img.shields.io/github/contributors/stonyp90/Ursly?style=flat-square)](https://github.com/stonyp90/Ursly/graphs/contributors)
+[![Last Commit](https://img.shields.io/github/last-commit/stonyp90/Ursly/main?style=flat-square)](https://github.com/stonyp90/Ursly/commits/main)
+
+<!-- Downloads & Releases -->
+
+[![Download](https://img.shields.io/badge/Download-Free-00d4ff?style=for-the-badge)](https://github.com/stonyp90/Ursly/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/stonyp90/Ursly?style=flat-square&logo=github)](https://github.com/stonyp90/Ursly/releases/latest)
+[![Release Date](https://img.shields.io/github/release-date/stonyp90/Ursly?style=flat-square)](https://github.com/stonyp90/Ursly/releases)
+
+<!-- License & Legal -->
+
+[![License](https://img.shields.io/badge/License-AGPL_v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/agpl-3.0)
+[![AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-green?style=flat-square)](LICENSE)
+
+<!-- Tech Stack -->
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
+[![Tauri](https://img.shields.io/badge/Tauri-2.0-24C8D8?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app/)
+[![Rust](https://img.shields.io/badge/Rust-Stable-orange?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+
+<!-- Additional Info -->
+
+[![Website](https://img.shields.io/badge/Website-ursly.io-00d4ff?style=flat-square)](https://ursly.io)
+[![Discussions](https://img.shields.io/badge/Discussions-GitHub-blue?style=flat-square&logo=github)](https://github.com/stonyp90/Ursly/discussions)
 
 <br />
 
