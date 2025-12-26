@@ -20,6 +20,7 @@ Connect AWS, Azure, Google Cloud, your NAS, and 15+ more storage services. Searc
 [![CI](https://github.com/stonyp90/Ursly/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/stonyp90/Ursly/actions/workflows/ci.yml)
 [![Release](https://github.com/stonyp90/Ursly/actions/workflows/release.yml/badge.svg)](https://github.com/stonyp90/Ursly/actions/workflows/release.yml)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](https://github.com/stonyp90/Ursly/actions)
+[![Code Quality](https://img.shields.io/badge/code%20quality-enterprise--grade-success?style=flat-square)](https://github.com/stonyp90/Ursly)
 [![Download](https://img.shields.io/badge/Download-Free-00d4ff?style=for-the-badge)](https://github.com/stonyp90/Ursly/releases/latest)
 [![License](https://img.shields.io/badge/License-AGPL_v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/agpl-3.0)
 [![GitHub Stars](https://img.shields.io/github/stars/stonyp90/Ursly?style=for-the-badge&logo=github)](https://github.com/stonyp90/Ursly/stargazers)

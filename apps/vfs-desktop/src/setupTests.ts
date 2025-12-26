@@ -1,4 +1,8 @@
 import '@testing-library/jest-dom';
+import React from 'react';
+
+// Ensure React is available globally for tests
+(globalThis as unknown as { React?: typeof React }).React = React;
 
 // Mock Tauri API
 if (typeof window !== 'undefined') {

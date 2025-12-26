@@ -11,7 +11,8 @@
     "test:coverage": "nx test vfs-desktop --coverage",
     "lint": "nx lint vfs-desktop",
     "lint:fix": "nx lint vfs-desktop --fix",
-    "clean": "nx reset && rm -rf dist coverage node_modules/.cache"
+    "clean": "nx reset && rm -rf dist coverage node_modules/.cache",
+    "prepare": "husky"
   },
   "private": true,
   "dependencies": {
@@ -52,6 +53,7 @@
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "nx": "^18.3.5",
