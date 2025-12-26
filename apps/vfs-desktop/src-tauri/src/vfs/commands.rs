@@ -374,20 +374,29 @@ pub async fn vfs_eject(
     
     #[cfg(target_os = "windows")]
     {
-        // On Windows, use PowerShell to eject
+        // On Windows, use PowerShell to eject (hidden window)
         use std::process::Command;
         
-        let output = Command::new("powershell")
-            .args([
-                "-Command",
-                &format!(
-                    "$vol = Get-Volume -FilePath '{}'; \
-                     $driveEject = New-Object -comObject Shell.Application; \
-                     $driveEject.Namespace(17).ParseName($vol.DriveLetter + ':').InvokeVerb('Eject')",
-                    path_str
-                )
-            ])
-            .output()
+        let mut cmd = Command::new("powershell");
+        cmd.args([
+            "-NoProfile",
+            "-NonInteractive",
+            "-WindowStyle", "Hidden",
+            "-Command",
+            &format!(
+                "$vol = Get-Volume -FilePath '{}'; \
+                 $driveEject = New-Object -comObject Shell.Application; \
+                 $driveEject.Namespace(17).ParseName($vol.DriveLetter + ':').InvokeVerb('Eject')",
+                path_str
+            )
+        ]);
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x08000000;
+            cmd.creation_flags(CREATE_NO_WINDOW);
+        }
+        let output = cmd.output()
             .map_err(|e| format!("Failed to eject: {}", e))?;
         
         if !output.status.success() {

@@ -605,18 +605,26 @@ return "ok"
 async fn read_windows_clipboard() -> Result<Option<Vec<PathBuf>>> {
     use std::process::Command;
     
-    // Use PowerShell to read file paths
-    let output = Command::new("powershell")
-        .args([
-            "-NoProfile",
-            "-Command",
-            r#"
-            Add-Type -AssemblyName System.Windows.Forms
-            $files = [System.Windows.Forms.Clipboard]::GetFileDropList()
-            $files | ForEach-Object { Write-Output $_ }
-            "#,
-        ])
-        .output();
+    // Use PowerShell to read file paths (hidden window)
+    let mut cmd = Command::new("powershell");
+    cmd.args([
+        "-NoProfile",
+        "-NonInteractive",
+        "-WindowStyle", "Hidden",
+        "-Command",
+        r#"
+        Add-Type -AssemblyName System.Windows.Forms
+        $files = [System.Windows.Forms.Clipboard]::GetFileDropList()
+        $files | ForEach-Object { Write-Output $_ }
+        "#,
+    ]);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    let output = cmd.output();
     
     match output {
         Ok(out) if out.status.success() => {
@@ -661,9 +669,20 @@ async fn write_windows_clipboard(paths: &[PathBuf]) -> Result<()> {
             .join("\n")
     );
     
-    Command::new("powershell")
-        .args(["-NoProfile", "-Command", &script])
-        .output()
+    let mut cmd = Command::new("powershell");
+    cmd.args([
+        "-NoProfile",
+        "-NonInteractive",
+        "-WindowStyle", "Hidden",
+        "-Command", &script
+    ]);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd.output()
         .context("Failed to write to Windows clipboard")?;
     
     debug!("Wrote {} paths to Windows clipboard", paths.len());

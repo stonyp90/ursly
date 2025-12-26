@@ -342,16 +342,24 @@ impl NativeThumbnailAdapter {
             file_path, output_path
         );
         
-        // Run PowerShell with timeout (10 seconds max)
+        // Run PowerShell with timeout (10 seconds max) and hidden window
         let mut cmd = Command::new("powershell.exe");
         cmd.args([
             "-NoProfile",
             "-NonInteractive",
+            "-WindowStyle", "Hidden",
             "-ExecutionPolicy", "Bypass",
             "-Command", &script
         ]);
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
+        // Hide the window on Windows using CREATE_NO_WINDOW flag
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x08000000;
+            cmd.creation_flags(CREATE_NO_WINDOW);
+        }
         
         // Add timeout using tokio::time::timeout
         let output = tokio::time::timeout(
