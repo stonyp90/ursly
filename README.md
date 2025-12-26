@@ -12,7 +12,7 @@ Connect AWS, Azure, Google Cloud, your NAS, and 15+ more storage services. Searc
 
 <br />
 
-<img src="website/screenshots/vfs-main-dark.png" alt="Ursly VFS file browser on macOS 15 with Apple M4 Pro showing unified file management interface with sidebar navigation, favorites, storage locations, tags, real-time system metrics, and keyboard-first controls" width="800" />
+<img src="website/screenshots/vfs-main-dark.png" alt="Ursly VFS file browser on macOS 15 with Apple M4 Pro showing unified file management interface with sidebar navigation (Favorites, Storage locations, Tags, System metrics), main content area displaying file list with Name, Date Modified, Size, and Tier columns, header with Files/Metrics tabs, navigation bar with search, and footer with Shortcuts/Search/Theme buttons" width="800" />
 
 <br />
 <br />
