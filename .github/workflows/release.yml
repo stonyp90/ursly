@@ -73,6 +73,7 @@ jobs:
 
       - name: Setup signing key and extract public key
         working-directory: apps/vfs-desktop
+        shell: bash
         run: |
           if [ -n "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
             mkdir -p .tauri-keys
