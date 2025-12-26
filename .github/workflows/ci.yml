@@ -12,10 +12,10 @@ concurrency:
 
 jobs:
   # ==========================================================================
-  # VFS Desktop Tests & Linting
+  # VFS Desktop Tests & Linting (Linux)
   # ==========================================================================
-  test-vfs:
-    name: Test & Lint VFS Desktop
+  test-vfs-linux:
+    name: Test & Lint VFS Desktop (Linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,11 +28,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install root dependencies
-        run: npm ci
-
-      - name: Install VFS desktop dependencies
-        working-directory: apps/vfs-desktop
+      - name: Install dependencies
         run: npm ci
 
       - name: Run linting
@@ -40,3 +36,78 @@ jobs:
 
       - name: Run tests
         run: npm test -- --passWithNoTests
+
+  # ==========================================================================
+  # VFS Desktop Tests & Linting (macOS)
+  # ==========================================================================
+  test-vfs-macos:
+    name: Test & Lint VFS Desktop (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --passWithNoTests
+
+  # ==========================================================================
+  # VFS Desktop Tests & Linting (Windows)
+  # ==========================================================================
+  test-vfs-windows:
+    name: Test & Lint VFS Desktop (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --passWithNoTests
+
+  # ==========================================================================
+  # Build VFS Desktop Frontend (Linux)
+  # ==========================================================================
+  build-vfs-linux:
+    name: Build VFS Desktop Frontend (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npx nx run vfs-desktop:build-frontend

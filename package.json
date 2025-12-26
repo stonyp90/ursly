@@ -31,7 +31,7 @@
   "scripts": {
     "start:vfs": "nx serve vfs-desktop",
     "build:vfs": "nx build vfs-desktop",
-    "test": "nx test vfs-desktop --passWithNoTests",
+    "test": "nx test vfs-desktop",
     "test:watch": "nx test vfs-desktop --watch",
     "test:coverage": "nx test vfs-desktop --coverage",
     "lint": "nx lint vfs-desktop",
