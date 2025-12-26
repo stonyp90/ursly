@@ -136,7 +136,11 @@ export function AutoUpdater() {
 
       // Only check for updates if updater is properly configured
       // Check if we're in production build and updater is enabled
-      const isProduction = import.meta.env.PROD;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const isProduction =
+        (globalThis as any).import?.meta?.env?.PROD === true ||
+        (typeof process !== 'undefined' &&
+          process.env.NODE_ENV === 'production');
       if (isProduction) {
         checkForUpdates();
       } else {

@@ -75,3 +75,4 @@ console.log('5. Replace old files\n');
 
 console.log('💡 Tip: Use Cmd+Shift+4 (Mac) or Win+Shift+S (Windows) for area selection\n');
 
+

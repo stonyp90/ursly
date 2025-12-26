@@ -1,20 +1,15 @@
 /**
  * useDraggableSection Hook Tests
- * Simplified unit tests for drag and drop functionality
  */
 
 import React from 'react';
 import { renderHook, act } from '@testing-library/react';
-import { useDraggableSection, DraggableSectionConfig } from './useDraggableSection';
+import {
+  useDraggableSection,
+  DraggableSectionConfig,
+} from './useDraggableSection';
 
-// Wrapper component for testing hooks
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <>{children}</>
-);
-
-// Skip React hooks tests - they require proper React setup
-// These tests verify the logic without rendering
-describe.skip('useDraggableSection', () => {
+describe('useDraggableSection', () => {
   const defaultConfig: DraggableSectionConfig = {
     id: 'test-section',
     onReorder: jest.fn(),
@@ -23,6 +18,11 @@ describe.skip('useDraggableSection', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
+
+  // Wrapper component for testing hooks - simple passthrough
+  const wrapper = ({ children }: { children: React.ReactNode }) => {
+    return <>{children}</>;
+  };
 
   it('should initialize with default state', () => {
     const { result } = renderHook(() => useDraggableSection(defaultConfig), {
@@ -83,11 +83,11 @@ describe.skip('useDraggableSection', () => {
     } as unknown as React.DragEvent;
 
     act(() => {
-      result.current.handlers.onDragOver(dragOverEvent, 'target-section');
+      result.current.handlers.onDragOver(dragOverEvent, 'target-section', 1);
     });
 
     expect(result.current.dragOverId).toBe('target-section');
-        expect(dragOverEvent.dataTransfer?.dropEffect).toBe('move');
+    expect(dragOverEvent.dataTransfer?.dropEffect).toBe('move');
   });
 
   it('should not set dragOverId for same section', () => {
@@ -114,7 +114,7 @@ describe.skip('useDraggableSection', () => {
     } as unknown as React.DragEvent;
 
     act(() => {
-      result.current.handlers.onDragOver(dragOverEvent, 'test-section');
+      result.current.handlers.onDragOver(dragOverEvent, 'test-section', 0);
     });
 
     // Should not set dragOverId for same section
@@ -207,4 +207,3 @@ describe.skip('useDraggableSection', () => {
     }).not.toThrow();
   });
 });
-

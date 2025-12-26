@@ -14,6 +14,7 @@ pub mod nas_storage;
 pub mod clipboard;
 pub mod metadata_store;
 pub mod native_thumbnail;
+pub mod transcription;
 
 pub use local_storage::LocalStorageAdapter;
 pub use s3_storage::S3StorageAdapter;

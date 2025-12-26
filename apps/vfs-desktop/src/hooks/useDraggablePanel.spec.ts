@@ -8,8 +8,7 @@ import { useDraggablePanel, DraggablePanelConfig } from './useDraggablePanel';
 
 // Wrapper component for testing hooks
 const wrapper = ({ children }: { children: React.ReactNode }) => {
-  // eslint-disable-next-line react/react-in-jsx-scope
-  return <>{children}</>;
+  return React.createElement(React.Fragment, null, children);
 };
 
 describe('useDraggablePanel', () => {
@@ -186,4 +185,3 @@ describe('useDraggablePanel', () => {
     expect(result.current).toBeDefined();
   });
 });
-

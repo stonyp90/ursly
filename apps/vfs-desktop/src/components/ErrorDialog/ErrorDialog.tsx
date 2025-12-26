@@ -13,11 +13,7 @@ import React, {
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './ErrorDialog.css';
-import {
-  IconAlertTriangle,
-  IconInfo,
-  IconX,
-} from '../CyberpunkIcons';
+import { IconAlertTriangle, IconInfo, IconX } from '../CyberpunkIcons';
 
 type DialogType = 'info' | 'warning' | 'error';
 type DialogMode = 'message' | 'confirm';
@@ -86,9 +82,10 @@ export const ErrorDialogProvider: React.FC<{ children: ReactNode }> = ({
       });
     };
 
-    window.addEventListener('ursly:dialog' as any, handleDialogEvent);
+    const eventName = 'ursly:dialog' as keyof WindowEventMap;
+    window.addEventListener(eventName, handleDialogEvent as EventListener);
     return () =>
-      window.removeEventListener('ursly:dialog' as any, handleDialogEvent);
+      window.removeEventListener(eventName, handleDialogEvent as EventListener);
   }, []);
 
   const closeDialog = useCallback(

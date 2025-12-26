@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState } from 'react';
+import { getEnvVar } from '../../utils/env';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = getEnvVar('VITE_API_URL') || 'http://localhost:3000';
 const STORAGE_KEY_PREFIX = 'vfs_metadata_';
 const DIRTY_KEY = 'vfs_metadata_dirty';
 const SYNC_INTERVAL = 30000; // 30 seconds

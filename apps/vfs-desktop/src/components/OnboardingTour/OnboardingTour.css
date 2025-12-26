@@ -144,10 +144,14 @@
 .tour-step-tip {
   margin-top: 12px;
   padding: 14px 16px;
-  background: var(--surface-elevated, rgba(255, 255, 255, 0.06));
-  border-radius: 10px;
-  border-left: 4px solid var(--primary, #0a84ff);
+  background: var(
+    --surface-elevated,
+    var(--vfs-bg-elevated, rgba(255, 255, 255, 0.06))
+  );
+  border-radius: var(--radius-md, 10px);
+  border-left: 4px solid var(--primary, var(--vfs-primary, #0a84ff));
   font-size: 13px;
+  font-family: var(--vfs-font-sans, 'Inter', sans-serif);
   line-height: 1.6;
   animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -172,7 +176,7 @@
 }
 
 .tour-step-tip strong {
-  color: var(--text-primary, #f5f5f7);
+  color: var(--text-primary, var(--vfs-text-primary, #f5f5f7));
   font-weight: 600;
 }
 
@@ -207,11 +211,19 @@
 }
 
 .react-joyride__tooltip code {
-  background: var(--surface-elevated, rgba(255, 255, 255, 0.05)) !important;
-  color: var(--primary, #0a84ff) !important;
+  background: var(
+    --surface-elevated,
+    var(--vfs-bg-elevated, rgba(255, 255, 255, 0.05))
+  ) !important;
+  color: var(--primary, var(--vfs-primary, #0a84ff)) !important;
   padding: 2px 6px !important;
-  border-radius: 4px !important;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace !important;
+  border-radius: var(--radius-sm, 4px) !important;
+  font-family: var(
+    --vfs-font-mono,
+    'JetBrains Mono',
+    'SF Mono',
+    monospace
+  ) !important;
   font-size: 12px !important;
 }
 
@@ -236,15 +248,15 @@
 .react-joyride__button--primary {
   background: linear-gradient(
     135deg,
-    var(--primary, #0a84ff) 0%,
-    rgba(10, 132, 255, 0.9) 100%
+    var(--primary, var(--vfs-primary, #0a84ff)) 0%,
+    rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.9) 100%
   ) !important;
   color: white !important;
   border: none !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   pointer-events: auto !important;
   cursor: pointer !important;
-  z-index: 10002 !important;
+  z-index: 10005 !important;
   position: relative !important;
   overflow: hidden !important;
   transform: translateZ(0) !important;
@@ -274,18 +286,18 @@
 .react-joyride__button--primary:hover {
   background: linear-gradient(
     135deg,
-    rgba(10, 132, 255, 0.95) 0%,
-    var(--primary, #0a84ff) 100%
+    rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.95) 0%,
+    var(--primary, var(--vfs-primary, #0a84ff)) 100%
   ) !important;
   transform: translateY(-2px) scale(1.02) !important;
   box-shadow:
-    0 8px 24px rgba(10, 132, 255, 0.5),
+    0 8px 24px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
 }
 
 .react-joyride__button--primary:active {
   transform: translateY(0) scale(0.98) !important;
-  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.4) !important;
   transition: all 0.1s ease !important;
 }
 
@@ -358,10 +370,10 @@
 }
 
 .react-joyride__beacon {
-  background: var(--primary, #0a84ff) !important;
-  border-color: var(--primary, #0a84ff) !important;
+  background: var(--primary, var(--vfs-primary, #0a84ff)) !important;
+  border-color: var(--primary, var(--vfs-primary, #0a84ff)) !important;
   animation: pulse 2s ease-in-out infinite !important;
-  box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.7) !important;
+  box-shadow: 0 0 0 0 rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.7) !important;
 }
 
 .react-joyride__beacon__inner {
@@ -387,13 +399,13 @@
 .react-joyride__tooltip__progress > div {
   background: linear-gradient(
     90deg,
-    var(--primary, #0a84ff),
-    rgba(10, 132, 255, 0.8)
+    var(--primary, var(--vfs-primary, #0a84ff)),
+    rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.8)
   ) !important;
   height: 100% !important;
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
   animation: progressPulse 2s ease-in-out infinite !important;
-  box-shadow: 0 0 8px rgba(10, 132, 255, 0.5) !important;
+  box-shadow: 0 0 8px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.5) !important;
 }
 
 /* Completion animation */

@@ -11,6 +11,7 @@ use tauri::State;
 use tracing::{error, info, warn};
 
 use crate::vfs::application::VfsService;
+use crate::vfs::adapters::transcription::{TranscriptionService, TranscriptionSegment};
 
 // ============================================================================
 // Response Types for Frontend
@@ -3309,6 +3310,69 @@ pub async fn vfs_get_thumbnail(
     // TODO: Add API-based thumbnail fetching for cloud storage
     
     Ok(None)
+}
+
+// ============================================================================
+// Transcription Commands
+// ============================================================================
+
+/// Start live transcription for a video file
+#[tauri::command]
+pub async fn vfs_start_transcription(
+    file_path: String,
+    app: tauri::AppHandle,
+) -> Result<String, String> {
+    let path = std::path::Path::new(&file_path);
+    
+    if !path.exists() {
+        return Err("File does not exist".to_string());
+    }
+    
+    // Get or create transcription service
+    let temp_dir = dirs::cache_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
+        .join("ursly-transcription");
+    
+    let service = TranscriptionService::new(temp_dir).await
+        .map_err(|e| format!("Failed to initialize transcription service: {}", e))?;
+    
+    if !service.is_available() {
+        return Err("FFmpeg not available. Please install FFmpeg to use transcription.".to_string());
+    }
+    
+    let job_id = service.start_live_transcription(path, app, None).await
+        .map_err(|e| format!("Failed to start transcription: {}", e))?;
+    
+    info!("Started transcription job: {}", job_id);
+    Ok(job_id)
+}
+
+/// Stop transcription for a job
+#[tauri::command]
+pub async fn vfs_stop_transcription(
+    job_id: String,
+) -> Result<(), String> {
+    // For now, we'll need to store the service instance somewhere
+    // This is a simplified version - in production, you'd use a state wrapper
+    Ok(())
+}
+
+/// Get transcription status
+#[tauri::command]
+pub async fn vfs_get_transcription_status(
+    job_id: String,
+) -> Result<String, String> {
+    // Placeholder - would need access to service
+    Ok("running".to_string())
+}
+
+/// Get transcription segments
+#[tauri::command]
+pub async fn vfs_get_transcription_segments(
+    job_id: String,
+) -> Result<Vec<TranscriptionSegment>, String> {
+    // Placeholder - would need access to service
+    Ok(Vec::new())
 }
 
 #[cfg(test)]

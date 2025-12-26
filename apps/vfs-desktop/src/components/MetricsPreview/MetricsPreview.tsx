@@ -51,6 +51,7 @@ interface MetricsPreviewProps {
   onOpenMetrics: () => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function formatBytes(bytes: number): string {
   if (!bytes || isNaN(bytes) || bytes === 0) return '0 B';
   if (!isFinite(bytes)) return '0 B';

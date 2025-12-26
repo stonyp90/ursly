@@ -216,11 +216,11 @@ export function SpotlightSearch({
   isOpen,
   onClose,
   files,
-  sources: _sources,
+  sources: _sources, // eslint-disable-line @typescript-eslint/no-unused-vars
   onNavigateToFile,
-  onNavigateToPath: _onNavigateToPath,
+  onNavigateToPath: _onNavigateToPath, // eslint-disable-line @typescript-eslint/no-unused-vars
   onSearchSubmit,
-  currentSourceId: _currentSourceId,
+  currentSourceId: _currentSourceId, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: SpotlightSearchProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);

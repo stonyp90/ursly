@@ -50,13 +50,13 @@ export function getDeploymentConfig(): DeploymentConfig {
 /**
  * Get API endpoint from environment or config
  */
+import { getEnvVar } from '../utils/env';
+
 export function getApiEndpoint(): string {
   // Check for environment variable
-  if (
-    typeof import.meta !== 'undefined' &&
-    import.meta.env?.VITE_API_ENDPOINT
-  ) {
-    return import.meta.env.VITE_API_ENDPOINT;
+  const endpoint = getEnvVar('VITE_API_ENDPOINT');
+  if (endpoint) {
+    return endpoint;
   }
 
   // Check window config

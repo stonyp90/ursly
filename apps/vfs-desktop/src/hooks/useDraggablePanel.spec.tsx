@@ -1,13 +1,17 @@
 /**
  * useDraggablePanel Hook Tests
- * Simplified unit tests for drag and drop functionality
  */
 
+import React from 'react';
+import { renderHook, act } from '@testing-library/react';
 import { useDraggablePanel, DraggablePanelConfig } from './useDraggablePanel';
 
-// Skip React hooks tests - they require proper React setup
-// These tests verify the logic without rendering
-describe.skip('useDraggablePanel', () => {
+// Wrapper component for testing hooks
+const wrapper = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
+
+describe('useDraggablePanel', () => {
   const defaultConfig: DraggablePanelConfig = {
     id: 'test-panel',
     initialPosition: { x: 100, y: 100 },
@@ -181,4 +185,3 @@ describe.skip('useDraggablePanel', () => {
     expect(result.current).toBeDefined();
   });
 });
-

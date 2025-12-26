@@ -4,7 +4,10 @@
  */
 
 import React from 'react';
-import { useDraggablePanel, DraggablePanelConfig } from '../../hooks/useDraggablePanel';
+import {
+  useDraggablePanel,
+  DraggablePanelConfig,
+} from '../../hooks/useDraggablePanel';
 import './DraggablePanel.css';
 
 export interface DraggablePanelProps extends DraggablePanelConfig {
@@ -52,11 +55,21 @@ export function DraggablePanel({
               onClick={handlers.togglePin}
               title={state.pinned ? 'Unpin panel' : 'Pin panel'}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 {state.pinned ? (
                   <path d="M12 17v5M9 10V7a3 3 0 0 1 6 0v3M5 10h14l-1 7H6l-1-7z" />
                 ) : (
-                  <path d="M12 17v5M9 10V7a3 3 0 0 1 6 0v3M5 10h14l-1 7H6l-1-7z" strokeDasharray="2 2" />
+                  <path
+                    d="M12 17v5M9 10V7a3 3 0 0 1 6 0v3M5 10h14l-1 7H6l-1-7z"
+                    strokeDasharray="2 2"
+                  />
                 )}
               </svg>
             </button>
@@ -66,7 +79,14 @@ export function DraggablePanel({
                 onClick={onClose}
                 title="Close panel"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -119,4 +139,3 @@ export function DraggablePanel({
     </div>
   );
 }
-

@@ -36,6 +36,7 @@ export function MediaPreviewModal({
   const [showInfo, setShowInfo] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [transcriptionEnabled, setTranscriptionEnabled] = useState(false);
 
   const getMediaType = (): MediaType => {
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
@@ -114,6 +115,8 @@ export function MediaPreviewModal({
               autoPlay
               onReady={() => setIsLoading(false)}
               onError={(err) => console.error('Video error:', err)}
+              enableTranscription={transcriptionEnabled}
+              videoPath={file.path}
             />
           );
         }
@@ -216,6 +219,19 @@ export function MediaPreviewModal({
                   ⟳
                 </button>
               </>
+            )}
+            {mediaType === 'video' && (
+              <button
+                onClick={() => setTranscriptionEnabled((prev) => !prev)}
+                title={
+                  transcriptionEnabled
+                    ? 'Disable transcription'
+                    : 'Enable live transcription'
+                }
+                className={transcriptionEnabled ? 'active' : ''}
+              >
+                {transcriptionEnabled ? '🎤' : '🎙️'}
+              </button>
             )}
             <button
               onClick={() => setShowInfo(!showInfo)}

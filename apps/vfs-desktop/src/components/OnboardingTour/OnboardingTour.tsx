@@ -243,7 +243,7 @@ export function OnboardingTour({
 
   const handleJoyrideCallback = useCallback(
     (data: CallBackProps) => {
-      const { status, type, index } = data;
+      const { status, type, index, action } = data;
 
       // Handle tour completion, skipping, or closing (Escape/X button)
       if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
@@ -260,10 +260,24 @@ export function OnboardingTour({
           }
         });
       } else if (type === 'step:after') {
-        // Smooth transition to next step
-        requestAnimationFrame(() => {
-          setStepIndex(index);
-        });
+        // Handle button clicks - advance to next step when Next is clicked
+        if (action === 'next' || action === 'prev') {
+          requestAnimationFrame(() => {
+            if (action === 'next' && index < TOUR_STEPS.length - 1) {
+              setStepIndex(index + 1);
+            } else if (action === 'prev' && index > 0) {
+              setStepIndex(index - 1);
+            } else {
+              // Last step or first step - keep current index
+              setStepIndex(index);
+            }
+          });
+        } else {
+          // Other step:after events (e.g., auto-advance) - use the provided index
+          requestAnimationFrame(() => {
+            setStepIndex(index);
+          });
+        }
         // Last step - add completion animation
         if (index === TOUR_STEPS.length - 1) {
           const tooltip = document.querySelector('.react-joyride__tooltip');
@@ -336,7 +350,7 @@ export function OnboardingTour({
         steps={TOUR_STEPS}
         run={run}
         stepIndex={stepIndex}
-        continuous
+        continuous={true}
         showProgress
         showSkipButton
         disableCloseOnEsc={false}
@@ -346,6 +360,13 @@ export function OnboardingTour({
         scrollOffset={20}
         scrollToFirstStep={true}
         callback={handleJoyrideCallback}
+        styles={{
+          buttonNext: {
+            pointerEvents: 'auto',
+            cursor: 'pointer',
+            zIndex: 10005,
+          },
+        }}
         floaterProps={{
           disableAnimation: false,
           styles: {

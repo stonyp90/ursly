@@ -50,14 +50,14 @@
 .ursly-logo-icon {
   display: inline-block;
   flex-shrink: 0;
-  color: var(--primary, #8b5cf6);
+  color: var(--primary, var(--vfs-primary, #0a84ff));
   transition:
     color 0.2s ease,
     transform 0.2s ease;
 }
 
 .ursly-logo-icon:hover {
-  color: var(--primary-hover, #a855f7);
+  color: var(--primary-hover, var(--vfs-primary, #0a84ff));
   transform: scale(1.05);
 }
 
@@ -65,7 +65,7 @@
 .ursly-logo-glyph {
   display: inline-block;
   flex-shrink: 0;
-  color: var(--primary, #8b5cf6);
+  color: var(--primary, var(--vfs-primary, #0a84ff));
 }
 
 /* App icon */
@@ -93,10 +93,13 @@
 .logo-wordmark {
   font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-primary, var(--vfs-text-primary, #f5f5f7));
   letter-spacing: -0.02em;
   line-height: 1;
-  font-family: var(--font-display, system-ui, -apple-system, sans-serif);
+  font-family: var(
+    --font-display,
+    var(--vfs-font-sans, system-ui, -apple-system, sans-serif)
+  );
 }
 
 /* Variant: dark background */
@@ -130,19 +133,23 @@
 /* Focus states for accessibility */
 .ursly-logo:focus-visible,
 .logo-with-text:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--primary, var(--vfs-primary, #0a84ff));
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm, 4px);
 }
 
 /* Loading state glow */
 @keyframes logoGlow {
   0%,
   100% {
-    filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.3));
+    filter: drop-shadow(
+      0 0 8px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.3)
+    );
   }
   50% {
-    filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6));
+    filter: drop-shadow(
+      0 0 20px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.6)
+    );
   }
 }
 

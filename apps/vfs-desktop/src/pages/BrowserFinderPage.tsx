@@ -374,6 +374,7 @@ export function BrowserFinderPage() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _handleRequestTierChange = async (
     file: FileMetadata,
     targetTier: FileTierStatus,
@@ -473,7 +474,9 @@ export function BrowserFinderPage() {
     ) {
       const thumbUrl =
         file.thumbnail ||
-        api.getThumbnailUrl(selectedSource!.id, file.path, 128);
+        (selectedSource
+          ? api.getThumbnailUrl(selectedSource.id, file.path, 128)
+          : '');
       return (
         <img
           src={thumbUrl}

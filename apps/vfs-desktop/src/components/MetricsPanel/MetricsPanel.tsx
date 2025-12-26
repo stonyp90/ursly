@@ -54,7 +54,7 @@ const calculateIOPS = (bytesPerSec: number) => {
 
 export function MetricsPanel({
   isCollapsed = false,
-  onToggle,
+  onToggle, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: MetricsPanelProps) {
   const [metrics, setMetrics] = useState<AllMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -135,20 +135,21 @@ export function MetricsPanel({
     return `${formatBytes(bytesPerSec)}/s`;
   };
 
-  const cycleViewMode = () => {
-    const modes: ViewMode[] = [
-      'collapsed',
-      'compact',
-      'expanded',
-      'fullscreen',
-    ];
-    const currentIndex = modes.indexOf(viewMode);
-    const nextIndex = (currentIndex + 1) % modes.length;
-    setViewMode(modes[nextIndex]);
-    if (modes[nextIndex] === 'collapsed' && onToggle) {
-      onToggle();
-    }
-  };
+  // Unused function - kept for future use
+  // const cycleViewMode = () => {
+  //   const modes: ViewMode[] = [
+  //     'collapsed',
+  //     'compact',
+  //     'expanded',
+  //     'fullscreen',
+  //   ];
+  //   const currentIndex = modes.indexOf(viewMode);
+  //   const nextIndex = (currentIndex + 1) % modes.length;
+  //   setViewMode(modes[nextIndex]);
+  //   if (modes[nextIndex] === 'collapsed' && onToggle) {
+  //     onToggle();
+  //   }
+  // };
 
   const toggleFullscreen = () => {
     setViewMode(viewMode === 'fullscreen' ? 'expanded' : 'fullscreen');

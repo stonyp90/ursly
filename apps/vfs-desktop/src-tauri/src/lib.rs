@@ -197,6 +197,11 @@ pub fn run() {
             vfs::commands::vfs_get_apps_for_file,
             vfs::commands::vfs_get_os_preferences,
             vfs::commands::vfs_get_thumbnail,
+            // VFS Transcription commands
+            vfs::commands::vfs_start_transcription,
+            vfs::commands::vfs_stop_transcription,
+            vfs::commands::vfs_get_transcription_status,
+            vfs::commands::vfs_get_transcription_segments,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

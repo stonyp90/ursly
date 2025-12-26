@@ -71,6 +71,14 @@ jobs:
         working-directory: apps/vfs-desktop
         run: npm ci
 
+      - name: Setup signing key
+        run: |
+          if [ -n "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
+            mkdir -p apps/vfs-desktop/.tauri-keys
+            echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > apps/vfs-desktop/.tauri-keys/key
+            chmod 600 apps/vfs-desktop/.tauri-keys/key
+          fi
+
       - name: Build VFS Desktop
         working-directory: apps/vfs-desktop
         run: npm run tauri:build
@@ -80,6 +88,7 @@ jobs:
           VITE_KEYCLOAK_CLIENT_ID: agent-web
           VITE_API_URL: https://api.ursly.io
           VITE_WS_URL: wss://api.ursly.io
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
 
       # macOS: Rename and upload DMG
       - name: Prepare macOS artifacts
@@ -172,6 +181,14 @@ jobs:
           else
             echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
+          echo "Version: ${{ steps.version.outputs.version }}"
+
+      - name: Generate update manifest
+        working-directory: apps/vfs-desktop
+        run: |
+          node scripts/generate-update-manifest.js ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
 
       - name: Delete previous releases (keep only latest)
         run: |
@@ -197,6 +214,7 @@ jobs:
             artifacts/macos/ursly-vfs.dmg
             artifacts/windows/ursly-vfs.msi
             artifacts/linux/ursly-vfs.AppImage
+            apps/vfs-desktop/latest.json
           body: |
             ## Ursly VFS ${{ steps.version.outputs.version }}
             

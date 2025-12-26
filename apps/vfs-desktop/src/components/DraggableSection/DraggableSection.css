@@ -32,7 +32,8 @@
 }
 
 @keyframes drag-indicator-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -114,4 +115,3 @@
 .section-content {
   padding: 4px 0;
 }
-

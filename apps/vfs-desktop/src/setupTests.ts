@@ -24,14 +24,40 @@ if (typeof window !== 'undefined') {
   } as typeof window;
 }
 
-// Mock import.meta.env for Vite environment variables
-(
-  globalThis as unknown as { importMetaEnv?: Record<string, unknown> }
-).importMetaEnv = {
-  MODE: 'test',
-  DEV: true,
-  PROD: false,
-};
+// Mock import.meta for Jest (needs to be available before modules are loaded)
+// This is a workaround for Jest not supporting import.meta syntax
+if (typeof globalThis !== 'undefined') {
+  // Create a mock import object
+  const mockImportMeta = {
+    env: {
+      MODE: 'test',
+      DEV: 'true',
+      PROD: 'false',
+      VITE_API_ENDPOINT: '',
+      VITE_KEYCLOAK_URL: '',
+      VITE_KEYCLOAK_REALM: '',
+      VITE_KEYCLOAK_CLIENT_ID: '',
+      VITE_API_URL: '',
+      VITE_WS_URL: '',
+    },
+  };
+
+  // Use Object.defineProperty to make it non-enumerable
+  Object.defineProperty(globalThis, 'import', {
+    value: { meta: mockImportMeta },
+    writable: true,
+    configurable: true,
+    enumerable: false,
+  });
+
+  // Also set importMeta for direct access
+  Object.defineProperty(globalThis, 'importMeta', {
+    value: mockImportMeta,
+    writable: true,
+    configurable: true,
+    enumerable: false,
+  });
+}
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {

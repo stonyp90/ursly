@@ -41,8 +41,10 @@
   },
   "plugins": {
     "updater": {
-      "active": false,
-      "endpoints": [],
+      "active": true,
+      "endpoints": [
+        "https://github.com/stonyp90/Ursly/releases/latest/download/latest.json"
+      ],
       "dialog": true,
       "pubkey": ""
     }

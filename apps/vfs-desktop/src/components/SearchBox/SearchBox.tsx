@@ -156,6 +156,7 @@ export function SearchBox({
   }, [files]);
 
   // Extract folder names for suggestions
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const folderNames = useMemo(() => {
     return files.filter((f) => f.isDirectory).map((f) => f.name);
   }, [files]);
