@@ -7,7 +7,7 @@
   <!-- Primary Meta Tags -->
   <title>Ursly - Cloud-Native Virtual File System | Open Source</title>
   <meta name="title" content="Ursly - Cloud-Native Virtual File System | Open Source">
-  <meta name="description" content="One app for all your files. Connect Dropbox, Google Drive, AWS, Azure, your NAS and 15+ more storage services. Find anything with AI search. Free for personal use.">
+  <meta name="description" content="The file manager built for creatives. One app. All your clouds. Zero friction. Connect AWS, Azure, Google Cloud, your NAS, and 15+ storage services. AI-powered search, video transcription, real-time metrics. Free for personal use.">
   <meta name="keywords" content="virtual file system, VFS, cloud storage, S3 browser, Azure blob, Google Cloud Storage, multi-cloud, file manager, AI search, Tauri, Rust, open source">
   <meta name="author" content="Ursly">
   <meta name="robots" content="index, follow">
@@ -17,7 +17,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ursly.io/">
   <meta property="og:title" content="Ursly - Cloud-Native Virtual File System">
-  <meta property="og:description" content="One app for all your files. Connect 15+ storage services - cloud, NAS, network drives & more. AI-powered search. Free for personal use.">
+  <meta property="og:description" content="The file manager built for creatives. One app. All your clouds. Zero friction. Connect AWS, Azure, Google Cloud, your NAS, and 15+ storage services. AI-powered search, video transcription, real-time metrics. Free for personal use.">
   <meta property="og:image" content="https://ursly.io/screenshots/vfs-main-dark.png">
   <meta property="og:site_name" content="Ursly">
   <meta property="og:locale" content="en_US">
@@ -26,7 +26,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://ursly.io/">
   <meta name="twitter:title" content="Ursly - Cloud-Native Virtual File System">
-  <meta name="twitter:description" content="One app for all your files. Connect 15+ storage services - cloud, NAS, network drives & more. AI-powered search. Free for personal use.">
+  <meta name="twitter:description" content="The file manager built for creatives. One app. All your clouds. Zero friction. Connect AWS, Azure, Google Cloud, your NAS, and 15+ storage services. AI-powered search, video transcription, real-time metrics. Free for personal use.">
   <meta name="twitter:image" content="https://ursly.io/screenshots/vfs-main-dark.png">
   
   <!-- Favicon - Complete Set -->
@@ -50,7 +50,7 @@
     "name": "Ursly",
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Linux, macOS, Windows",
-    "description": "One app for all your files. Connect Dropbox, Google Drive, AWS, Azure, your NAS and 15+ more storage services. Find anything with AI search. Free for personal use.",
+    "description": "The file manager built for creatives. One app. All your clouds. Zero friction. Connect AWS, Azure, Google Cloud, your NAS, and 15+ storage services. AI-powered search, video transcription, real-time metrics. Free for personal use.",
     "url": "https://ursly.io",
     "downloadUrl": "https://github.com/stonyp90/ursly/releases",
     "license": "https://www.gnu.org/licenses/agpl-3.0",
@@ -69,14 +69,18 @@
       "AWS S3, Azure Blob, Google Cloud Storage",
       "FSx for ONTAP, SMB, NFS, SFTP, WebDAV",
       "Backblaze B2, MinIO, Wasabi, DigitalOcean Spaces",
-      "Spotlight Search (`Cmd+K`) via Ollama",
-      "Whisper Transcription (99 languages)",
+      "Spotlight Search (Cmd+K / Ctrl+K) via Ollama",
+      "Smart Search Operators (tag:, type:, ext:, size:)",
+      "Whisper Video Transcription (99 languages)",
+      "AI Auto-Tagging for Photos",
       "Storage Tiering (Hot/Nearline/Cold/Archive)",
-      "Real-Time System Metrics (CPU, GPU, Memory, Disk I/O)",
-      "Keyboard-First Navigation",
-      "Theme Customization & Settings",
-      "Onboarding Tour",
-      "Auto-Updates",
+      "Real-Time System Metrics (CPU per-core, GPU, Memory, Disk I/O, Network)",
+      "Keyboard-First Navigation with ? Shortcuts Dialog",
+      "Theme Customization & Settings Tab",
+      "Dark & Light Themes with 10 Accent Colors",
+      "Onboarding Tour with Reset Option",
+      "Auto-Updates (when configured)",
+      "Cross-Platform (macOS, Windows, Linux)",
       "Open Source AGPL-3.0"
     ]
   }
@@ -282,7 +286,7 @@
           </div>
           <div class="screenshot-caption">
             <h3>All Your Files, One View</h3>
-            <p>Cloud storage, network drives, local folders — everything side by side. See your system performance at a glance. Move files anywhere with simple drag & drop. Customize your theme and access settings from the new Settings tab.</p>
+            <p>Cloud storage, network drives, local folders — everything side by side. See your system performance at a glance with the Metrics tab. Move files anywhere with simple drag & drop. Customize your theme (dark/light modes, 10 accent colors) and manage all settings from the dedicated Settings tab. Access onboarding tour, keyboard shortcuts, and preferences in one place.</p>
         </div>
         </div>
 
@@ -294,18 +298,29 @@
           </div>
             <div class="feature-info">
               <h4>Live System Metrics</h4>
-              <p>Real-time performance monitoring with detailed CPU core activity, memory usage, GPU metrics, disk I/O, network stats, and system load averages. Perfect for keeping an eye on renders and heavy workloads without leaving your flow.</p>
+              <p>Real-time performance monitoring with detailed CPU core activity, memory usage, GPU metrics, disk I/O, network stats, and system load averages. Access via the Metrics tab in the header. Perfect for keeping an eye on renders and heavy workloads without leaving your flow.</p>
         </div>
       </div>
 
-          <!-- 3. KEYBOARD SHORTCUTS -->
+          <!-- 3. SETTINGS & THEME CUSTOMIZATION -->
+          <div class="product-feature-card">
+            <div class="screenshot-frame small">
+              <img src="screenshots/vfs-theme-customizer-dark.png" alt="Settings page showing Theme Mode toggle (Dark/Light), Accent Color grid with 10 color swatches (Cyan, Purple, Neon Cyan, Neon Magenta, Electric Purple, Neon Green, Sunset Orange, Electric Blue, Cyber Yellow, Neon Red), selected color display, and Onboarding section with Start Feature Tour and Reset buttons" loading="lazy">
+            </div>
+            <div class="feature-info">
+              <h4>Settings & Theme Customization</h4>
+              <p>Access the dedicated Settings tab from the header navigation. Customize your theme with dark/light modes and 10 accent colors. Start or reset the onboarding tour to learn features and shortcuts. All preferences in one place for a personalized experience.</p>
+            </div>
+          </div>
+
+          <!-- 4. KEYBOARD SHORTCUTS -->
           <div class="product-feature-card">
             <div class="screenshot-frame small">
               <img src="screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts dialog showing four sections: NAVIGATION (Go back ⌘+[, Go forward ⌘+], Go to parent folder ⌘+↑, Open selected Enter, Navigate files ↑↓←→), SELECTION (Select all ⌘+A, Toggle selection ⌘+Click, Range select Shift+Click, Clear selection Escape), CLIPBOARD (Copy ⌘+C, Paste ⌘+V, Duplicate ⌘+D), and FILE OPERATIONS (New folder ⌘+Shift+N, Rename Enter, Move to Trash ⌘+Delete, Delete Delete). Bottom hint: Press ? to toggle this panel" loading="lazy">
             </div>
             <div class="feature-info">
-              <h4>Keyboard Shortcuts & Settings</h4>
-              <p>Press <code>Cmd+K</code> (Mac) or <code>Ctrl+K</code> (Windows/Linux) for instant Spotlight Search. Press <code>?</code> to view all shortcuts. Customize your theme, manage settings, and start the onboarding tour from the new Settings tab. Every action has a keyboard shortcut for maximum productivity.</p>
+              <h4>Keyboard Shortcuts</h4>
+              <p>Press <code>Cmd+K</code> (Mac) or <code>Ctrl+K</code> (Windows/Linux) for instant Spotlight Search. Press <code>?</code> to view all shortcuts in the dialog. Every action has a keyboard shortcut for maximum productivity. Navigate, search, and manage files without touching your mouse.</p>
             </div>
             </div>
         </div>
@@ -348,13 +363,14 @@
           <h3 class="feature-title">Spotlight Search (`Cmd+K` / `Ctrl+K`)</h3>
           <p class="feature-description">
             Find files by what's in them, not just their names. 
-            Press `Cmd+K` for instant search across all storage. Search video transcripts, image content, document text — all locally and private.
+            Press `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux) for instant search across all storage. Search video transcripts, image content, document text — all locally and private. Use smart operators to filter results instantly.
           </p>
           <ul class="feature-list">
             <li>Instant Spotlight Search</li>
             <li>Smart operators (`tag:`, `type:`, `ext:`, `size:`)</li>
-            <li>Video transcription (99 languages)</li>
-            <li>Smart tagging</li>
+            <li>Video transcription (99 languages with Whisper)</li>
+            <li>AI auto-tagging for photos</li>
+            <li>Keyboard-first navigation</li>
           </ul>
         </div>
 
@@ -381,13 +397,14 @@
           </div>
           <h3 class="feature-title">Real-Time System Metrics</h3>
           <p class="feature-description">
-            Monitor your system performance in real-time. Track CPU usage per core, GPU temperature and power, memory utilization, disk I/O, and network speeds — all without leaving your flow.
+            Monitor your system performance in real-time with the Metrics tab. Track CPU usage per core, GPU temperature and power, memory utilization, disk I/O, and network speeds — all without leaving your flow. Perfect for keeping an eye on resource consumption during heavy workloads.
           </p>
           <ul class="feature-list">
-            <li>CPU per-core usage</li>
-            <li>GPU metrics (temp, power, fan)</li>
-            <li>Memory & disk I/O</li>
-            <li>Network bandwidth</li>
+            <li>CPU per-core usage & load averages</li>
+            <li>GPU metrics (temp, power, fan, core clock)</li>
+            <li>Memory & swap utilization</li>
+            <li>Disk I/O & network bandwidth</li>
+            <li>System uptime tracking</li>
           </ul>
         </div>
         
@@ -397,13 +414,14 @@
           </div>
           <h3 class="feature-title">Theme Customization & Settings</h3>
           <p class="feature-description">
-            Customize your experience with dark/light themes and 10 accent colors. Access settings, start the onboarding tour, and configure your preferences from the dedicated Settings tab.
+            Customize your experience with dark/light themes and 10 accent colors (Cyan, Purple, Neon Cyan, Electric Purple, and more). Access all settings, start or reset the onboarding tour, and configure your preferences from the dedicated Settings tab in the header navigation.
           </p>
           <ul class="feature-list">
             <li>Dark & light themes</li>
             <li>10 accent colors</li>
-            <li>Onboarding tour</li>
-            <li>Auto-updates</li>
+            <li>Onboarding tour with reset option</li>
+            <li>Settings tab in header</li>
+            <li>Auto-updates (when configured)</li>
           </ul>
         </div>
       </div>
