@@ -213,8 +213,8 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
         />
       </div>
 
-      {progress.status === 'Failed' && progress.error && (
-        <div className="upload-progress-error">{progress.error}</div>
+      {progress.status === 'Failed' && (progress as any).error && (
+        <div className="upload-progress-error">{(progress as any).error}</div>
       )}
 
       {progress.status === 'Completed' && (
