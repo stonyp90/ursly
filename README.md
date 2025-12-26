@@ -298,9 +298,11 @@ ursly/
 
 ## 📚 Documentation
 
-- **[Architecture Guide](./vfs.md)**: Detailed architecture documentation
-- **[API Documentation](./docs/api.md)**: API reference (coming soon)
-- **[Contributing Guide](./CONTRIBUTING.md)**: How to contribute (coming soon)
+- **[Architecture Guide](./agents.md)**: Detailed architecture and development guide
+- **[Contributing Guide](./CONTRIBUTING.md)**: How to contribute to Ursly VFS
+- **[Code of Conduct](./CODE_OF_CONDUCT.md)**: Community guidelines
+- **[Security Policy](./SECURITY.md)**: How to report security vulnerabilities
+- **[Changelog](./CHANGELOG.md)**: Version history and release notes
 
 ---
 
