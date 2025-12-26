@@ -90,12 +90,23 @@ Connect **15+ storage providers** in one unified interface:
 
 Every action has a shortcut:
 
-- `⌘+K` - Spotlight Search
+- `⌘+K` / `Ctrl+K` - Spotlight Search
 - `⌘+A` - Select All
 - `⌘+C/V` - Copy/Paste
 - `⌘+Shift+N` - New Folder
 - `Enter` - Rename
 - `Delete` - Move to Trash
+- `?` - Show all shortcuts
+
+### 🎨 Theme Customization & Settings
+
+Customize your experience with a dedicated Settings tab:
+
+- **Dark & Light Themes**: Switch between themes instantly
+- **10 Accent Colors**: Choose from Cyan, Purple, Neon Cyan, Electric Purple, and more
+- **Onboarding Tour**: Interactive tour to learn features and shortcuts
+- **Auto-Updates**: Seamless updates with progress tracking
+- **Settings Tab**: Access all preferences from the header navigation
 
 ### 🎯 Three Deployment Modes
 
@@ -126,7 +137,11 @@ Every action has a shortcut:
 
 ### Keyboard Shortcuts
 
-<img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts dialog" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+<img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts dialog showing navigation, selection, clipboard, and file operation shortcuts" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+
+### Settings & Theme Customization
+
+<img src="website/screenshots/vfs-theme-customizer-dark.png" alt="Settings page showing theme mode toggle (Dark/Light), accent color selection with 10 color options, and onboarding tour button" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
 
 ### Add Storage Modal
 
