@@ -486,7 +486,7 @@ export function FinderPage({
     }
   }, [selectedSource?.id, currentPath]);
 
-  // Load thumbnails when switching to grid view
+  // Load thumbnails when switching to grid view or when files change
   useEffect(() => {
     if (viewMode === 'icon' && selectedSource?.id && files.length > 0) {
       // Check if any files need thumbnails
@@ -497,23 +497,54 @@ export function FinderPage({
         loadThumbnailsForFiles(selectedSource.id, files);
       }
     }
-  }, [viewMode]);
+  }, [viewMode, files, selectedSource?.id]);
 
   // Helper to check if file can have a thumbnail
   const canHaveThumbnail = (filename: string): boolean => {
     const thumbnailTypes = [
+      // Images
       'jpg',
       'jpeg',
       'png',
       'gif',
+      'bmp',
+      'tiff',
+      'tif',
       'webp',
       'heic',
+      'heif',
+      'svg',
+      'ico',
+      'raw',
+      'cr2',
+      'nef',
+      'arw',
+      'dng',
+      'orf',
+      'rw2',
+      'pef',
+      'srw',
+      'psd',
+      'ai',
+      'eps',
+      // PDF
       'pdf',
+      // Video
       'mp4',
       'mov',
       'avi',
       'mkv',
+      'wmv',
+      'flv',
       'webm',
+      'm4v',
+      'mpg',
+      'mpeg',
+      '3gp',
+      'mxf',
+      'prores',
+      'r3d',
+      'braw',
     ];
     const ext = filename.split('.').pop()?.toLowerCase() || '';
     return thumbnailTypes.includes(ext);
@@ -561,18 +592,49 @@ export function FinderPage({
     fileList: FileMetadata[],
   ) => {
     const thumbnailTypes = [
+      // Images
       'jpg',
       'jpeg',
       'png',
       'gif',
+      'bmp',
+      'tiff',
+      'tif',
       'webp',
       'heic',
+      'heif',
+      'svg',
+      'ico',
+      'raw',
+      'cr2',
+      'nef',
+      'arw',
+      'dng',
+      'orf',
+      'rw2',
+      'pef',
+      'srw',
+      'psd',
+      'ai',
+      'eps',
+      // PDF
       'pdf',
+      // Video
       'mp4',
       'mov',
       'avi',
       'mkv',
+      'wmv',
+      'flv',
       'webm',
+      'm4v',
+      'mpg',
+      'mpeg',
+      '3gp',
+      'mxf',
+      'prores',
+      'r3d',
+      'braw',
     ];
 
     // Filter files that can have thumbnails
