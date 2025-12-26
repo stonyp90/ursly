@@ -6,7 +6,7 @@
 .add-storage-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: color-mix(in srgb, var(--background) 30%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
@@ -32,7 +32,10 @@
   background: var(--finder-bg-secondary, #2c2c2e);
   border: 1px solid var(--finder-border, rgba(255, 255, 255, 0.1));
   border-radius: 12px;
-  box-shadow: var(--shadow-xl, 0 16px 40px rgba(0, 0, 0, 0.5));
+  box-shadow: var(
+    --shadow-xl,
+    0 16px 40px color-mix(in srgb, var(--background) 50%, transparent)
+  );
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -83,8 +86,8 @@
 }
 
 .add-storage-modal .close-btn:hover {
-  background: rgba(255, 69, 58, 0.15);
-  border-color: rgba(255, 69, 58, 0.3);
+  background: rgba(var(--finder-danger-rgb, 255, 69, 58), 0.15);
+  border-color: rgba(var(--finder-danger-rgb, 255, 69, 58), 0.3);
   color: var(--finder-danger, #ff453a);
 }
 
@@ -145,7 +148,7 @@
 }
 
 .provider-btn:hover {
-  background: var(--finder-selection, rgba(10, 132, 255, 0.15));
+  background: var(--finder-selection);
   border-color: var(--finder-accent, #0a84ff);
   transform: translateY(-1px);
 }
@@ -202,7 +205,7 @@
 .form-field input:focus,
 .form-field select:focus {
   border-color: var(--finder-accent, #0a84ff);
-  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--finder-accent-rgb, 10, 132, 255), 0.15);
 }
 
 .form-field input::placeholder {
@@ -211,8 +214,8 @@
 
 .form-error {
   padding: 10px 14px;
-  background: rgba(255, 69, 58, 0.1);
-  border: 1px solid rgba(255, 69, 58, 0.2);
+  background: rgba(var(--finder-danger-rgb, 255, 69, 58), 0.1);
+  border: 1px solid rgba(var(--finder-danger-rgb, 255, 69, 58), 0.2);
   border-radius: 6px;
   font-size: 12px;
   color: var(--finder-danger, #ff453a);
@@ -261,17 +264,21 @@
 }
 
 .cancel-btn:hover {
-  background: var(--finder-selection, rgba(10, 132, 255, 0.15));
+  background: var(--finder-selection);
 }
 
 .add-btn {
   background: var(--finder-accent, #0a84ff);
   border: none;
-  color: #fff;
+  color: var(--text-primary, #ffffff);
 }
 
 .add-btn:hover {
   filter: brightness(1.1);
+  background: var(
+    --finder-accent-hover,
+    color-mix(in srgb, var(--finder-accent) 90%, white)
+  );
 }
 
 .add-btn:disabled {
@@ -289,10 +296,45 @@
 }
 
 .add-storage-modal .modal-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--finder-border, rgba(255, 255, 255, 0.15));
   border-radius: 3px;
 }
 
 .add-storage-modal .modal-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--finder-border-hover, rgba(255, 255, 255, 0.25));
+}
+
+/* Light theme adjustments */
+[data-theme='light'] .add-storage-overlay {
+  background: color-mix(in srgb, var(--background) 50%, transparent);
+}
+
+[data-theme='light'] .add-storage-modal {
+  box-shadow: var(
+    --shadow-xl,
+    0 16px 40px color-mix(in srgb, var(--background) 20%, transparent)
+  );
+}
+
+[data-theme='light'] .provider-btn:hover {
+  background: var(--finder-selection);
+  border-color: var(--finder-accent);
+}
+
+[data-theme='light'] .form-field input:focus,
+[data-theme='light'] .form-field select:focus {
+  border-color: var(--finder-accent);
+  box-shadow: 0 0 0 3px rgba(var(--finder-accent-rgb, 10, 132, 255), 0.15);
+}
+
+[data-theme='light']
+  .add-storage-modal
+  .modal-content::-webkit-scrollbar-thumb {
+  background: var(--finder-border, rgba(0, 0, 0, 0.15));
+}
+
+[data-theme='light']
+  .add-storage-modal
+  .modal-content::-webkit-scrollbar-thumb:hover {
+  background: var(--finder-border-hover, rgba(0, 0, 0, 0.25));
 }

@@ -192,8 +192,9 @@ describe('Keyboard Shortcuts System', () => {
 
       const saved = localStorage.getItem('ursly-keyboard-shortcuts');
       expect(saved).not.toBeNull();
+      if (!saved) return;
 
-      const parsed = JSON.parse(saved!);
+      const parsed = JSON.parse(saved);
       expect(parsed.copy.key).toBe('d');
     });
 
@@ -207,7 +208,8 @@ describe('Keyboard Shortcuts System', () => {
       );
 
       const saved = localStorage.getItem('ursly-keyboard-shortcuts');
-      const parsed = JSON.parse(saved!);
+      if (!saved) return;
+      const parsed = JSON.parse(saved);
 
       // Apply to default shortcuts
       const shortcuts = DEFAULT_SHORTCUTS.map((s) => ({

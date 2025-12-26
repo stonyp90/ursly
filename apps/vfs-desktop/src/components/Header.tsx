@@ -88,6 +88,7 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
           className={`header-tab ${activeTab === 'metrics' ? 'active' : ''}`}
           onClick={() => onTabChange('metrics')}
           data-tab="metrics"
+          type="button"
         >
           <svg
             width="14"

@@ -2,7 +2,7 @@
 
 <img src="website/logo.svg" alt="Ursly Logo" width="80" height="80" style="max-width: 100%; height: auto;" />
 
-# Ursly
+# Ursly VFS
 
 ### The File Manager Built for Creatives
 
@@ -17,9 +17,16 @@ Connect AWS, Azure, Google Cloud, your NAS, and 15+ more storage services. Searc
 <br />
 <br />
 
+[![CI](https://github.com/stonyp90/Ursly/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/stonyp90/Ursly/actions/workflows/ci.yml)
+[![Release](https://github.com/stonyp90/Ursly/actions/workflows/release.yml/badge.svg)](https://github.com/stonyp90/Ursly/actions/workflows/release.yml)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](https://github.com/stonyp90/Ursly/actions)
 [![Download](https://img.shields.io/badge/Download-Free-00d4ff?style=for-the-badge)](https://github.com/stonyp90/Ursly/releases/latest)
 [![License](https://img.shields.io/badge/License-AGPL_v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/agpl-3.0)
 [![GitHub Stars](https://img.shields.io/github/stars/stonyp90/Ursly?style=for-the-badge&logo=github)](https://github.com/stonyp90/Ursly/stargazers)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev/)
+[![Tauri](https://img.shields.io/badge/Tauri-2.0-24C8D8?style=flat-square&logo=tauri)](https://tauri.app/)
+[![Rust](https://img.shields.io/badge/Rust-Stable-orange?style=flat-square&logo=rust)](https://www.rust-lang.org/)
 
 <br />
 
@@ -29,15 +36,35 @@ Connect AWS, Azure, Google Cloud, your NAS, and 15+ more storage services. Searc
 
 ---
 
-## 🚀 Why Ursly?
+## 🚀 Why Ursly VFS?
 
 Your files are scattered across AWS S3, Azure Blob, Google Cloud, your NAS, local drives, and Dropbox. Each requires a different app. You waste hours hunting for files.
 
-**Ursly changes everything.** One beautiful, native app that unifies all your storage. See everything in one place. Move files anywhere with drag & drop. Find anything instantly with AI-powered search that runs 100% locally.
+**Ursly VFS changes everything.** One beautiful, native app that unifies all your storage. See everything in one place. Move files anywhere with drag & drop. Find anything instantly with AI-powered search that runs 100% locally.
 
 ---
 
-## ✨ What Makes Ursly Different
+## 📸 Screenshots
+
+<div align="center">
+
+### Main File Browser
+
+<img src="website/screenshots/vfs-main-dark.png" alt="Ursly VFS file browser" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+
+### Performance Monitor
+
+<img src="website/screenshots/vfs-performance-metrics.png" alt="Performance Monitor dashboard" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+
+### Keyboard Shortcuts
+
+<img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts dialog" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+
+</div>
+
+---
+
+## ✨ What Makes Ursly VFS Different
 
 <div style="overflow-x: auto;">
 
@@ -77,64 +104,6 @@ Your files are scattered across AWS S3, Azure Blob, Google Cloud, your NAS, loca
 
 ---
 
-## 🔌 Supported Storage
-
-### ☁️ Cloud Storage
-
-- **AWS S3** (all regions)
-- **Google Cloud Storage**
-- **Azure Blob Storage**
-- **Dropbox**
-- **Google Drive**
-- **OneDrive**
-
-### 🏠 Network & Local
-
-- **NAS** (Synology, QNAP, and more)
-- **SMB/CIFS** Shares
-- **NFS** Mounts
-- **SFTP** Servers
-- **WebDAV**
-- **Local Drives**
-
-### 🏢 Enterprise
-
-- **AWS FSx for ONTAP**
-- **Backblaze B2**
-- **Wasabi**
-- **MinIO**
-- **DigitalOcean Spaces**
-
----
-
-## 🖼️ See It in Action
-
-### Spotlight Search
-
-Press `Cmd+K` to instantly search across all your storage. Use powerful operators like `tag:important`, `type:video`, `ext:mp4`, or `size:>1gb`.
-
-<p align="center">
-  <img src="website/screenshots/vfs-spotlight-search.png" alt="Spotlight Search overlay showing search input with magnifying glass icon on left, keyboard shortcut icon and X icon on right. Four filter operators displayed: tag: (blue tag icon), type: (blue document icon), ext: (blue file extension icon, highlighted with blue background and 'Tab to insert' hint), size: (blue chart icon). Footer shows keyboard shortcuts: ↑ ↓ Navigate, ⏎ Select, Tab Complete, Esc Close. All icons use consistent blue theme color" width="700" style="max-width: 100%; height: auto;" />
-</p>
-
-### System Performance Monitor
-
-Real-time performance monitoring with detailed CPU core activity (14 cores), memory usage (54.6% - 26.2/48 GB), GPU metrics (64% Apple M4 Pro), VRAM (66%), temperature (64°C), disk I/O, network stats (2.5 KB/s), and system load averages (5.02 / 4.56 / 3.80). Perfect for keeping an eye on renders and heavy workloads.
-
-<p align="center">
-  <img src="website/screenshots/vfs-performance-metrics.png" alt="Performance Monitor dashboard showing macOS 15 with 14 Cores Apple M4 Pro. Header metrics: CPU 16% (14 cores), RAM 55% (26.2/48 GB), GPU 64% (Apple M4 Pro), VRAM 66% (5.2/0 GB), TEMP 64°C, LOAD 36% (5.02). Detailed cards: CPU Usage 15.9% with 14 individual core bars, Memory 54.6% (26.2/48 GB) with Swap 75% (3.7/5 GB), GPU 64% with Temperature 64°C, Power 170W, Fan Speed 58%, Core Clock 1986 MHz, Disk I/O 0 B/s (Read 0 B/s, Write 0 B/s), Network 2.5 KB/s (Download 1.0 KB/s, Upload 1.5 KB/s), System Load Average 5.02 (1M: 5.02, 5M: 4.56, 15M: 3.80). Uptime: 4d 3h" width="700" style="max-width: 100%; height: auto;" />
-</p>
-
-### Keyboard-First Experience
-
-Every action has a shortcut. Stay in your flow without touching the mouse.
-
-<p align="center">
-  <img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts dialog showing four sections: NAVIGATION (Go back ⌘+[, Go forward ⌘+], Go to parent folder ⌘+↑, Open selected Enter, Navigate files ↑↓←→), SELECTION (Select all ⌘+A, Toggle selection ⌘+Click, Range select Shift+Click, Clear selection Escape), CLIPBOARD (Copy ⌘+C, Paste ⌘+V, Duplicate ⌘+D), and FILE OPERATIONS (New folder ⌘+Shift+N, Rename Enter, Move to Trash ⌘+Delete, Delete Delete). Bottom hint: Press ? to toggle this panel" width="700" style="max-width: 100%; height: auto;" />
-</p>
-
----
-
 ## 🛠️ Built With Modern Tech
 
 <div style="overflow-x: auto;">
@@ -165,30 +134,6 @@ npm install
 cd apps/vfs-desktop
 npm run tauri:dev
 ```
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Check out our [architecture documentation](./agents.md) to get started.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Adobe Premiere Pro plugin
-- [ ] DaVinci Resolve integration
-- [ ] VS Code extension
-- [ ] Real-time collaboration
-- [ ] Team workspaces
-- [ ] Advanced search operators
-- [ ] Custom storage providers
 
 ---
 

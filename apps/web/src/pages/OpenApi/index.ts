@@ -1,2 +1,0 @@
-export { OpenApi } from './OpenApi';
-

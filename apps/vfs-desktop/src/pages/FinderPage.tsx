@@ -336,6 +336,7 @@ export function FinderPage({
       // Spotlight Search - Cmd/Ctrl+K
       if (shortcuts.matchesShortcut(e, 'spotlight')) {
         e.preventDefault();
+        e.stopPropagation();
         if (_onOpenSearch) {
           // Use external handler if provided
           _onOpenSearch();
@@ -343,6 +344,7 @@ export function FinderPage({
           // Use internal state if no external control
           setInternalSpotlightOpen(true);
         }
+        return; // Exit early to prevent other handlers
       }
     };
 
@@ -757,7 +759,8 @@ export function FinderPage({
     } else if (e.shiftKey && selectedFiles.size > 0) {
       // Range selection
       const allPaths = files.map((f) => f.path);
-      const lastSelected = Array.from(selectedFiles).pop()!;
+      const lastSelected = Array.from(selectedFiles).pop();
+      if (!lastSelected) return;
       const lastIdx = allPaths.indexOf(lastSelected);
       const currentIdx = allPaths.indexOf(file.path);
       const [start, end] = [
@@ -1059,7 +1062,6 @@ export function FinderPage({
 
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      let _successCount = 0;
       const failedPaths: string[] = [];
 
       for (const path of paths) {
@@ -1077,7 +1079,6 @@ export function FinderPage({
           });
 
           console.log(`[VFS Delete] Result:`, result);
-          _successCount++;
         } catch (err) {
           console.error(`[VFS Delete] Failed to delete ${path}:`, err);
           failedPaths.push(path);
@@ -1283,9 +1284,9 @@ export function FinderPage({
       const { invoke } = await import('@tauri-apps/api/core');
 
       // Generate copy name (e.g., "file.txt" -> "file copy.txt" or "file copy 2.txt")
-      const ext = file.name.includes('.')
-        ? '.' + file.name.split('.').pop()
-        : '';
+      const nameParts = file.name.split('.');
+      const ext =
+        nameParts.length > 1 ? '.' + nameParts[nameParts.length - 1] : '';
       const baseName = file.name.includes('.')
         ? file.name.substring(0, file.name.lastIndexOf('.'))
         : file.name;
@@ -3476,15 +3477,15 @@ export function FinderPage({
                                   return;
                                 } else if (typeof selectedApp === 'string') {
                                   appPath = selectedApp;
-                                } else if (
-                                  Array.isArray(selectedApp) &&
-                                  selectedApp.length > 0
-                                ) {
-                                  // Dialog might return an array
-                                  appPath =
-                                    typeof selectedApp[0] === 'string'
-                                      ? selectedApp[0]
-                                      : null;
+                                } else if (Array.isArray(selectedApp)) {
+                                  // Dialog might return an array (even with multiple: false)
+                                  const firstItem = selectedApp[0];
+                                  if (
+                                    typeof firstItem === 'string' &&
+                                    firstItem
+                                  ) {
+                                    appPath = firstItem;
+                                  }
                                 }
 
                                 if (appPath) {
@@ -3545,37 +3546,34 @@ export function FinderPage({
                 </>
               )}
 
-              {/* Move to Storage Class - Only for folders */}
-              {contextMenu.targetFile &&
-                (contextMenu.targetFile.mimeType === 'folder' ||
-                  contextMenu.targetFile.path.endsWith('/') ||
-                  contextMenu.targetFile.isDirectory) && (
-                  <>
-                    <div className="context-divider" />
-                    <button
-                      className="context-item"
-                      onClick={() => {
-                        toast.showToast({
-                          type: 'info',
-                          message:
-                            'Move to Storage Class: This feature is under development and will be available soon.',
-                          duration: 4000,
-                        });
-                        closeContextMenu();
-                      }}
+              {/* Move to Storage Tier - Available for files and folders */}
+              {contextMenu.targetFile && (
+                <>
+                  <div className="context-divider" />
+                  <button
+                    className="context-item"
+                    onClick={() => {
+                      toast.showToast({
+                        type: 'info',
+                        message:
+                          'Move to Storage Tier: This feature is under development and will be available soon.',
+                        duration: 4000,
+                      });
+                      closeContextMenu();
+                    }}
+                  >
+                    <svg
+                      className="context-icon storage-tier"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
                     >
-                      <svg
-                        className="context-icon"
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
-                      >
-                        <path d="M.5 3l.04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9.81a2 2 0 0 0 1.991-1.819l.637-7a1.99 1.99 0 0 0-.342-1.311L12.5 3H.5zm.217 1h11.566l-.166 2.894a.5.5 0 0 1-.421.45l-5.5.894a.5.5 0 0 1-.578-.45L1.717 4zM14 2H2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zM2 1a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2H2z" />
-                        <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-1z" />
-                      </svg>
-                      Move to Storage Class
-                    </button>
-                  </>
-                )}
+                      <path d="M.5 3l.04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9.81a2 2 0 0 0 1.991-1.819l.637-7a1.99 1.99 0 0 0-.342-1.311L12.5 3H.5zm.217 1h11.566l-.166 2.894a.5.5 0 0 1-.421.45l-5.5.894a.5.5 0 0 1-.578-.45L1.717 4zM14 2H2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zM2 1a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2H2z" />
+                      <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-1z" />
+                    </svg>
+                    Move to Storage Tier
+                  </button>
+                </>
+              )}
 
               <div className="context-divider" />
             </>
@@ -4172,8 +4170,9 @@ function getStorageIcon(source: StorageSource) {
  * - S3: s3://bucket/prefix
  * - Cloud: provider://container
  */
-function getStorageDisplayLabel(source: StorageSource): string {
-  const { providerId, name, config } = source;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getStorageDisplayLabel(_source: StorageSource): string {
+  const { providerId, name, config } = _source;
 
   // For named sources, just return the name
   if (name && !name.includes('/') && !name.includes('\\')) {

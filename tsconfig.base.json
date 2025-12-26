@@ -14,14 +14,7 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {
-      "@ursly/access-control": [
-        "libs/shared/access-control/access-control/src/index.ts"
-      ],
-      "@ursly/agent-core": ["libs/agent-core/src/index.ts"],
-      "@ursly/audit-logger": ["libs/audit-logger/src/index.ts"],
-      "@ursly/shared/types": ["libs/shared/types/src/index.ts"]
-    }
+    "paths": {}
   },
   "exclude": ["node_modules", "tmp"]
 }

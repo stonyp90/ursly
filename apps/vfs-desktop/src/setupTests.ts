@@ -1,17 +1,28 @@
 import '@testing-library/jest-dom';
 
 // Mock Tauri API
-(
-  globalThis as unknown as { window: typeof window & { __TAURI__?: unknown } }
-).window = {
-  ...globalThis.window,
-  __TAURI__: {
+if (typeof window !== 'undefined') {
+  (window as typeof window & { __TAURI__?: unknown }).__TAURI__ = {
     invoke: jest.fn(),
     tauri: {
       invoke: jest.fn(),
     },
-  },
-};
+  };
+} else {
+  // For Node.js test environment
+  (
+    globalThis as unknown as {
+      window?: typeof window & { __TAURI__?: unknown };
+    }
+  ).window = {
+    __TAURI__: {
+      invoke: jest.fn(),
+      tauri: {
+        invoke: jest.fn(),
+      },
+    },
+  } as typeof window;
+}
 
 // Mock import.meta.env for Vite environment variables
 (

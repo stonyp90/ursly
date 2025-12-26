@@ -108,11 +108,12 @@ export async function showConfirm(options: ConfirmOptions): Promise<boolean> {
 
   // Fallback: use custom dialog with promise
   return new Promise((resolve) => {
-    const handler = (e: CustomEvent) => {
-      window.removeEventListener('ursly:dialog-response' as any, handler);
-      resolve(e.detail.confirmed);
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<{ confirmed: boolean }>;
+      window.removeEventListener('ursly:dialog-response', handler);
+      resolve(customEvent.detail.confirmed);
     };
-    window.addEventListener('ursly:dialog-response' as any, handler);
+    window.addEventListener('ursly:dialog-response', handler);
 
     window.dispatchEvent(
       new CustomEvent('ursly:dialog', {

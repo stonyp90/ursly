@@ -12,7 +12,6 @@ import type {
   FileMetadata,
   ApiSearchRequest,
   ApiFileListResponse,
-  ApiPreviewRequest,
   ApiStreamResponse,
   DeploymentConfig,
   FileTierStatus,

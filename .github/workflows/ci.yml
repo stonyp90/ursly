@@ -1,4 +1,4 @@
-name: CI
+name: CI - VFS
 
 on:
   push:
@@ -12,10 +12,10 @@ concurrency:
 
 jobs:
   # ==========================================================================
-  # Core Tests & Linting
+  # VFS Desktop Tests & Linting
   # ==========================================================================
-  test:
-    name: Test & Lint
+  test-vfs:
+    name: Test & Lint VFS Desktop
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +28,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install VFS desktop dependencies
+        working-directory: apps/vfs-desktop
         run: npm ci
 
       - name: Run linting
@@ -36,34 +40,3 @@ jobs:
 
       - name: Run tests
         run: npm test -- --passWithNoTests
-
-  # ==========================================================================
-  # Build Web & API (excludes desktop apps - built in release workflow)
-  # ==========================================================================
-  build-web-api:
-    name: Build Web & API
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build web and API projects
-        run: npx nx run-many --target=build --projects=web,api,grpc,agent-core,shared-access-control-access-control --parallel=3
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-          retention-days: 7
-          if-no-files-found: ignore

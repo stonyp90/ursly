@@ -275,32 +275,38 @@ const QuickStat = ({
   detail,
   color,
   showAsValue = false,
+  maxValue = 100,
 }: {
   label: string;
   value: number;
   detail?: string;
   color: string;
   showAsValue?: boolean;
-}) => (
-  <div className="quick-stat">
-    <div className="quick-stat-header">
-      <span className="quick-stat-label">{label}</span>
-      <span className="quick-stat-value" style={{ color }}>
-        {showAsValue ? value.toFixed(0) : `${value.toFixed(0)}%`}
-      </span>
+  maxValue?: number;
+}) => {
+  // Cap the progress bar width at maxValue, but show actual value
+  const progressWidth = Math.min((value / maxValue) * 100, 100);
+  return (
+    <div className="quick-stat">
+      <div className="quick-stat-header">
+        <span className="quick-stat-label">{label}</span>
+        <span className="quick-stat-value" style={{ color }}>
+          {showAsValue ? value.toFixed(0) : `${value.toFixed(0)}%`}
+        </span>
+      </div>
+      <div className="quick-stat-bar">
+        <div
+          className="quick-stat-fill"
+          style={{
+            width: `${progressWidth}%`,
+            background: color,
+          }}
+        />
+      </div>
+      {detail && <span className="quick-stat-detail">{detail}</span>}
     </div>
-    <div className="quick-stat-bar">
-      <div
-        className="quick-stat-fill"
-        style={{
-          width: `${Math.min(showAsValue ? value : value, 100)}%`,
-          background: color,
-        }}
-      />
-    </div>
-    {detail && <span className="quick-stat-detail">{detail}</span>}
-  </div>
-);
+  );
+};
 
 // Metric Card - Clean design with small status indicator
 const MetricCard = ({
@@ -669,9 +675,12 @@ export function MetricsPage() {
     ? getColor(gpu.current.gpu_utilization, thresholds.gpu)
     : 'var(--vfs-success, #30d158)';
   // Load average: use CPU cores as baseline (load > cores = overloaded)
+  // Load average is a ratio, not a percentage. For display purposes, we show it as
+  // a percentage relative to core count, but cap the visual bar at 200% (2x cores)
   const coreCount = sys.per_core_usage?.length || 4;
-  const loadPercent = (sys.load_average[0] / coreCount) * 100;
-  const loadColor = getColor(Math.min(loadPercent, 100), 100);
+  const loadRatio = sys.load_average[0] / coreCount; // e.g., 37.55 / 14 = 2.68 (268% of cores)
+  const loadPercent = Math.min(loadRatio * 100, 200); // Cap visual at 200% for progress bar
+  const loadColor = getColor(Math.min(loadRatio * 100, 100), 100); // Color based on 100% threshold
 
   return (
     <div className="metrics-page">
@@ -743,8 +752,9 @@ export function MetricsPage() {
         <QuickStat
           label="Load"
           value={loadPercent}
-          detail={sys.load_average[0].toFixed(2)}
+          detail={`${sys.load_average[0].toFixed(2)} / ${coreCount} cores`}
           color={loadColor}
+          maxValue={200}
         />
       </section>
 

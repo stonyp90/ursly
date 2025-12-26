@@ -367,7 +367,9 @@ function useStandaloneShortcuts(): ShortcutsContextType {
         s.key !== s.defaultKey ||
         JSON.stringify(s.modifiers) !== JSON.stringify(s.defaultModifiers)
       ) {
-        customized[s.id] = { key: s.key!, modifiers: s.modifiers! };
+        if (s.key && s.modifiers) {
+          customized[s.id] = { key: s.key, modifiers: s.modifiers };
+        }
       }
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(customized));

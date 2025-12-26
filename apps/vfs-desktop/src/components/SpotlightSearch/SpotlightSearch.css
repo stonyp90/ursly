@@ -157,6 +157,11 @@
   color: var(--text-secondary);
 }
 
+/* Ensure operator icons override default color */
+.result-icon[class*='op-'] {
+  color: var(--primary) !important;
+}
+
 .spotlight-result.file .result-icon,
 .spotlight-result.folder .result-icon {
   background: var(--surface-elevated);
@@ -206,20 +211,14 @@
 }
 
 /* Operator icon colors - using theme variables only */
-.result-icon.op-tag {
-  color: var(--primary);
-}
-
-.result-icon.op-type {
-  color: var(--primary);
-}
-
-.result-icon.op-ext {
-  color: var(--primary);
-}
-
-.result-icon.op-size {
-  color: var(--primary);
+/* All operators use the primary accent color for consistency */
+.result-icon.op-tag,
+.result-icon.op-type,
+.result-icon.op-ext,
+.result-icon.op-size,
+.result-icon.op-tier,
+.result-icon.op-is {
+  color: var(--primary) !important;
 }
 
 /* Icon colors use theme variables and inherit properly */
@@ -228,9 +227,22 @@
   fill: currentColor;
 }
 
-/* Ensure icons inherit color from parent */
-.result-icon svg path {
-  fill: currentColor;
+/* Ensure icons inherit color from parent - override any hardcoded fills */
+.result-icon svg path,
+.result-icon svg circle,
+.result-icon svg rect,
+.result-icon svg polygon {
+  fill: currentColor !important;
+  stroke: currentColor;
+}
+
+/* Ensure operator icons specifically use primary color */
+.result-icon[class*='op-'] svg,
+.result-icon[class*='op-'] svg path,
+.result-icon[class*='op-'] svg circle,
+.result-icon[class*='op-'] svg rect {
+  color: var(--primary) !important;
+  fill: var(--primary) !important;
 }
 
 .spotlight-result.recent .result-title {

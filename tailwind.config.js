@@ -2,7 +2,7 @@
 module.exports = {
   darkMode: ['class'],
   content: [
-    './apps/web/src/**/*.{ts,tsx,js,jsx}',
+    './apps/vfs-desktop/src/**/*.{ts,tsx,js,jsx}',
   ],
   theme: {
     container: {

@@ -39,11 +39,12 @@ const TOUR_STEPS: Step[] = [
     target: '.header-tab[data-tab="metrics"]',
     content: (
       <div>
-        <h3>Metrics</h3>
+        <h3>System Metrics</h3>
         <p>
-          Monitor system performance, GPU usage, and storage statistics in
-          real-time. Track resource consumption across all your connected
-          storage sources and optimize your workflow.
+          Click the <strong>Metrics</strong> tab to monitor system performance,
+          GPU usage, CPU cores, memory, and storage statistics in real-time.
+          Perfect for keeping an eye on resource consumption during heavy
+          workloads like video rendering or large file transfers.
         </p>
       </div>
     ),
@@ -72,8 +73,9 @@ const TOUR_STEPS: Step[] = [
         <h3>Favorites</h3>
         <p>
           Quickly access your most-used files and folders. Drag any file or
-          folder here to add it to favorites, or right-click and select "Add to
-          Favorites". Your favorites sync across all devices.
+          folder here to add it to favorites, or right-click and select{' '}
+          <strong>"Add to Favorites"</strong>. Your favorites are saved locally
+          and help you access frequently used locations instantly.
         </p>
       </div>
     ),
@@ -84,13 +86,13 @@ const TOUR_STEPS: Step[] = [
     target: '.file-browser',
     content: (
       <div>
-        <h3>Asset Management</h3>
+        <h3>File Management</h3>
         <p>
-          Organize your files with tags, metadata, and smart filters.
-          Right-click any file to view details, add tags, or manage properties.
-          Use <kbd>Cmd+I</kbd> (Mac) or <kbd>Ctrl+I</kbd> (Windows/Linux) to
-          open asset details. Tags help you organize and find files across all
-          storage sources.
+          This is your main file browser. Right-click any file to view details,
+          add tags, or manage properties. Use <kbd>Cmd+I</kbd> (Mac) or{' '}
+          <kbd>Ctrl+I</kbd> (Windows/Linux) to open file details. Drag and drop
+          files between storage sources, or use keyboard shortcuts for quick
+          navigation.
         </p>
       </div>
     ),
@@ -127,10 +129,45 @@ export function OnboardingTour({
   useEffect(() => {
     const hasCompleted = localStorage.getItem(STORAGE_KEY) === 'true';
     if (autoStart && !hasCompleted) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        setRun(true);
-      }, 1000);
+      // Wait for DOM to be fully ready and ensure all elements are rendered
+      const checkElements = () => {
+        const searchButton = document.querySelector('.action-pill.search');
+        const shortcutsButton = document.querySelector(
+          '.action-pill.shortcuts',
+        );
+        const fileBrowser = document.querySelector('.file-browser');
+        const metricsTab = document.querySelector(
+          '.header-tab[data-tab="metrics"]',
+        );
+        const favoritesSection = document.querySelector('.favorites-section');
+
+        // Check all required elements exist
+        if (
+          searchButton &&
+          shortcutsButton &&
+          fileBrowser &&
+          metricsTab &&
+          favoritesSection
+        ) {
+          console.log('Onboarding tour: All elements found, starting tour');
+          setRun(true);
+        } else {
+          console.log('Onboarding tour: Waiting for elements...', {
+            searchButton: !!searchButton,
+            shortcutsButton: !!shortcutsButton,
+            fileBrowser: !!fileBrowser,
+            metricsTab: !!metricsTab,
+            favoritesSection: !!favoritesSection,
+          });
+          // Retry after a short delay if elements aren't ready
+          setTimeout(checkElements, 500);
+        }
+      };
+
+      // Initial delay to ensure app is loaded
+      setTimeout(checkElements, 2000);
+    } else if (autoStart && hasCompleted) {
+      console.log('Onboarding tour: Already completed, skipping');
     }
   }, [autoStart]);
 
@@ -149,8 +186,47 @@ export function OnboardingTour({
           // Handle skip or close (Escape/X button triggers SKIPPED status)
           onSkip?.();
         }
-      } else if (type === 'step:after' || type === 'error:target_not_found') {
+      } else if (type === 'step:after') {
+        // Move to next step after current step completes
         setStepIndex(index);
+      } else if (type === 'error:target_not_found') {
+        // If target not found, try to wait a bit and retry, or skip to next step
+        console.warn(`Onboarding tour: Target not found for step ${index}`);
+        // Wait a bit for DOM to update, then try next step
+        setTimeout(() => {
+          if (index < TOUR_STEPS.length - 1) {
+            setStepIndex(index + 1);
+          } else {
+            // Last step failed, finish tour
+            setRun(false);
+            localStorage.setItem(STORAGE_KEY, 'true');
+            onComplete?.();
+          }
+        }, 500);
+      } else if (type === 'step:before') {
+        // Before showing a step, ensure we're on the right tab
+        const step = TOUR_STEPS[index];
+        if (step?.target === '.header-tab[data-tab="metrics"]') {
+          // Switch to Metrics tab if needed
+          const metricsTab = document.querySelector(
+            '.header-tab[data-tab="metrics"]',
+          ) as HTMLElement;
+          if (metricsTab && !metricsTab.classList.contains('active')) {
+            metricsTab.click();
+          }
+        } else if (
+          step?.target === '.file-browser' ||
+          step?.target === '.favorites-section'
+        ) {
+          // Ensure we're on Files tab for file browser steps (switch back from Metrics if needed)
+          const filesTab = document.querySelector(
+            '.header-tab:not([data-tab="metrics"])',
+          ) as HTMLElement;
+          if (filesTab && !filesTab.classList.contains('active')) {
+            filesTab.click();
+          }
+        }
+        // For steps 3 (shortcuts) and 1 (search), we can be on any tab - no switching needed
       }
     },
     [onComplete, onSkip],
@@ -167,6 +243,10 @@ export function OnboardingTour({
         showSkipButton
         disableCloseOnEsc={false}
         hideCloseButton={false}
+        disableOverlayClose={false}
+        disableScrolling={false}
+        scrollOffset={20}
+        scrollToFirstStep={true}
         callback={handleJoyrideCallback}
         styles={{
           options: {
@@ -175,7 +255,7 @@ export function OnboardingTour({
             backgroundColor: 'var(--surface, #3a3a3c)',
             overlayColor: 'rgba(0, 0, 0, 0.6)',
             arrowColor: 'var(--surface, #3a3a3c)',
-            zIndex: 10001,
+            zIndex: 10002,
           },
           tooltip: {
             borderRadius: '12px',
@@ -185,6 +265,12 @@ export function OnboardingTour({
           },
           tooltipContainer: {
             textAlign: 'left',
+            pointerEvents: 'auto',
+            zIndex: 10003,
+          },
+          tooltipFooter: {
+            pointerEvents: 'auto',
+            zIndex: 10004,
           },
           tooltipTitle: {
             fontSize: '18px',

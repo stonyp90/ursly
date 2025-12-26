@@ -1,6 +1,6 @@
 {
   "name": "@ursly/vfs-desktop",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "private": true,
   "description": "Ursly VFS Desktop - Virtual Cloud File System",
   "type": "module",
@@ -20,6 +20,7 @@
     "@tauri-apps/plugin-updater": "^2.0.0",
     "framer-motion": "^10.16.0",
     "hls.js": "^1.6.15",
+    "lucide-react": "^0.562.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-joyride": "^2.9.3"

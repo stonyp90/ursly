@@ -1,2 +1,0 @@
-export { GpuMetrics } from './GpuMetrics';
-

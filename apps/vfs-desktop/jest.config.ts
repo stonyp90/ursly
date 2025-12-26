@@ -4,11 +4,10 @@ export default {
   testEnvironment: 'jsdom',
   transform: {
     '^.+\\.[tj]sx?$': [
-      '@swc/jest',
+      'ts-jest',
       {
-        jsc: {
-          parser: { syntax: 'typescript', tsx: true },
-          transform: { react: { runtime: 'automatic' } },
+        tsconfig: {
+          jsx: 'react-jsx',
         },
       },
     ],
@@ -19,7 +18,6 @@ export default {
   testMatch: ['**/*.spec.ts', '**/*.spec.tsx'],
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
-    '^@ursly/(.*)$': '<rootDir>/../../libs/$1/src/index.ts',
     '\\.css$': 'identity-obj-proxy',
     '\\.module\\.css$': 'identity-obj-proxy',
   },

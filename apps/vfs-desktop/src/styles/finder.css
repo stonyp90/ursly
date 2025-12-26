@@ -63,8 +63,11 @@
 
   /* Semantic colors - inherit from global theme */
   --finder-success: var(--color-success, var(--vfs-success, #30d158));
+  --finder-success-rgb: var(--vfs-success-rgb, 48, 209, 88);
   --finder-warning: var(--color-warning, var(--vfs-warning, #ff9f0a));
+  --finder-warning-rgb: var(--vfs-warning-rgb, 255, 159, 10);
   --finder-danger: var(--color-error, var(--vfs-error, #ff453a));
+  --finder-danger-rgb: var(--vfs-error-rgb, 255, 69, 58);
   --finder-info: var(--color-info, var(--finder-accent));
 
   /* Selection & Interaction - use accent color */
@@ -2776,7 +2779,7 @@
 }
 
 .context-item.danger:hover:not(:disabled) {
-  background: rgba(255, 69, 58, 0.12);
+  background: rgba(var(--finder-danger-rgb, 255, 69, 58), 0.12);
 }
 
 .context-item.danger:hover .context-icon {
@@ -2789,6 +2792,10 @@
   flex-shrink: 0;
   color: var(--finder-text-secondary);
   transition: color 0.1s ease;
+}
+
+.context-icon.storage-tier {
+  color: var(--finder-accent);
 }
 
 .context-shortcut {
@@ -2804,7 +2811,7 @@
 
 .context-item:hover:not(:disabled) .context-shortcut {
   /* Keep shortcut badge subtle - macOS style */
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--finder-hover);
 }
 
 .context-divider {

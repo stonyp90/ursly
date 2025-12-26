@@ -63,7 +63,7 @@ export function BrowserFinderPage() {
 
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [showHiddenFiles, _setShowHiddenFiles] = useState(false);
+  const [showHiddenFiles] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
 
   // Search state
@@ -261,7 +261,8 @@ export function BrowserFinderPage() {
     } else if (e.shiftKey && selectedFiles.size > 0) {
       // Range select
       const allPaths = files.map((f) => f.path);
-      const lastSelected = Array.from(selectedFiles).pop()!;
+      const lastSelected = Array.from(selectedFiles).pop();
+      if (!lastSelected) return;
       const lastIdx = allPaths.indexOf(lastSelected);
       const currentIdx = allPaths.indexOf(file.path);
       const [start, end] = [
@@ -279,9 +280,10 @@ export function BrowserFinderPage() {
   // ============================================================================
 
   const handlePreview = async (file: FileMetadata) => {
+    if (!selectedSource) return;
     // For images, show preview
     if (file.mimeType?.startsWith('image/')) {
-      const previewUrl = api.getPreviewUrl(selectedSource!.id, file.path);
+      const previewUrl = api.getPreviewUrl(selectedSource.id, file.path);
       window.open(previewUrl, '_blank');
       return;
     }
@@ -290,7 +292,7 @@ export function BrowserFinderPage() {
     if (file.mimeType?.startsWith('video/')) {
       try {
         const streamInfo = await api.getStreamInfo(
-          selectedSource!.id,
+          selectedSource.id,
           file.path,
         );
         // Open HLS player (could be a modal)
@@ -306,9 +308,10 @@ export function BrowserFinderPage() {
   };
 
   const handleDownload = async (file: FileMetadata) => {
+    if (!selectedSource) return;
     try {
       const downloadUrl = await api.getDownloadUrl(
-        selectedSource!.id,
+        selectedSource.id,
         file.path,
       );
       window.open(downloadUrl, '_blank');
@@ -319,8 +322,9 @@ export function BrowserFinderPage() {
   };
 
   const handleAddTag = async (file: FileMetadata, tag: string) => {
+    if (!selectedSource) return;
     try {
-      await api.addTags(selectedSource!.id, [file.path], [tag]);
+      await api.addTags(selectedSource.id, [file.path], [tag]);
       // Refresh tags
       loadTags();
       // Update local file state
@@ -335,8 +339,9 @@ export function BrowserFinderPage() {
   };
 
   const handleRemoveTag = async (file: FileMetadata, tag: string) => {
+    if (!selectedSource) return;
     try {
-      await api.removeTags(selectedSource!.id, [file.path], [tag]);
+      await api.removeTags(selectedSource.id, [file.path], [tag]);
       // Update local file state
       setFiles((prev) =>
         prev.map((f) =>
@@ -351,16 +356,17 @@ export function BrowserFinderPage() {
   };
 
   const handleToggleFavorite = async (path: string) => {
+    if (!selectedSource) return;
     const isFav = favorites.some(
-      (f) => f.sourceId === selectedSource?.id && f.path === path,
+      (f) => f.sourceId === selectedSource.id && f.path === path,
     );
 
     try {
       if (isFav) {
-        await api.removeFavorite(selectedSource!.id, path);
+        await api.removeFavorite(selectedSource.id, path);
       } else {
         const name = path.split('/').pop() || path;
-        await api.addFavorite(selectedSource!.id, path, name);
+        await api.addFavorite(selectedSource.id, path, name);
       }
       loadFavorites();
     } catch (err) {
@@ -372,9 +378,10 @@ export function BrowserFinderPage() {
     file: FileMetadata,
     targetTier: FileTierStatus,
   ) => {
+    if (!selectedSource) return;
     try {
       const result = await api.requestTierChange(
-        selectedSource!.id,
+        selectedSource.id,
         [file.path],
         targetTier,
       );
@@ -386,9 +393,10 @@ export function BrowserFinderPage() {
   };
 
   const handleRequestRetrieval = async (file: FileMetadata) => {
+    if (!selectedSource) return;
     try {
       const result = await api.requestRetrieval(
-        selectedSource!.id,
+        selectedSource.id,
         [file.path],
         'standard',
       );
