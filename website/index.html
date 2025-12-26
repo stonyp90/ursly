@@ -64,15 +64,19 @@
       "price": "0",
       "priceCurrency": "USD"
     },
-    "featureList": [
+      "featureList": [
       "15+ Storage Backend Integrations",
       "AWS S3, Azure Blob, Google Cloud Storage",
       "FSx for ONTAP, SMB, NFS, SFTP, WebDAV",
       "Backblaze B2, MinIO, Wasabi, DigitalOcean Spaces",
-      "AI-Powered Search via Ollama",
-      "Whisper Transcription",
-      "Storage Tiering (Hot/Warm/Cold)",
+      "Spotlight Search (`Cmd+K`) via Ollama",
+      "Whisper Transcription (99 languages)",
+      "Storage Tiering (Hot/Nearline/Cold/Archive)",
+      "Real-Time System Metrics (CPU, GPU, Memory, Disk I/O)",
       "Keyboard-First Navigation",
+      "Theme Customization & Settings",
+      "Onboarding Tour",
+      "Auto-Updates",
       "Open Source AGPL-3.0"
     ]
   }
@@ -274,11 +278,11 @@
           </div>
               <span class="screenshot-title">Ursly VFS</span>
         </div>
-            <img src="screenshots/vfs-main-dark.png" alt="Ursly VFS file browser on macOS 15 with Apple M4 Pro showing unified file management interface with sidebar navigation (Favorites, Storage locations, Tags, System metrics), main content area displaying file list with Name, Date Modified, Size, and Tier columns, header with Files/Metrics tabs, navigation bar with search, and footer with Shortcuts/Search/Theme buttons" loading="lazy">
+            <img src="screenshots/vfs-file-browser.png" alt="Ursly VFS file browser on macOS 15 with Apple M4 Pro showing unified file management interface with sidebar navigation (Favorites, Storage locations, Tags, System metrics), main content area displaying file list with Name, Date Modified, Size, and Tier columns, header with Files/Metrics/Settings tabs, navigation bar with search, and footer with Shortcuts/Search/Theme buttons" loading="lazy">
           </div>
           <div class="screenshot-caption">
             <h3>All Your Files, One View</h3>
-            <p>Cloud storage, network drives, local folders — everything side by side. See your system performance at a glance. Move files anywhere with simple drag & drop.</p>
+            <p>Cloud storage, network drives, local folders — everything side by side. See your system performance at a glance. Move files anywhere with simple drag & drop. Customize your theme and access settings from the new Settings tab.</p>
         </div>
         </div>
 
@@ -300,8 +304,8 @@
               <img src="screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts dialog showing four sections: NAVIGATION (Go back ⌘+[, Go forward ⌘+], Go to parent folder ⌘+↑, Open selected Enter, Navigate files ↑↓←→), SELECTION (Select all ⌘+A, Toggle selection ⌘+Click, Range select Shift+Click, Clear selection Escape), CLIPBOARD (Copy ⌘+C, Paste ⌘+V, Duplicate ⌘+D), and FILE OPERATIONS (New folder ⌘+Shift+N, Rename Enter, Move to Trash ⌘+Delete, Delete Delete). Bottom hint: Press ? to toggle this panel" loading="lazy">
             </div>
             <div class="feature-info">
-              <h4>Keyboard Shortcuts</h4>
-              <p>Press <code>Cmd+K</code> (Mac) or <code>Ctrl+K</code> (Windows/Linux) for instant Spotlight Search. Press <code>?</code> to view all shortcuts. Every action has a keyboard shortcut for maximum productivity.</p>
+              <h4>Keyboard Shortcuts & Settings</h4>
+              <p>Press <code>Cmd+K</code> (Mac) or <code>Ctrl+K</code> (Windows/Linux) for instant Spotlight Search. Press <code>?</code> to view all shortcuts. Customize your theme, manage settings, and start the onboarding tour from the new Settings tab. Every action has a keyboard shortcut for maximum productivity.</p>
             </div>
             </div>
         </div>
@@ -341,14 +345,15 @@
           <div class="feature-icon feature-icon-secondary">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </div>
-          <h3 class="feature-title">AI-Powered Search</h3>
+          <h3 class="feature-title">Spotlight Search (`Cmd+K` / `Ctrl+K`)</h3>
           <p class="feature-description">
             Find files by what's in them, not just their names. 
-            Search video transcripts, image content, document text — all locally and private.
+            Press `Cmd+K` for instant search across all storage. Search video transcripts, image content, document text — all locally and private.
           </p>
           <ul class="feature-list">
-            <li>Search by content</li>
-            <li>Video transcription</li>
+            <li>Instant Spotlight Search</li>
+            <li>Smart operators (`tag:`, `type:`, `ext:`, `size:`)</li>
+            <li>Video transcription (99 languages)</li>
             <li>Smart tagging</li>
           </ul>
         </div>
@@ -366,6 +371,39 @@
             <li>AWS S3 & FSx for ONTAP</li>
             <li>Azure Blob Storage</li>
             <li>Google Cloud Storage</li>
+            <li>15+ storage providers</li>
+          </ul>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon feature-icon-accent">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m6 0h10M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"/></svg>
+          </div>
+          <h3 class="feature-title">Real-Time System Metrics</h3>
+          <p class="feature-description">
+            Monitor your system performance in real-time. Track CPU usage per core, GPU temperature and power, memory utilization, disk I/O, and network speeds — all without leaving your flow.
+          </p>
+          <ul class="feature-list">
+            <li>CPU per-core usage</li>
+            <li>GPU metrics (temp, power, fan)</li>
+            <li>Memory & disk I/O</li>
+            <li>Network bandwidth</li>
+          </ul>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon feature-icon-success">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <h3 class="feature-title">Theme Customization & Settings</h3>
+          <p class="feature-description">
+            Customize your experience with dark/light themes and 10 accent colors. Access settings, start the onboarding tour, and configure your preferences from the dedicated Settings tab.
+          </p>
+          <ul class="feature-list">
+            <li>Dark & light themes</li>
+            <li>10 accent colors</li>
+            <li>Onboarding tour</li>
+            <li>Auto-updates</li>
           </ul>
         </div>
       </div>
