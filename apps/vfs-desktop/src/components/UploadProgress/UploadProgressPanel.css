@@ -1,0 +1,83 @@
+/**
+ * UploadProgressPanel Styles
+ */
+
+.upload-progress-panel {
+  position: fixed;
+  bottom: var(--space-4, 16px);
+  right: var(--space-4, 16px);
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  max-height: 60vh;
+  background: var(--vfs-bg-elevated, var(--surface-elevated, #3a3a3c));
+  border: 1px solid var(--vfs-border, var(--border, rgba(255, 255, 255, 0.12)));
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--vfs-shadow-xl, 0 20px 60px rgba(0, 0, 0, 0.5));
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.upload-progress-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-bottom: 1px solid
+    var(--vfs-separator, var(--border-subtle, rgba(255, 255, 255, 0.08)));
+}
+
+.upload-progress-panel-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--vfs-font-sans, 'Inter', sans-serif);
+  color: var(--vfs-text-primary, var(--text-primary, #f5f5f7));
+}
+
+.upload-progress-panel-count {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--vfs-font-sans, 'Inter', sans-serif);
+  color: var(--vfs-text-muted, var(--text-muted, #8e8e93));
+  background: var(--vfs-bg-primary, var(--background, #1c1c1e));
+  padding: 2px 8px;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.upload-progress-panel-list {
+  padding: var(--space-2, 8px);
+  overflow-y: auto;
+  max-height: calc(60vh - 50px);
+}
+
+.upload-progress-panel-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.upload-progress-panel-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.upload-progress-panel-list::-webkit-scrollbar-thumb {
+  background: var(--vfs-border, var(--border, rgba(255, 255, 255, 0.15)));
+  border-radius: var(--radius-sm, 4px);
+}
+
+.upload-progress-panel-list::-webkit-scrollbar-thumb:hover {
+  background: var(
+    --vfs-border-hover,
+    var(--border-hover, rgba(255, 255, 255, 0.25))
+  );
+}
+
+/* Light theme */
+[data-theme='light'] .upload-progress-panel {
+  background: var(--vfs-bg-elevated, var(--surface-elevated, #f5f5f7));
+  border-color: var(--vfs-border, var(--border, rgba(0, 0, 0, 0.1)));
+}
+
+[data-theme='light'] .upload-progress-panel-count {
+  background: var(--vfs-bg-primary, var(--background, #ffffff));
+}

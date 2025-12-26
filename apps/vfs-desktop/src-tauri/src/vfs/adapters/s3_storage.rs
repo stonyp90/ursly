@@ -64,6 +64,11 @@ impl S3StorageAdapter {
         })
     }
     
+    /// Get the OpenDAL operator (for multipart uploads)
+    pub fn operator(&self) -> &Operator {
+        &self.operator
+    }
+    
     /// Convert path to S3 key
     fn to_key(&self, path: &Path) -> String {
         path.strip_prefix("/")

@@ -141,6 +141,10 @@
   color: var(--vfs-primary, var(--primary, #6366f1));
 }
 
+.group-header .cyber-icon {
+  color: var(--vfs-primary, var(--primary, #6366f1));
+}
+
 .group-providers {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -172,8 +176,15 @@
 }
 
 .provider-icon {
-  font-size: 24px;
-  color: var(--vfs-text-secondary, var(--text-secondary, #a1a1a6));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--vfs-primary, var(--primary, #6366f1));
+  transition: color var(--vfs-transition-fast, 150ms);
+}
+
+.provider-btn:hover .provider-icon {
+  color: var(--vfs-primary, var(--primary, #6366f1));
 }
 
 .provider-name {

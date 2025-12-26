@@ -41,6 +41,7 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { SearchBox } from '../components/SearchBox';
 import { SpotlightSearch } from '../components/SpotlightSearch';
 import { MetricsPreview } from '../components/MetricsPreview';
+import { UploadProgressPanel } from '../components/UploadProgress';
 import { truncateMiddle } from '../utils/file-utils';
 import '../styles/finder.css';
 
@@ -78,6 +79,7 @@ export function FinderPage({
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [showAddStorage, setShowAddStorage] = useState(false);
   const [showHiddenFiles, setShowHiddenFiles] = useState(false);
+  const [activeUploads, setActiveUploads] = useState<Set<string>>(new Set());
   const [warmProgress, setWarmProgress] = useState<
     Record<string, WarmProgress>
   >({});
@@ -1759,6 +1761,70 @@ export function FinderPage({
     } catch (err) {
       console.error('Failed to add storage:', err);
       DialogService.error(`Failed to add storage: ${err}`, 'Storage Error');
+    }
+  };
+
+  const handleUploadToS3 = async () => {
+    if (!selectedSource) return;
+
+    const storageType =
+      selectedSource.providerId || selectedSource.type || 'local';
+    const isS3 =
+      storageType === 's3' ||
+      storageType === 'aws-s3' ||
+      storageType === 's3-compatible';
+
+    if (!isS3) {
+      DialogService.error(
+        'Upload is only available for S3 storage',
+        'Upload Error',
+      );
+      return;
+    }
+
+    try {
+      const selectedFiles = await DialogService.open({
+        multiple: true,
+        directory: false,
+      });
+
+      if (!selectedFiles || selectedFiles.length === 0) return;
+
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      for (const localPath of selectedFiles) {
+        const fileName =
+          localPath.split('/').pop() || localPath.split('\\').pop() || 'file';
+        const s3Path =
+          currentPath === '/'
+            ? fileName
+            : `${currentPath.replace(/^\//, '')}/${fileName}`;
+
+        try {
+          const uploadId = await invoke<string>('vfs_start_multipart_upload', {
+            sourceId: selectedSource.id,
+            localPath,
+            s3Path,
+            partSize: null, // Use default 5MB
+          });
+
+          setActiveUploads((prev) => new Set([...prev, uploadId]));
+
+          toast.showToast({
+            type: 'success',
+            message: `Started uploading ${fileName}`,
+          });
+        } catch (err) {
+          console.error('Failed to start upload:', err);
+          DialogService.error(
+            `Failed to upload ${fileName}: ${err}`,
+            'Upload Error',
+          );
+        }
+      }
+    } catch (err) {
+      console.error('Failed to open file dialog:', err);
+      DialogService.error(`Failed to open file dialog: ${err}`, 'Upload Error');
     }
   };
 
@@ -3729,6 +3795,35 @@ export function FinderPage({
             </>
           )}
 
+          {/* Upload to S3 - only when storage is S3 */}
+          {!contextMenu.targetFile &&
+            selectedSource &&
+            (selectedSource.providerId === 's3' ||
+              selectedSource.providerId === 'aws-s3' ||
+              selectedSource.providerId === 's3-compatible' ||
+              selectedSource.category === 'cloud') && (
+              <>
+                <div className="context-divider" />
+                <button
+                  className="context-item"
+                  onClick={() => {
+                    handleUploadToS3();
+                    closeContextMenu();
+                  }}
+                >
+                  <svg
+                    className="context-icon"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+                  </svg>
+                  Upload Files to S3
+                </button>
+              </>
+            )}
+
           {/* New Folder - only on empty space, not when right-clicking on a folder */}
           {!contextMenu.targetFile && (
             <>
@@ -4154,6 +4249,9 @@ export function FinderPage({
         isOpen={showShortcutSettings}
         onClose={() => setShowShortcutSettings(false)}
       />
+
+      {/* Upload Progress Panel */}
+      {activeUploads.size > 0 && <UploadProgressPanel />}
     </div>
   );
 }

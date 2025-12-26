@@ -3557,3 +3557,222 @@ mod tests {
         );
     }
 }
+
+// ============================================================================
+// Multipart Upload Commands
+// ============================================================================
+
+use crate::vfs::multipart_upload::{MultipartUploadManager, UploadProgress};
+
+static MULTIPART_UPLOAD_MANAGER: OnceLock<MultipartUploadManager> = OnceLock::new();
+
+fn get_upload_manager() -> &'static MultipartUploadManager {
+    MULTIPART_UPLOAD_MANAGER.get_or_init(|| {
+        let state_dir = dirs::cache_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
+            .join("ursly")
+            .join("multipart_uploads");
+        MultipartUploadManager::new(&state_dir)
+            .expect("Failed to initialize multipart upload manager")
+    })
+}
+
+/// Start a multipart upload to S3
+#[tauri::command]
+pub async fn vfs_start_multipart_upload(
+    source_id: String,
+    local_path: String,
+    s3_path: String,
+    part_size: Option<u64>,
+    state: State<'_, VfsStateWrapper>,
+) -> Result<String, String> {
+    let service = state.get_service()
+        .ok_or_else(|| "VFS not initialized".to_string())?;
+    
+    // Get the source and verify it's S3
+    let source = service.get_source(&source_id)
+        .ok_or_else(|| "Storage source not found".to_string())?;
+    
+    if source.source_type != crate::vfs::domain::StorageSourceType::S3 {
+        return Err("Multipart upload is only supported for S3 storage".to_string());
+    }
+    
+    // We'll create the operator from source config since we can't access the adapter directly
+    
+    // Create operator from source config
+    let operator = {
+        use opendal::services::S3;
+        use opendal::Operator;
+        
+        let mut builder = S3::default();
+        builder.bucket(&source.config.path_or_bucket);
+        if let Some(region) = &source.config.region {
+            builder.region(region);
+        }
+        if let Some(ak) = &source.config.access_key {
+            builder.access_key_id(ak);
+        }
+        if let Some(sk) = &source.config.secret_key {
+            builder.secret_access_key(sk);
+        }
+        if let Some(ep) = &source.config.endpoint {
+            builder.endpoint(ep);
+        }
+        
+        Operator::new(builder)
+            .map_err(|e| format!("Failed to create S3 operator: {}", e))?
+            .finish()
+    };
+    
+    let manager = get_upload_manager();
+        let upload_id = manager.start_upload(
+            &operator,
+            &source_id,
+            &PathBuf::from(local_path),
+            &s3_path,
+            part_size,
+        ).await.map_err(|e| format!("Failed to start upload: {}", e))?;
+    
+    // Start upload in background
+    let manager_clone = get_upload_manager();
+    let operator_clone = operator.clone();
+    let upload_id_clone = upload_id.clone();
+    tokio::spawn(async move {
+        if let Err(e) = manager_clone.upload_chunks(&operator_clone, &upload_id_clone).await {
+            error!("Multipart upload failed: {}", e);
+        }
+    });
+    
+    Ok(upload_id)
+}
+
+/// Get upload progress
+#[tauri::command]
+pub async fn vfs_get_upload_progress(
+    upload_id: String,
+) -> Result<Option<UploadProgress>, String> {
+    let manager = get_upload_manager();
+    Ok(manager.get_progress(&upload_id).await)
+}
+
+/// Resume a paused or failed upload
+#[tauri::command]
+pub async fn vfs_resume_upload(
+    upload_id: String,
+    state: State<'_, VfsStateWrapper>,
+) -> Result<(), String> {
+    let manager = get_upload_manager();
+    
+    // Get upload state to find source_id
+    let uploads = manager.list_uploads().await;
+    let upload_state = uploads.iter()
+        .find(|u| u.upload_id == upload_id)
+        .ok_or_else(|| "Upload not found".to_string())?;
+    
+    let source_id = &upload_state.source_id;
+    
+    let service = state.get_service()
+        .ok_or_else(|| "VFS not initialized".to_string())?;
+    
+    let source = service.get_source(source_id)
+        .ok_or_else(|| "Storage source not found".to_string())?;
+    
+    // Recreate operator (same as in start_upload)
+    let operator = {
+        use opendal::services::S3;
+        use opendal::Operator;
+        
+        let mut builder = S3::default();
+        builder.bucket(&source.config.path_or_bucket);
+        if let Some(region) = &source.config.region {
+            builder.region(region);
+        }
+        if let Some(ak) = &source.config.access_key {
+            builder.access_key_id(ak);
+        }
+        if let Some(sk) = &source.config.secret_key {
+            builder.secret_access_key(sk);
+        }
+        if let Some(ep) = &source.config.endpoint {
+            builder.endpoint(ep);
+        }
+        
+        Operator::new(builder)
+            .map_err(|e| format!("Failed to create S3 operator: {}", e))?
+            .finish()
+    };
+    
+    manager.resume_upload(&operator, &upload_id).await
+        .map_err(|e| format!("Failed to resume upload: {}", e))?;
+    
+    Ok(())
+}
+
+/// Pause an upload
+#[tauri::command]
+pub async fn vfs_pause_upload(
+    upload_id: String,
+) -> Result<(), String> {
+    let manager = get_upload_manager();
+    manager.pause_upload(&upload_id).await
+        .map_err(|e| format!("Failed to pause upload: {}", e))?;
+    Ok(())
+}
+
+/// Cancel an upload
+#[tauri::command]
+pub async fn vfs_cancel_upload(
+    upload_id: String,
+    state: State<'_, VfsStateWrapper>,
+) -> Result<(), String> {
+    let manager = get_upload_manager();
+    
+    // Get upload state to find source_id
+    let uploads = manager.list_uploads().await;
+    let upload_state = uploads.iter()
+        .find(|u| u.upload_id == upload_id)
+        .ok_or_else(|| "Upload not found".to_string())?;
+    
+    let source_id = &upload_state.source_id;
+    
+    let service = state.get_service()
+        .ok_or_else(|| "VFS not initialized".to_string())?;
+    
+    let source = service.get_source(source_id)
+        .ok_or_else(|| "Storage source not found".to_string())?;
+    
+    let operator = {
+        use opendal::services::S3;
+        use opendal::Operator;
+        
+        let mut builder = S3::default();
+        builder.bucket(&source.config.path_or_bucket);
+        if let Some(region) = &source.config.region {
+            builder.region(region);
+        }
+        if let Some(ak) = &source.config.access_key {
+            builder.access_key_id(ak);
+        }
+        if let Some(sk) = &source.config.secret_key {
+            builder.secret_access_key(sk);
+        }
+        if let Some(ep) = &source.config.endpoint {
+            builder.endpoint(ep);
+        }
+        
+        Operator::new(builder)
+            .map_err(|e| format!("Failed to create S3 operator: {}", e))?
+            .finish()
+    };
+    
+    manager.cancel_upload(&operator, &upload_id).await
+        .map_err(|e| format!("Failed to cancel upload: {}", e))?;
+    Ok(())
+}
+
+/// List all active uploads
+#[tauri::command]
+pub async fn vfs_list_uploads() -> Result<Vec<crate::vfs::multipart_upload::MultipartUploadState>, String> {
+    let manager = get_upload_manager();
+    Ok(manager.list_uploads().await)
+}

@@ -61,6 +61,9 @@ pub mod hydration;
 #[cfg(feature = "vfs")]
 pub mod mount;
 
+// Multipart upload support
+pub mod multipart_upload;
+
 #[cfg(feature = "vfs")]
 pub use filesystem::UrslyFS;
 #[cfg(feature = "vfs")]

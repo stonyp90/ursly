@@ -202,6 +202,13 @@ pub fn run() {
             vfs::commands::vfs_stop_transcription,
             vfs::commands::vfs_get_transcription_status,
             vfs::commands::vfs_get_transcription_segments,
+            // Multipart upload commands
+            vfs::commands::vfs_start_multipart_upload,
+            vfs::commands::vfs_get_upload_progress,
+            vfs::commands::vfs_resume_upload,
+            vfs::commands::vfs_pause_upload,
+            vfs::commands::vfs_cancel_upload,
+            vfs::commands::vfs_list_uploads,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

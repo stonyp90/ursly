@@ -15,6 +15,8 @@ import {
   IconDatabase,
   IconCube,
   IconServer,
+  IconFolder,
+  IconLink,
 } from '../CyberpunkIcons';
 import './AddStorageModal.css';
 
@@ -24,18 +26,44 @@ interface AddStorageModalProps {
   onAdd: (source: Partial<StorageSource>) => void;
 }
 
+// Helper to get provider icon component
+const getProviderIcon = (providerId: string) => {
+  const iconProps = { size: 24, color: 'currentColor' };
+  switch (providerId) {
+    case 's3':
+    case 'gcs':
+    case 'azure-blob':
+    case 's3-compatible':
+      return <IconCloud {...iconProps} />;
+    case 'smb':
+    case 'nfs':
+      return <IconFolder {...iconProps} />;
+    case 'sftp':
+      return <IconServer {...iconProps} />;
+    case 'webdav':
+      return <IconLink {...iconProps} />;
+    case 'fsx-ontap':
+    case 'netapp':
+      return <IconDatabase {...iconProps} />;
+    case 'iscsi':
+    case 'fc':
+      return <IconCube {...iconProps} />;
+    default:
+      return <IconServer {...iconProps} />;
+  }
+};
+
 // Storage provider templates (simplified - backend has full schema)
 const PROVIDER_TEMPLATES = [
   {
     category: 'cloud' as StorageCategory,
     providers: [
-      { id: 's3', name: 'Amazon S3', icon: '☁️' },
-      { id: 'gcs', name: 'Google Cloud Storage', icon: '☁️' },
-      { id: 'azure-blob', name: 'Azure Blob Storage', icon: '☁️' },
+      { id: 's3', name: 'Amazon S3' },
+      { id: 'gcs', name: 'Google Cloud Storage' },
+      { id: 'azure-blob', name: 'Azure Blob Storage' },
       {
         id: 's3-compatible',
         name: 'S3 Compatible',
-        icon: '☁️',
         description: 'MinIO, Wasabi, R2, etc.',
       },
     ],
@@ -43,24 +71,24 @@ const PROVIDER_TEMPLATES = [
   {
     category: 'network' as StorageCategory,
     providers: [
-      { id: 'smb', name: 'SMB/CIFS Share', icon: '📁' },
-      { id: 'nfs', name: 'NFS Mount', icon: '📁' },
-      { id: 'sftp', name: 'SFTP Server', icon: '🔐' },
-      { id: 'webdav', name: 'WebDAV', icon: '🌐' },
+      { id: 'smb', name: 'SMB/CIFS Share' },
+      { id: 'nfs', name: 'NFS Mount' },
+      { id: 'sftp', name: 'SFTP Server' },
+      { id: 'webdav', name: 'WebDAV' },
     ],
   },
   {
     category: 'hybrid' as StorageCategory,
     providers: [
-      { id: 'fsx-ontap', name: 'FSx for ONTAP', icon: '🗄️' },
-      { id: 'netapp', name: 'NetApp', icon: '🗄️' },
+      { id: 'fsx-ontap', name: 'FSx for ONTAP' },
+      { id: 'netapp', name: 'NetApp' },
     ],
   },
   {
     category: 'block' as StorageCategory,
     providers: [
-      { id: 'iscsi', name: 'iSCSI Target', icon: '💿' },
-      { id: 'fc', name: 'Fibre Channel', icon: '💿' },
+      { id: 'iscsi', name: 'iSCSI Target' },
+      { id: 'fc', name: 'Fibre Channel' },
     ],
   },
 ];
@@ -235,17 +263,18 @@ const PROVIDER_FIELDS: Record<
 };
 
 const getCategoryIcon = (category: StorageCategory) => {
+  const iconProps = { size: 20, color: 'currentColor', glow: true };
   switch (category) {
     case 'cloud':
-      return <IconCloud size={20} glow />;
+      return <IconCloud {...iconProps} />;
     case 'network':
-      return <IconNetwork size={20} glow />;
+      return <IconNetwork {...iconProps} />;
     case 'hybrid':
-      return <IconDatabase size={20} glow />;
+      return <IconDatabase {...iconProps} />;
     case 'block':
-      return <IconCube size={20} glow />;
+      return <IconCube {...iconProps} />;
     default:
-      return <IconServer size={20} glow />;
+      return <IconServer {...iconProps} />;
   }
 };
 
@@ -363,7 +392,9 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
                           handleProviderSelect(provider.id, group.category)
                         }
                       >
-                        <span className="provider-icon">{provider.icon}</span>
+                        <span className="provider-icon">
+                          {getProviderIcon(provider.id)}
+                        </span>
                         <span className="provider-name">{provider.name}</span>
                         {provider.description && (
                           <span className="provider-desc">
@@ -381,8 +412,9 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
           {step === 'configure' && (
             <div className="config-form">
               <div className="form-field">
-                <label>Display Name *</label>
+                <label htmlFor="display-name">Display Name *</label>
                 <input
+                  id="display-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -392,11 +424,12 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
 
               {fields.map((field) => (
                 <div key={field.key} className="form-field">
-                  <label>
+                  <label htmlFor={`field-${field.key}`}>
                     {field.label}
                     {field.required && ' *'}
                   </label>
                   <input
+                    id={`field-${field.key}`}
                     type={field.type === 'password' ? 'password' : 'text'}
                     value={config[field.key] || ''}
                     onChange={(e) =>
