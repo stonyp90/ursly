@@ -4,12 +4,11 @@
 
 // TODO: Convert from Vitest to Jest or configure Vitest properly
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-const vi = { fn: jest.fn };
 import { BrowserApiService } from './browser-api.service';
 
 // Mock fetch
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+const mockFetch = jest.fn<typeof fetch>();
+global.fetch = mockFetch as unknown as typeof fetch;
 
 // Skip tests temporarily - needs Vitest to Jest conversion
 describe.skip('BrowserApiService', () => {
@@ -49,7 +48,7 @@ describe.skip('BrowserApiService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => mockSources,
-      });
+      } as Response);
 
       const sources = await api.listSources();
 
@@ -76,7 +75,7 @@ describe.skip('BrowserApiService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
-      });
+      } as Response);
 
       const result = await api.listFiles('source-1', '/docs');
 
@@ -94,7 +93,7 @@ describe.skip('BrowserApiService', () => {
           pageSize: 50,
           hasMore: false,
         }),
-      });
+      } as Response);
 
       await api.listFiles('source-1', '/docs', { page: 2, pageSize: 50 });
 
@@ -120,7 +119,7 @@ describe.skip('BrowserApiService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => mockResults,
-      });
+      } as Response);
 
       const result = await api.search({
         query: 'project',
@@ -165,7 +164,7 @@ describe.skip('BrowserApiService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => mockStreamInfo,
-      });
+      } as Response);
 
       const result = await api.getStreamInfo('source-1', '/videos/movie.mp4');
 
@@ -181,7 +180,7 @@ describe.skip('BrowserApiService', () => {
         json: async () => ({
           url: 'https://s3.example.com/file?signature=...',
         }),
-      });
+      } as Response);
 
       const url = await api.getDownloadUrl('source-1', '/documents/report.pdf');
 
@@ -192,7 +191,7 @@ describe.skip('BrowserApiService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ requestId: 'req-123', estimatedMinutes: 30 }),
-      });
+      } as Response);
 
       const result = await api.requestRetrieval('source-1', [
         '/archive/old-file.zip',
@@ -205,7 +204,10 @@ describe.skip('BrowserApiService', () => {
 
   describe('Tagging', () => {
     it('should add tags to files', async () => {
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
 
       await api.addTags(
         'source-1',
@@ -223,7 +225,10 @@ describe.skip('BrowserApiService', () => {
     });
 
     it('should remove tags from files', async () => {
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
 
       await api.removeTags('source-1', ['/file1.txt'], ['old-tag']);
 
@@ -242,7 +247,7 @@ describe.skip('BrowserApiService', () => {
           { name: 'approved', count: 50, color: '#22c55e' },
           { name: 'pending', count: 30, color: '#f59e0b' },
         ],
-      });
+      } as Response);
 
       const tags = await api.listAllTags();
 
@@ -258,7 +263,7 @@ describe.skip('BrowserApiService', () => {
         json: async () => [
           { sourceId: 'source-1', path: '/projects', name: 'Projects' },
         ],
-      });
+      } as Response);
 
       const favorites = await api.getFavorites();
 
@@ -266,7 +271,10 @@ describe.skip('BrowserApiService', () => {
     });
 
     it('should add a favorite', async () => {
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
 
       await api.addFavorite('source-1', '/important', 'Important');
 
@@ -277,7 +285,10 @@ describe.skip('BrowserApiService', () => {
     });
 
     it('should remove a favorite', async () => {
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
 
       await api.removeFavorite('source-1', '/old-favorite');
 
@@ -296,7 +307,7 @@ describe.skip('BrowserApiService', () => {
           '/file1.txt': 'hot',
           '/file2.txt': 'cold',
         }),
-      });
+      } as Response);
 
       const status = await api.getTierStatus('source-1', [
         '/file1.txt',
@@ -311,7 +322,7 @@ describe.skip('BrowserApiService', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ requestId: 'tier-change-123' }),
-      });
+      } as Response);
 
       const result = await api.requestTierChange(
         'source-1',
@@ -330,7 +341,7 @@ describe.skip('BrowserApiService', () => {
         status: 404,
         statusText: 'Not Found',
         json: async () => ({ message: 'Resource not found' }),
-      });
+      } as Response);
 
       await expect(api.listSources()).rejects.toThrow('Resource not found');
     });

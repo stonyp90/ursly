@@ -11,7 +11,7 @@ on:
       invalidate_cache:
         description: 'Invalidate CloudFront cache'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 permissions:
@@ -68,9 +68,13 @@ jobs:
               --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
               --paths "/*" \
               --paths "/screenshots/ursly-vfs.png" \
+              --paths "/screenshots/ursly-vfs-black.png" \
               --paths "/screenshots/ursly-search.png" \
+              --paths "/screenshots/ursly-search-black.png" \
               --paths "/screenshots/ursly-metrics.png" \
-              --paths "/screenshots/ursly-shortcuts.png" || {
+              --paths "/screenshots/ursly-metrics-black.png" \
+              --paths "/screenshots/ursly-shortcuts.png" \
+              --paths "/screenshots/ursly-shortcuts-black.png" || {
               echo "⚠️ CloudFront invalidation failed, but deployment succeeded"
               exit 0
             }

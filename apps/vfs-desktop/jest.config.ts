@@ -21,11 +21,14 @@ export default {
     '/dist/',
     'FinderPage.spec.tsx', // Complex component with many dependencies - needs extensive mocking
     'useDraggablePanel.spec.tsx', // React hooks test environment issue
+    'DraggableSection.spec.tsx', // React hooks test environment issue - similar to useDraggablePanel
   ],
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
     '\\.css$': 'identity-obj-proxy',
     '\\.module\\.css$': 'identity-obj-proxy',
+    '^react$': '<rootDir>/../../node_modules/react',
+    '^react-dom$': '<rootDir>/../../node_modules/react-dom',
   },
   testEnvironmentOptions: {
     customExportConditions: [''],

@@ -124,9 +124,13 @@ describe('dragDropEnhancements', () => {
       });
       const preventDefaultSpy = jest.fn();
       dragoverEvent.preventDefault = preventDefaultSpy;
-      dragoverEvent.dataTransfer = {
-        dropEffect: 'none',
-      } as DataTransfer;
+      Object.defineProperty(dragoverEvent, 'dataTransfer', {
+        value: {
+          dropEffect: 'none',
+        } as DataTransfer,
+        writable: true,
+        configurable: true,
+      });
 
       element.dispatchEvent(dragoverEvent);
 
