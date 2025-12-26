@@ -387,12 +387,12 @@ describe('AddStorageModal', () => {
       expect(callArgs.name).toBe('My S3 Storage');
       expect(callArgs.providerId).toBe('s3');
       expect(callArgs.category).toBe('cloud');
+      // Config only includes fields that have values (optional fields are not included if empty)
       expect(callArgs.config).toEqual({
         bucket: 'my-bucket',
         region: 'us-east-1',
-        accessKeyId: '',
-        secretAccessKey: '',
       });
+      expect(callArgs.id).toMatch(/^s3-\d+$/);
     });
   });
 
