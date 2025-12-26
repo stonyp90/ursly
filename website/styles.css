@@ -294,13 +294,13 @@ ul {
   gap: 32px;
 }
 
-/* Social icons should be closer together - group them */
+/* Social icons with proper spacing */
 .nav-links .btn-nav-icon {
   margin-right: 0;
 }
 
 .nav-links .btn-nav-icon + .btn-nav-icon {
-  margin-left: -28px;
+  margin-left: 8px;
 }
 
 .nav-links a {
@@ -524,6 +524,7 @@ ul {
   padding: 16px 0 0 0;
   border-top: 1px solid var(--border-subtle);
   margin-top: 8px;
+  justify-content: center;
 }
 
 .mobile-social-link {
@@ -3110,7 +3111,7 @@ ul {
 /* ================================ */
 
 /* Large tablets and small laptops */
-@media (max-width: 1024px) {
+@media (max-width: 1024px) and (min-width: 769px) {
   .hero {
     grid-template-columns: 1fr;
     gap: 40px;
@@ -3270,20 +3271,23 @@ ul {
   .nav-links {
     display: flex;
     gap: 8px;
+    align-items: center;
   }
 
   .nav-links a:not(.btn-nav-icon) {
     display: none;
   }
 
-  /* Social icons closer on mobile too */
+  /* Social icons with proper spacing on mobile */
   .nav-links .btn-nav-icon + .btn-nav-icon {
-    margin-left: -20px;
+    margin-left: 8px;
   }
 
   .btn-nav-icon {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
   }
 
   .btn-nav-icon svg {
