@@ -83,7 +83,7 @@ describe('useDraggableSection', () => {
     } as unknown as React.DragEvent;
 
     act(() => {
-      result.current.handlers.onDragOver(dragOverEvent, 'target-section', 1);
+      result.current.handlers.onDragOver(dragOverEvent, 'target-section');
     });
 
     expect(result.current.dragOverId).toBe('target-section');
@@ -114,7 +114,7 @@ describe('useDraggableSection', () => {
     } as unknown as React.DragEvent;
 
     act(() => {
-      result.current.handlers.onDragOver(dragOverEvent, 'test-section', 0);
+      result.current.handlers.onDragOver(dragOverEvent, 'test-section');
     });
 
     // Should not set dragOverId for same section

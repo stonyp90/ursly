@@ -20,6 +20,7 @@ use std::sync::Arc;
 use regex::Regex;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use tokio::process::Command;
+use tauri::Emitter;
 use tracing::{debug, error, info, warn};
 
 /// Transcription segment with timing information
@@ -283,6 +284,7 @@ impl TranscriptionService {
         }
         
         let job_id = uuid::Uuid::new_v4().to_string();
+        let job_id_for_return = job_id.clone(); // Keep a copy for return
         let mut config = config.unwrap_or_default();
         
         // Get video info and optimize audio parameters
@@ -323,11 +325,12 @@ impl TranscriptionService {
         let app_handle_clone = app_handle.clone();
         let config_clone = config.clone();
         let use_whisper_clone = use_whisper;
+        let job_id_clone = job_id.clone(); // Clone for use in spawn
         
         tokio::spawn(async move {
             // Update status to running
             {
-                if let Some(job) = jobs.write().get_mut(&job_id) {
+                if let Some(job) = jobs.write().get_mut(&job_id_clone) {
                     job.status = TranscriptionStatus::Running;
                 }
             }
@@ -368,9 +371,8 @@ impl TranscriptionService {
             match cmd.spawn() {
                 Ok(mut child) => {
                     // Store process ID
-                    let process_id = child.id();
-                    {
-                        if let Some(job) = jobs.write().get_mut(&job_id) {
+                    if let Some(process_id) = child.id() {
+                        if let Some(job) = jobs.write().get_mut(&job_id_clone) {
                             job.process_id = Some(process_id);
                         }
                     }
@@ -380,7 +382,7 @@ impl TranscriptionService {
                     let duration_clone = duration;
                     let jobs_progress = jobs.clone();
                     let app_progress = app_handle_clone.clone();
-                    let job_id_progress = job_id.clone();
+                    let job_id_progress = job_id_clone.clone();
                     
                     if let Some(mut stderr_handle) = stderr {
                         tokio::spawn(async move {
@@ -429,52 +431,45 @@ impl TranscriptionService {
                     }
                     
                     // Process audio chunks
-                    if let Some(stdout) = child.stdout.take() {
-                        let reader = tokio::io::BufReader::new(stdout);
-                        let mut bytes = reader.bytes();
+                    if let Some(mut stdout) = child.stdout.take() {
                         let chunk_size = (config_clone.sample_rate as f64 * config_clone.chunk_duration * 2.0) as usize;
                         
                         let mut current_time = 0.0;
-                        let mut chunk_buffer = Vec::with_capacity(chunk_size);
+                        let mut chunk_buffer = vec![0u8; chunk_size];
                         
                         // Process audio chunks for real-time transcription
                         loop {
-                            match bytes.next().await {
-                                Ok(Some(byte)) => {
-                                    chunk_buffer.push(byte);
+                            match stdout.read_exact(&mut chunk_buffer).await {
+                                Ok(_) => {
+                                    // Process chunk (placeholder for actual STT)
+                                    let segment = Self::transcribe_audio_chunk(
+                                        &chunk_buffer,
+                                        current_time,
+                                        current_time + config_clone.chunk_duration,
+                                    ).await;
                                     
-                                    if chunk_buffer.len() >= chunk_size {
-                                        // Process chunk (placeholder for actual STT)
-                                        let segment = Self::transcribe_audio_chunk(
-                                            &chunk_buffer,
-                                            current_time,
-                                            current_time + config_clone.chunk_duration,
-                                        ).await;
+                                    if let Some(seg) = segment {
+                                        // Emit transcription event
+                                        let _ = app_handle_clone.emit(
+                                            "transcription:segment",
+                                            serde_json::json!({
+                                                "job_id": job_id_clone.clone(),
+                                                "segment": seg.clone(),
+                                            }),
+                                        );
                                         
-                                        if let Some(seg) = segment {
-                                            // Emit transcription event
-                                            let _ = app_handle_clone.emit(
-                                                "transcription:segment",
-                                                serde_json::json!({
-                                                    "job_id": job_id.clone(),
-                                                    "segment": seg.clone(),
-                                                }),
-                                            );
-                                            
-                                            // Update job
-                                            {
-                                                if let Some(job) = jobs.write().get_mut(&job_id) {
-                                                    job.segments.push(seg.clone());
-                                                    job.current_time = seg.end_time;
-                                                }
+                                        // Update job
+                                        {
+                                            if let Some(job) = jobs.write().get_mut(&job_id_clone) {
+                                                job.segments.push(seg.clone());
+                                                job.current_time = seg.end_time;
                                             }
                                         }
-                                        
-                                        current_time += config_clone.chunk_duration;
-                                        chunk_buffer.clear();
                                     }
+                                    
+                                    current_time += config_clone.chunk_duration;
                                 }
-                                Ok(None) => break, // EOF
+                                Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
                                 Err(e) => {
                                     warn!("Error reading audio stream: {}", e);
                                     break;
@@ -485,7 +480,7 @@ impl TranscriptionService {
                     
                     // Mark as completed
                     {
-                        if let Some(job) = jobs.write().get_mut(&job_id) {
+                        if let Some(job) = jobs.write().get_mut(&job_id_clone) {
                             job.status = TranscriptionStatus::Completed;
                         }
                     }
@@ -499,7 +494,7 @@ impl TranscriptionService {
                 }
                 Err(e) => {
                     error!("Failed to start transcription: {}", e);
-                    if let Some(job) = jobs.write().get_mut(&job_id) {
+                    if let Some(job) = jobs.write().get_mut(&job_id_clone) {
                         job.status = TranscriptionStatus::Failed;
                         job.error = Some(e.to_string());
                     }
@@ -515,7 +510,7 @@ impl TranscriptionService {
             }
         });
         
-        Ok(job_id)
+        Ok(job_id_for_return)
     }
     
     /// Transcribe an audio chunk

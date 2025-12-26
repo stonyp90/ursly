@@ -66,7 +66,10 @@ jobs:
             aws cloudfront create-invalidation \
               --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
               --paths "/*" \
-              --paths "/screenshots/vfs-performance-metrics-latest.png"
+              --paths "/screenshots/ursly-vfs.png" \
+              --paths "/screenshots/ursly-search.png" \
+              --paths "/screenshots/ursly-metrics.png" \
+              --paths "/screenshots/ursly-shortcuts.png"
             echo "✅ CloudFront cache invalidated successfully"
           else
             echo "⚠️ CLOUDFRONT_DISTRIBUTION_ID not set, skipping cache invalidation"

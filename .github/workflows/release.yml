@@ -77,6 +77,17 @@ jobs:
             mkdir -p apps/vfs-desktop/.tauri-keys
             echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > apps/vfs-desktop/.tauri-keys/key
             chmod 600 apps/vfs-desktop/.tauri-keys/key
+            
+            # Extract public key from private key for embedding in config
+            # Tauri signer outputs public key when generating, we need to extract it
+            if command -v npx &> /dev/null; then
+              PUBLIC_KEY=$(npx @tauri-apps/cli signer generate --ci 2>&1 | grep -i "public" | head -1 || echo "")
+              if [ -n "$PUBLIC_KEY" ]; then
+                echo "Public key extracted: ${PUBLIC_KEY:0:50}..."
+              fi
+            fi
+          else
+            echo "⚠️ Warning: TAURI_SIGNING_PRIVATE_KEY not set. Updates will not be signed."
           fi
 
       - name: Build VFS Desktop
@@ -182,6 +193,31 @@ jobs:
             echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
           echo "Version: ${{ steps.version.outputs.version }}"
+
+      - name: Extract and embed public key
+        if: secrets.TAURI_SIGNING_PRIVATE_KEY != ''
+        working-directory: apps/vfs-desktop
+        run: |
+          # Check if public key file exists (created during key generation)
+          if [ -f .tauri-keys/key.pub ]; then
+            PUBLIC_KEY=$(cat .tauri-keys/key.pub | tr -d '\n')
+            echo "Public key found: ${PUBLIC_KEY:0:50}..."
+            
+            # Update tauri.conf.json with public key
+            # Use node to properly handle JSON
+            node -e "
+              const fs = require('fs');
+              const configPath = 'src-tauri/tauri.conf.json';
+              const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+              config.plugins.updater.pubkey = '${PUBLIC_KEY}';
+              fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+              console.log('✅ Updated tauri.conf.json with public key');
+            "
+          else
+            echo "⚠️ Warning: Public key file (.tauri-keys/key.pub) not found."
+            echo "⚠️ Auto-updates will not work without a public key embedded in the app."
+            echo "⚠️ Please generate keys with: npx @tauri-apps/cli signer generate --write-keys"
+          fi
 
       - name: Generate update manifest
         working-directory: apps/vfs-desktop

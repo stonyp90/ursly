@@ -182,16 +182,183 @@ body::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 32px;
+  animation: loaderFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.loader-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Multi-ring spinner with gradient */
 .loader-ring {
-  width: 48px;
-  height: 48px;
-  border: 3px solid var(--color-surface-elevated);
-  border-top-color: var(--color-primary);
+  position: absolute;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  border-style: solid;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.loader-ring-outer {
+  width: 80px;
+  height: 80px;
+  border-width: 3px;
+  border-left-color: var(--vfs-primary, #0a84ff);
+  animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  box-shadow:
+    0 0 20px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.4),
+    inset 0 0 20px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.1);
+}
+
+.loader-ring-middle {
+  width: 60px;
+  height: 60px;
+  border-width: 2.5px;
+  border-left-color: var(--vfs-secondary, #5e5ce6);
+  animation: spin 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite reverse;
+  box-shadow:
+    0 0 15px rgba(var(--vfs-secondary-rgb, 94, 92, 230), 0.3),
+    inset 0 0 15px rgba(var(--vfs-secondary-rgb, 94, 92, 230), 0.1);
+}
+
+.loader-ring-inner {
+  width: 40px;
+  height: 40px;
+  border-width: 2px;
+  border-left-color: var(--vfs-accent, #ff9f0a);
+  animation: spin 0.6s linear infinite;
+  box-shadow:
+    0 0 10px rgba(var(--vfs-accent-rgb, 255, 159, 10), 0.3),
+    inset 0 0 10px rgba(var(--vfs-accent-rgb, 255, 159, 10), 0.1);
+}
+
+.loader-core {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--vfs-primary, #0a84ff),
+    var(--vfs-secondary, #5e5ce6)
+  );
+  box-shadow:
+    0 0 20px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.6),
+    0 0 40px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.2);
+  animation: corePulse 2s ease-in-out infinite;
+}
+
+/* Loader text with animated dots */
+.loader-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.loader-text-main {
+  color: var(--vfs-text-primary, #f5f5f7);
+  font-size: 16px;
+  font-weight: 500;
+  font-family: var(--vfs-font-sans, 'Inter', sans-serif);
+  letter-spacing: 0.02em;
+  text-align: center;
+  animation: textFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.loader-text-dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.loader-text-dots .dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--vfs-primary, #0a84ff);
+  animation: dotPulse 1.4s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.6);
+}
+
+.loader-text-dots .dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loader-text-dots .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loader-text-dots .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Animations */
+@keyframes loaderFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes textFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes corePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow:
+      0 0 20px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.6),
+      0 0 40px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.3),
+      inset 0 0 10px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+    box-shadow:
+      0 0 30px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.8),
+      0 0 60px rgba(var(--vfs-primary-rgb, 10, 132, 255), 0.4),
+      inset 0 0 15px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Website-style animations */
@@ -241,17 +408,6 @@ body::after {
       0 0 50px rgba(var(--primary-rgb), 0.5),
       0 0 100px rgba(var(--primary-rgb), 0.2);
   }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loader span {
-  color: var(--color-text-secondary);
-  font-size: 14px;
 }
 
 /* Error */

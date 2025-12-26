@@ -18,7 +18,7 @@
   <meta property="og:url" content="https://ursly.io/">
   <meta property="og:title" content="Ursly - Cloud-Native Virtual File System">
   <meta property="og:description" content="The file manager built for creatives. One app. All your clouds. Zero friction. Connect AWS, Azure, Google Cloud, your NAS, and 15+ storage services. AI-powered search, video transcription, real-time metrics. Free for personal use.">
-  <meta property="og:image" content="https://ursly.io/screenshots/vfs-main-dark-latest.png">
+  <meta property="og:image" content="https://ursly.io/screenshots/ursly-vfs.png">
   <meta property="og:site_name" content="Ursly">
   <meta property="og:locale" content="en_US">
 
@@ -27,7 +27,7 @@
   <meta name="twitter:url" content="https://ursly.io/">
   <meta name="twitter:title" content="Ursly - Cloud-Native Virtual File System">
   <meta name="twitter:description" content="The file manager built for creatives. One app. All your clouds. Zero friction. Connect AWS, Azure, Google Cloud, your NAS, and 15+ storage services. AI-powered search, video transcription, real-time metrics. Free for personal use.">
-  <meta name="twitter:image" content="https://ursly.io/screenshots/vfs-main-dark-latest.png">
+  <meta name="twitter:image" content="https://ursly.io/screenshots/ursly-vfs.png">
   
   <!-- Favicon - Complete Set -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -271,16 +271,28 @@
       <div class="product-showcase">
         <!-- 1. FILE SYSTEM - Primary Feature -->
         <div class="product-screenshot main-screenshot">
-          <div class="screenshot-frame">
+          <div class="screenshot-frame" data-screenshot="vfs">
             <div class="screenshot-header">
               <div class="screenshot-dots">
                 <span></span>
                 <span></span>
                 <span></span>
-          </div>
+              </div>
               <span class="screenshot-title">Ursly VFS</span>
-        </div>
-            <img src="screenshots/vfs-main-dark-latest.png" alt="Ursly VFS file browser showing unified file management interface with sidebar navigation (Favorites, Storage locations, Tags), main content area, header with Files/Metrics/Settings tabs, and bottom toolbar with Shortcuts and Search buttons" loading="lazy">
+              <button class="screenshot-theme-toggle" aria-label="Toggle screenshot theme" title="Switch between light and dark theme">
+                <svg class="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"/>
+                  <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M17.66 6.34l1.42-1.42"/>
+                </svg>
+                <svg class="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="screenshot-image-wrapper">
+              <img class="screenshot-img" src="screenshots/ursly-vfs.png" data-light="screenshots/ursly-vfs.png" data-dark="screenshots/ursly-vfs-black.png" alt="Ursly VFS file browser showing unified file management interface with sidebar navigation (Favorites, Storage locations, Tags), main content area, header with Files/Metrics/Settings tabs, and bottom toolbar with Shortcuts and Search buttons" loading="lazy">
+              <img class="screenshot-img" src="screenshots/ursly-vfs-black.png" data-light="screenshots/ursly-vfs.png" data-dark="screenshots/ursly-vfs-black.png" alt="" aria-hidden="true" style="position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: auto;">
+            </div>
           </div>
           <div class="screenshot-caption">
             <h3>All Your Files, One View</h3>
@@ -289,38 +301,80 @@
         </div>
 
         <div class="product-features-grid">
-          <!-- 2. PERFORMANCE METRICS -->
+          <!-- 2. SPOTLIGHT SEARCH -->
           <div class="product-feature-card">
-            <div class="screenshot-frame small">
-              <img src="screenshots/vfs-performance-metrics-latest.png" alt="Performance Monitor dashboard showing real-time system metrics: CPU 16% (14 cores), RAM 59% (28.3/48 GB), GPU 73% (Apple M4 Pro), VRAM 73% (5.9 GB), Temperature 69°C, Load 33% (4.62/14 cores), with detailed line graphs for CPU Usage, Memory, GPU, Disk I/O, Network stats, and System Load Average" loading="lazy">
-          </div>
-            <div class="feature-info">
-              <h4>Live System Metrics</h4>
-              <p>Real-time performance monitoring dashboard showing CPU usage (16% across 14 cores), memory utilization (59% - 28.3/48 GB), GPU performance (73% - Apple M4 Pro), VRAM usage (73% - 5.9 GB), temperature (69°C), system load (33% - 4.62/14 cores), disk I/O, and network stats with detailed line graphs. Access via the Metrics tab in the header navigation. <strong>Note:</strong> Metrics are only available in the desktop app (not in browser mode). Perfect for keeping an eye on renders and heavy workloads without leaving your flow.</p>
-        </div>
-      </div>
-
-          <!-- 3. SETTINGS & THEME CUSTOMIZATION -->
-          <div class="product-feature-card">
-            <div class="screenshot-frame small">
-              <img src="screenshots/vfs-theme-customizer-dark.png" alt="Settings page showing Theme Mode toggle (Dark/Light), Accent Color grid with 10 color swatches, selected color display, and Onboarding section with Start Feature Tour and Reset buttons" loading="lazy">
+            <div class="screenshot-frame small" data-screenshot="search">
+              <div class="screenshot-header">
+                <button class="screenshot-theme-toggle" aria-label="Toggle screenshot theme" title="Switch between light and dark theme">
+                  <svg class="theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M17.66 6.34l1.42-1.42"/>
+                  </svg>
+                  <svg class="theme-icon-dark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="screenshot-image-wrapper">
+                <img class="screenshot-img" src="screenshots/ursly-search.png" data-light="screenshots/ursly-search.png" data-dark="screenshots/ursly-search-black.png" alt="Spotlight Search interface showing instant search across all storage with smart operators and keyboard shortcuts" loading="lazy">
+                <img class="screenshot-img" src="screenshots/ursly-search-black.png" data-light="screenshots/ursly-search.png" data-dark="screenshots/ursly-search-black.png" alt="" aria-hidden="true" style="position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: auto;">
+              </div>
             </div>
             <div class="feature-info">
-              <h4>Settings & Theme Customization</h4>
-              <p>Access the dedicated Settings tab from the header navigation (Files/Metrics/Settings tabs). Customize your theme with dark/light modes and 10 accent colors (Cyan, Purple, Neon Cyan, Electric Purple, Neon Green, Sunset Orange, Electric Blue, Cyber Yellow, Neon Red, and more). Start or reset the onboarding tour to learn features and shortcuts. All preferences in one place for a personalized experience.</p>
+              <h4>Spotlight Search</h4>
+              <p>Press <code>Cmd+K</code> (Mac) or <code>Ctrl+K</code> (Windows/Linux) for instant Spotlight Search across all storage. Use smart operators like <code>tag:</code>, <code>type:</code>, <code>ext:</code>, and <code>size:</code> to filter results instantly. Full keyboard navigation with shortcuts for every action. Find files by name, content, tags, or metadata in seconds.</p>
+            </div>
+          </div>
+
+          <!-- 3. PERFORMANCE METRICS -->
+          <div class="product-feature-card">
+            <div class="screenshot-frame small" data-screenshot="metrics">
+              <div class="screenshot-header">
+                <button class="screenshot-theme-toggle" aria-label="Toggle screenshot theme" title="Switch between light and dark theme">
+                  <svg class="theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M17.66 6.34l1.42-1.42"/>
+                  </svg>
+                  <svg class="theme-icon-dark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="screenshot-image-wrapper">
+                <img class="screenshot-img" src="screenshots/ursly-metrics.png" data-light="screenshots/ursly-metrics.png" data-dark="screenshots/ursly-metrics-black.png" alt="Performance Monitor dashboard showing real-time system metrics: CPU, RAM, GPU, VRAM, Temperature, Load, with detailed line graphs for CPU Usage, Memory, GPU, Disk I/O, Network stats, and System Load Average" loading="lazy">
+                <img class="screenshot-img" src="screenshots/ursly-metrics-black.png" data-light="screenshots/ursly-metrics.png" data-dark="screenshots/ursly-metrics-black.png" alt="" aria-hidden="true" style="position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: auto;">
+              </div>
+            </div>
+            <div class="feature-info">
+              <h4>Live System Metrics</h4>
+              <p>Real-time performance monitoring dashboard showing CPU usage per core, memory utilization, GPU performance, VRAM usage, temperature, system load, disk I/O, and network stats with detailed line graphs. Access via the Metrics tab in the header navigation. <strong>Note:</strong> Metrics are only available in the desktop app (not in browser mode). Perfect for keeping an eye on renders and heavy workloads without leaving your flow.</p>
             </div>
           </div>
 
           <!-- 4. KEYBOARD SHORTCUTS -->
           <div class="product-feature-card">
-            <div class="screenshot-frame small">
-              <img src="screenshots/vfs-keyboard-shortcuts-latest.png" alt="Keyboard Shortcuts dialog showing navigation, selection, clipboard, file operations, view, and search shortcuts with keyboard combinations" loading="lazy">
+            <div class="screenshot-frame small" data-screenshot="shortcuts">
+              <div class="screenshot-header">
+                <button class="screenshot-theme-toggle" aria-label="Toggle screenshot theme" title="Switch between light and dark theme">
+                  <svg class="theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M17.66 6.34l1.42-1.42"/>
+                  </svg>
+                  <svg class="theme-icon-dark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="screenshot-image-wrapper">
+                <img class="screenshot-img" src="screenshots/ursly-shortcuts.png" data-light="screenshots/ursly-shortcuts.png" data-dark="screenshots/ursly-shortcuts-black.png" alt="Keyboard Shortcuts dialog showing navigation, selection, clipboard, file operations, view, and search shortcuts with keyboard combinations" loading="lazy">
+                <img class="screenshot-img" src="screenshots/ursly-shortcuts-black.png" data-light="screenshots/ursly-shortcuts.png" data-dark="screenshots/ursly-shortcuts-black.png" alt="" aria-hidden="true" style="position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: auto;">
+              </div>
             </div>
             <div class="feature-info">
               <h4>Keyboard Shortcuts</h4>
-              <p>Press <code>Cmd+K</code> (Mac) or <code>Ctrl+K</code> (Windows/Linux) for instant Spotlight Search across all storage. Press <code>?</code> to view all shortcuts in the dialog. Every action has a keyboard shortcut for maximum productivity: navigate with arrow keys, select with <code>⌘+A</code>, copy/paste with <code>⌘+C/V</code>, create folders with <code>⌘+Shift+N</code>, and more. Navigate, search, and manage files without touching your mouse.</p>
+              <p>Press <code>?</code> to view all shortcuts in the dialog. Every action has a keyboard shortcut for maximum productivity: navigate with arrow keys, select with <code>⌘+A</code>, copy/paste with <code>⌘+C/V</code>, create folders with <code>⌘+Shift+N</code>, and more. Navigate, search, and manage files without touching your mouse.</p>
             </div>
-            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -770,6 +824,125 @@
           details.open = true;
         } else {
           details.open = false;
+        }
+      });
+    })();
+
+    // Screenshot Theme Toggle Functionality
+    (function() {
+      const STORAGE_KEY = 'ursly_screenshot_themes';
+      const screenshots = document.querySelectorAll('.screenshot-frame[data-screenshot]');
+      
+      // Load saved preferences
+      function loadPreferences() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const themes = JSON.parse(saved);
+            screenshots.forEach(frame => {
+              const id = frame.getAttribute('data-screenshot');
+              if (themes[id]) {
+                frame.setAttribute('data-theme', themes[id]);
+                updateImageSrc(frame, themes[id]);
+              }
+            });
+          }
+        } catch (e) {
+          console.error('Failed to load screenshot preferences:', e);
+        }
+      }
+
+      // Save preferences
+      function savePreferences() {
+        try {
+          const themes = {};
+          screenshots.forEach(frame => {
+            const id = frame.getAttribute('data-screenshot');
+            themes[id] = frame.getAttribute('data-theme') || 'light';
+          });
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(themes));
+        } catch (e) {
+          console.error('Failed to save screenshot preferences:', e);
+        }
+      }
+
+      // Update image visibility with smooth transition
+      function updateImageSrc(frame, theme) {
+        // The CSS handles the transition, we just need to set the data-theme attribute
+        // Images are already loaded, so transitions will be smooth
+      }
+
+      // Toggle theme for a specific screenshot
+      function toggleScreenshotTheme(frame) {
+        const currentTheme = frame.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        frame.setAttribute('data-theme', newTheme);
+        updateImageSrc(frame, newTheme);
+        savePreferences();
+
+        // Add a subtle animation effect
+        frame.style.transform = 'scale(0.99)';
+        setTimeout(() => {
+          frame.style.transform = '';
+        }, 200);
+      }
+
+      // Initialize toggle buttons
+      screenshots.forEach(frame => {
+        const toggle = frame.querySelector('.screenshot-theme-toggle');
+        if (toggle) {
+          toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleScreenshotTheme(frame);
+          });
+
+          // Add keyboard support
+          toggle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleScreenshotTheme(frame);
+            }
+          });
+        }
+      });
+
+      // Load preferences on page load
+      loadPreferences();
+
+      // Global toggle option (Shift+Click to toggle all)
+      let globalToggleMode = false;
+      document.addEventListener('keydown', (e) => {
+        if (e.shiftKey && e.key === 'T') {
+          globalToggleMode = true;
+          const currentThemes = {};
+          screenshots.forEach(frame => {
+            const id = frame.getAttribute('data-screenshot');
+            currentThemes[id] = frame.getAttribute('data-theme') || 'light';
+          });
+          
+          // Determine the most common theme
+          const themeCounts = { light: 0, dark: 0 };
+          Object.values(currentThemes).forEach(theme => {
+            themeCounts[theme] = (themeCounts[theme] || 0) + 1;
+          });
+          const targetTheme = themeCounts.dark > themeCounts.light ? 'light' : 'dark';
+          
+          // Toggle all screenshots
+          screenshots.forEach(frame => {
+            frame.setAttribute('data-theme', targetTheme);
+            updateImageSrc(frame, targetTheme);
+          });
+          
+          savePreferences();
+          
+          // Show visual feedback
+          screenshots.forEach(frame => {
+            frame.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+              frame.style.transform = '';
+            }, 300);
+          });
         }
       });
     })();

@@ -14,7 +14,7 @@ Connect AWS, Azure, Google Cloud, your NAS, and 15+ more storage services. Searc
 
 ### 🗂️ Your Files, One Place
 
-<img src="website/screenshots/vfs-main-dark-latest.png" alt="Ursly VFS file browser showing unified file management interface" width="800" style="max-width: 100%; height: auto;" />
+<img src="website/screenshots/ursly-vfs.png" alt="Ursly VFS file browser showing unified file management interface" width="800" style="max-width: 100%; height: auto;" />
 
 _Unified file management across all your cloud storage providers in one beautiful interface_
 
@@ -116,19 +116,19 @@ Every action has a shortcut. Press `?` to see all shortcuts. Work faster with ke
 
 ### Main File Browser
 
-<img src="website/screenshots/vfs-main-dark-latest.png" alt="Ursly VFS file browser showing header with Files/Metrics/Settings tabs, sidebar with Favorites/Storage/Tags, main content area, and bottom toolbar with Shortcuts and Search buttons" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+<img src="website/screenshots/ursly-vfs.png" alt="Ursly VFS file browser showing header with Files/Metrics/Settings tabs, sidebar with Favorites/Storage/Tags, main content area, and bottom toolbar with Shortcuts and Search buttons" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+
+### Spotlight Search
+
+<img src="website/screenshots/ursly-search.png" alt="Spotlight Search interface showing instant search across all storage with smart operators" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
 
 ### Performance Monitor
 
-<img src="website/screenshots/vfs-performance-metrics-latest.png" alt="Performance Monitor dashboard showing real-time system metrics: CPU 16% (14 cores), RAM 59% (28.3/48 GB), GPU 73% (Apple M4 Pro), VRAM 73% (5.9 GB), Temperature 69°C, Load 33% (4.62/14 cores), with detailed line graphs for CPU Usage, Memory, GPU, Disk I/O, Network stats, and System Load Average" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+<img src="website/screenshots/ursly-metrics.png" alt="Performance Monitor dashboard showing real-time system metrics with detailed line graphs" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
 
 ### Keyboard Shortcuts
 
-<img src="website/screenshots/vfs-keyboard-shortcuts-latest.png" alt="Keyboard Shortcuts dialog showing all available shortcuts" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
-
-### Add Storage
-
-<img src="website/screenshots/vfs-add-storage-dark-latest.png" alt="Add Storage modal showing storage provider options" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+<img src="website/screenshots/ursly-shortcuts.png" alt="Keyboard Shortcuts dialog showing all available shortcuts" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
 
 </div>
 

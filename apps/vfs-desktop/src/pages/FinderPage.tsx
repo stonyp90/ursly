@@ -128,19 +128,19 @@ export function FinderPage({
   // );
 
   // Load sidebar section order from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('ursly-sidebar-section-order');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setSidebarSectionOrder(parsed);
-        }
-      }
-    } catch {
-      // Ignore localStorage errors
-    }
-  }, []);
+  // useEffect(() => {
+  //   try {
+  //     const saved = localStorage.getItem('ursly-sidebar-section-order');
+  //     if (saved) {
+  //       const parsed = JSON.parse(saved);
+  //       if (Array.isArray(parsed) && parsed.length > 0) {
+  //         setSidebarSectionOrder(parsed);
+  //       }
+  //     }
+  //   } catch {
+  //     // Ignore localStorage errors
+  //   }
+  // }, []);
 
   // Info modal state
   const [infoModal, setInfoModal] = useState<{
@@ -465,7 +465,6 @@ export function FinderPage({
         setShowHiddenFiles(osPrefs.show_hidden_files);
       } catch (prefsErr) {
         // Ignore - use defaults if OS preferences not available
-        console.debug('Could not load OS preferences:', prefsErr);
       }
     } catch (err) {
       console.error('Failed to initialize VFS:', err);
@@ -539,11 +538,9 @@ export function FinderPage({
   };
 
   const loadFilesList = async (sourceId: string, path: string) => {
-    console.log('[VFS] Loading files:', sourceId, path);
     setLoading(true);
     try {
       const list = await StorageService.listFiles(sourceId, path);
-      console.log('[VFS] Loaded', list.length, 'files');
       setFiles(list);
 
       // Load thumbnails for image/video files in the background
@@ -608,7 +605,6 @@ export function FinderPage({
             }
           } catch (error) {
             // Silently ignore thumbnail errors
-            console.debug('Thumbnail load failed for:', file.name);
           }
         }),
       );
@@ -699,11 +695,8 @@ export function FinderPage({
     // Skip if same source already selected
     if (selectedSource?.id === source.id) return;
 
-    console.log('[VFS] Selecting source:', source.id, source.name);
-
-    // Clear state first
     setSelectedFiles(new Set());
-    setFiles([]); // Clear files immediately to show loading
+    setFiles([]);
 
     // Reset navigation history when switching sources
     setNavigationHistory(['']);
@@ -839,7 +832,6 @@ export function FinderPage({
         targetPath = currentPath + '/' + file.name;
       }
 
-      console.log('[VFS] Navigating to folder:', targetPath);
       navigateTo(targetPath);
     } else {
       // Open file with default application
@@ -1019,15 +1011,10 @@ export function FinderPage({
       const { invoke } = await import('@tauri-apps/api/core');
       const paths = Array.from(selectedFiles);
 
-      console.log('[VFS Copy] Copying paths:', paths);
-      console.log('[VFS Copy] Source:', selectedSource.id);
-
-      // Copy to VFS clipboard AND export to native clipboard for Finder/Explorer
-      const result = await invoke('vfs_clipboard_copy_for_native', {
+      await invoke('vfs_clipboard_copy_for_native', {
         sourceId: selectedSource.id,
         paths,
       });
-      console.log('[VFS Copy] Result:', result);
 
       setClipboardHasFiles(true);
 
@@ -1043,25 +1030,18 @@ export function FinderPage({
     }
   };
 
-  // Cut operation removed - keeping it simple like macOS Finder (copy/paste only)
-
   const handlePaste = async (targetPath?: string) => {
     if (!selectedSource) return;
 
     const destination = targetPath || currentPath || '/';
 
-    console.log('[VFS Paste] Starting paste to:', destination);
     setFileOperation({ type: 'Pasting...', inProgress: true });
 
     try {
-      // Check if we have files in VFS clipboard
       let hasFiles = await StorageService.hasClipboardFiles();
-      console.log('[VFS Paste] hasClipboardFiles:', hasFiles);
 
-      // If not, check native clipboard (files copied from Finder)
       if (!hasFiles) {
         const nativeFiles = await StorageService.readNativeClipboard();
-        console.log('[VFS Paste] Native clipboard files:', nativeFiles);
         if (nativeFiles.length > 0) {
           await StorageService.copyNativeToClipboard(nativeFiles);
           hasFiles = true;
@@ -1069,23 +1049,15 @@ export function FinderPage({
       }
 
       if (!hasFiles) {
-        console.log('[VFS Paste] No files to paste, aborting');
         setFileOperation(null);
         return;
       }
 
-      console.log(
-        '[VFS Paste] Calling pasteFiles:',
-        selectedSource.id,
-        destination,
-      );
       const result = await StorageService.pasteFiles(
         selectedSource.id,
         destination,
       );
-      console.log('[VFS Paste] Result:', result);
 
-      // Refresh UI after paste
       await loadFilesList(selectedSource.id, currentPath);
 
       if (result.files_pasted > 0) {
@@ -1095,14 +1067,12 @@ export function FinderPage({
         });
         setTimeout(() => setFileOperation(null), 1500);
       } else if (result.errors && result.errors.length > 0) {
-        console.error('[VFS Paste] Errors:', result.errors);
         setFileOperation({
           type: `Paste failed: ${result.errors[0]}`,
           inProgress: false,
         });
         setTimeout(() => setFileOperation(null), 3000);
       } else {
-        console.log('[VFS Paste] No files pasted and no errors');
         setFileOperation(null);
       }
 
@@ -1137,16 +1107,10 @@ export function FinderPage({
           // Normalize the path - ensure it doesn't have double slashes
           const normalizedPath = path.replace(/\/+/g, '/');
 
-          console.log(
-            `[VFS Delete] Deleting: sourceId=${selectedSource.id}, path=${normalizedPath}`,
-          );
-
-          const result = await invoke('vfs_delete_recursive', {
+          await invoke('vfs_delete_recursive', {
             sourceId: selectedSource.id,
             path: normalizedPath,
           });
-
-          console.log(`[VFS Delete] Result:`, result);
         } catch (err) {
           console.error(`[VFS Delete] Failed to delete ${path}:`, err);
           failedPaths.push(path);
@@ -1417,15 +1381,6 @@ export function FinderPage({
       fileObjects.push(file);
     }
 
-    console.log(
-      '[VFS DnD] Drag start:',
-      filesToDrag,
-      'objects:',
-      fileObjects.length,
-      'from source:',
-      selectedSource?.id,
-    );
-
     setDraggedFiles(filesToDrag);
     setDraggedFileObjects(fileObjects);
     setDragSourceId(selectedSource?.id || null);
@@ -1505,26 +1460,19 @@ export function FinderPage({
     e.preventDefault();
     e.stopPropagation();
 
-    console.log('[VFS DnD] Drop event, target:', targetPath);
-
     setDropTarget(null);
     setIsDraggingOver(false);
 
     if (!selectedSource) {
-      console.warn('[VFS DnD] No selected source');
       return;
     }
 
-    // Use the internal draggedFiles state first (more reliable than dataTransfer)
-    // dataTransfer.getData() can be unreliable in some browsers during drop
     const filesToMove = draggedFiles.length > 0 ? draggedFiles : [];
     const sourceId = dragSourceId || selectedSource.id;
 
-    // Also try to get from dataTransfer as fallback
     const vfsData = e.dataTransfer.getData('application/x-vfs-files');
 
     if (filesToMove.length > 0 || vfsData) {
-      // VFS internal drag
       try {
         const paths =
           filesToMove.length > 0
@@ -1532,43 +1480,22 @@ export function FinderPage({
             : (JSON.parse(vfsData) as { sourceId: string; paths: string[] })
                 .paths;
 
-        console.log(
-          '[VFS DnD] Moving/copying paths:',
-          paths,
-          'to:',
-          targetPath,
-        );
-
-        // Default to move within same source, copy between sources
         const isMove = sourceId === selectedSource.id;
         const { invoke } = await import('@tauri-apps/api/core');
 
         for (const path of paths) {
-          // Don't drop onto self or parent
           if (path === targetPath || targetPath.startsWith(path + '/')) {
-            console.log('[VFS DnD] Skipping self/parent drop:', path);
             continue;
           }
 
           const fileName = path.split('/').pop() || '';
-          // Handle empty targetPath (root)
           const normalizedTarget = targetPath === '' ? '/' : targetPath;
           const destPath =
             normalizedTarget === '/'
               ? `/${fileName}`
               : `${normalizedTarget}/${fileName}`;
 
-          console.log(
-            '[VFS DnD] Operation:',
-            isMove ? 'move' : 'copy',
-            'from:',
-            path,
-            'to:',
-            destPath,
-          );
-
           if (sourceId === selectedSource.id) {
-            // Same source: move within the source
             if (isMove) {
               await invoke('vfs_move', {
                 sourceId,
@@ -1581,7 +1508,6 @@ export function FinderPage({
               });
             }
           } else {
-            // Different source: cross-storage transfer
             if (isMove) {
               await invoke('vfs_move_to_source', {
                 fromSourceId: sourceId,
@@ -1600,25 +1526,15 @@ export function FinderPage({
           }
         }
 
-        // Refresh file list
-        console.log('[VFS DnD] Refreshing files');
         await loadFilesList(selectedSource.id, currentPath);
       } catch (err) {
-        console.error('[VFS DnD] Drop failed:', err);
         DialogService.error(`Drop failed: ${err}`, 'Drop Error');
       }
     } else if (e.dataTransfer.files.length > 0) {
-      // Native file drop - import from filesystem
-      console.log(
-        '[VFS DnD] Native file drop:',
-        e.dataTransfer.files.length,
-        'files',
-      );
       try {
         const { invoke } = await import('@tauri-apps/api/core');
 
         for (const file of Array.from(e.dataTransfer.files)) {
-          // Use Tauri's file path if available
           const filePath = (file as unknown as { path?: string }).path;
           if (filePath) {
             const fileName = filePath.split('/').pop() || file.name;
@@ -1627,8 +1543,6 @@ export function FinderPage({
               normalizedTarget === '/'
                 ? `/${fileName}`
                 : `${normalizedTarget}/${fileName}`;
-
-            console.log('[VFS DnD] Native import:', filePath, 'to:', destPath);
 
             await invoke('vfs_copy_to_source', {
               fromSourceId: 'native',
@@ -1639,17 +1553,12 @@ export function FinderPage({
           }
         }
 
-        // Refresh
         await loadFilesList(selectedSource.id, currentPath);
       } catch (err) {
-        console.error('[VFS DnD] Import from native failed:', err);
         DialogService.error(`Import failed: ${err}`, 'Import Error');
       }
-    } else {
-      console.log('[VFS DnD] No files to drop');
     }
 
-    // Clean up drag state
     setDraggedFiles([]);
     setDraggedFileObjects([]);
     setDragSourceId(null);
@@ -2538,22 +2447,10 @@ export function FinderPage({
 
               // Add dragged files to global favorites using stored file objects
               if (dropSource && draggedFileObjects.length > 0) {
-                console.log(
-                  '[VFS DnD] Dropping to favorites:',
-                  draggedFileObjects.length,
-                  'files from',
-                  dropSource.name,
-                );
                 for (const file of draggedFileObjects) {
                   addToGlobalFavorites(file, dropSource);
                 }
               } else if (dropSource && draggedFiles.length > 0) {
-                // Fallback: try to find files in current directory
-                console.log(
-                  '[VFS DnD] Fallback: looking for',
-                  draggedFiles.length,
-                  'files in current directory',
-                );
                 for (const filePath of draggedFiles) {
                   const file = files.find((f) => f.path === filePath);
                   if (file) {

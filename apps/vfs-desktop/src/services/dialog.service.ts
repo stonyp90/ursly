@@ -36,8 +36,8 @@ export async function showMessage(options: DialogOptions): Promise<void> {
         okLabel: options.okLabel,
       });
       return;
-    } catch (err) {
-      console.warn('Native dialog failed, falling back to custom:', err);
+    } catch {
+      // Fallback to custom dialog if Tauri dialog fails
     }
   }
 
@@ -101,8 +101,8 @@ export async function showConfirm(options: ConfirmOptions): Promise<boolean> {
         okLabel: options.okLabel || 'OK',
         cancelLabel: options.cancelLabel || 'Cancel',
       });
-    } catch (err) {
-      console.warn('Native confirm failed, falling back to custom:', err);
+    } catch {
+      // Fallback to custom dialog if Tauri dialog fails
     }
   }
 
@@ -145,7 +145,6 @@ export async function showOpenDialog(options?: {
       if (result === null) return null;
       return Array.isArray(result) ? result : [result];
     } catch (err) {
-      console.warn('Native open dialog failed:', err);
       return null;
     }
   }
@@ -185,7 +184,6 @@ export async function showSaveDialog(options?: {
         filters: options?.filters,
       });
     } catch (err) {
-      console.warn('Native save dialog failed:', err);
       return null;
     }
   }

@@ -299,7 +299,6 @@ export const InfoModal: React.FC<InfoModalProps> = ({
         }
       } catch (error) {
         // Fallback: try to get from localStorage
-        console.debug('Failed to load tags from backend:', error);
       }
     };
 

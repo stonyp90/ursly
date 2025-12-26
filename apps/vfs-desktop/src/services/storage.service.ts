@@ -264,7 +264,6 @@ export class StorageService {
       });
       return thumbnail;
     } catch (error) {
-      console.debug('Failed to get thumbnail:', error);
       return null;
     }
   }

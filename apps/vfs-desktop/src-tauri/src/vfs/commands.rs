@@ -11,7 +11,7 @@ use tauri::State;
 use tracing::{error, info, warn};
 
 use crate::vfs::application::VfsService;
-use crate::vfs::adapters::transcription::{TranscriptionService, TranscriptionSegment};
+use crate::vfs::adapters::transcription::{TranscriptionService, TranscriptionSegment, TranscriptionStatus};
 
 // ============================================================================
 // Response Types for Frontend
@@ -2426,8 +2426,14 @@ fn get_macos_apps_for_extension(extension: &str) -> Vec<AppInfo> {
             .unwrap_or_else(|| path.to_string())
     };
     
-    // Helper to check if app is already seen
-    let is_app_seen = |app: &AppInfo| -> bool {
+    // Helper function to check if app is already seen
+    fn is_app_seen(
+        app: &AppInfo,
+        seen_bundle_ids: &HashSet<String>,
+        seen_paths: &HashSet<String>,
+        seen_names: &HashSet<String>,
+        normalize_path: &dyn Fn(&str) -> String,
+    ) -> bool {
         // Check by bundle_id first (most reliable)
         if let Some(ref bundle_id) = app.bundle_id {
             if seen_bundle_ids.contains(bundle_id) {
@@ -2448,24 +2454,20 @@ fn get_macos_apps_for_extension(extension: &str) -> Vec<AppInfo> {
         }
         
         false
-    };
-    
-    // Helper to mark app as seen
-    let mark_app_seen = |app: &AppInfo| {
-        if let Some(ref bundle_id) = app.bundle_id {
-            seen_bundle_ids.insert(bundle_id.clone());
-        }
-        let normalized_path = normalize_path(&app.path);
-        seen_paths.insert(normalized_path);
-        seen_names.insert(app.name.to_lowercase());
-    };
+    }
     
     // First, try to get apps from macOS Launch Services using AppleScript
     // This queries the actual system database of registered applications
     if let Some(ls_apps) = get_apps_from_launch_services(extension) {
         for app in ls_apps {
-            if !is_app_seen(&app) {
-                mark_app_seen(&app);
+            if !is_app_seen(&app, &seen_bundle_ids, &seen_paths, &seen_names, &normalize_path) {
+                // Mark as seen
+                if let Some(ref bundle_id) = app.bundle_id {
+                    seen_bundle_ids.insert(bundle_id.clone());
+                }
+                let normalized_path = normalize_path(&app.path);
+                seen_paths.insert(normalized_path);
+                seen_names.insert(app.name.to_lowercase());
                 apps.push(app);
             }
         }
@@ -2500,12 +2502,13 @@ fn get_macos_apps_for_extension(extension: &str) -> Vec<AppInfo> {
             }
         }
         
-        mark_app_seen(&AppInfo {
-            name: name.to_string(),
-            path: path.to_string(),
-            bundle_id: bundle_id.clone(),
-            icon: None,
-        });
+        // Mark as seen
+        if let Some(ref bid) = bundle_id {
+            seen_bundle_ids.insert(bid.clone());
+        }
+        let normalized_path = normalize_path(path);
+        seen_paths.insert(normalized_path);
+        seen_names.insert(name.to_lowercase());
         
         apps.push(AppInfo {
             name: name.to_string(),
@@ -2518,8 +2521,14 @@ fn get_macos_apps_for_extension(extension: &str) -> Vec<AppInfo> {
     // Scan /Applications for additional known apps
     let additional_apps = scan_applications_folder(extension);
     for app in additional_apps {
-        if !is_app_seen(&app) {
-            mark_app_seen(&app);
+        if !is_app_seen(&app, &seen_bundle_ids, &seen_paths, &seen_names, &normalize_path) {
+            // Mark as seen
+            if let Some(ref bundle_id) = app.bundle_id {
+                seen_bundle_ids.insert(bundle_id.clone());
+            }
+            let normalized_path = normalize_path(&app.path);
+            seen_paths.insert(normalized_path);
+            seen_names.insert(app.name.to_lowercase());
             apps.push(app);
         }
     }
@@ -3316,6 +3325,33 @@ pub async fn vfs_get_thumbnail(
 // Transcription Commands
 // ============================================================================
 
+/// Global transcription service
+static TRANSCRIPTION_SERVICE: Lazy<SyncRwLock<Option<Arc<TranscriptionService>>>> = Lazy::new(|| SyncRwLock::new(None));
+
+/// Get or initialize the global transcription service
+async fn get_transcription_service() -> Result<Arc<TranscriptionService>, String> {
+    // Try to get existing service
+    {
+        let service_lock = TRANSCRIPTION_SERVICE.read();
+        if let Some(service) = service_lock.as_ref() {
+            return Ok(service.clone());
+        }
+    }
+    
+    // Initialize service if not yet initialized
+    let temp_dir = dirs::cache_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
+        .join("ursly-transcription");
+    
+    let service = TranscriptionService::new(temp_dir).await
+        .map_err(|e| format!("Failed to initialize transcription service: {}", e))?;
+    
+    let service_arc = Arc::new(service);
+    *TRANSCRIPTION_SERVICE.write() = Some(service_arc.clone());
+    
+    Ok(service_arc)
+}
+
 /// Start live transcription for a video file
 #[tauri::command]
 pub async fn vfs_start_transcription(
@@ -3328,13 +3364,7 @@ pub async fn vfs_start_transcription(
         return Err("File does not exist".to_string());
     }
     
-    // Get or create transcription service
-    let temp_dir = dirs::cache_dir()
-        .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
-        .join("ursly-transcription");
-    
-    let service = TranscriptionService::new(temp_dir).await
-        .map_err(|e| format!("Failed to initialize transcription service: {}", e))?;
+    let service = get_transcription_service().await?;
     
     if !service.is_available() {
         return Err("FFmpeg not available. Please install FFmpeg to use transcription.".to_string());
@@ -3351,19 +3381,24 @@ pub async fn vfs_start_transcription(
 #[tauri::command]
 pub async fn vfs_stop_transcription(
     job_id: String,
-) -> Result<(), String> {
-    // For now, we'll need to store the service instance somewhere
-    // This is a simplified version - in production, you'd use a state wrapper
-    Ok(())
+) -> Result<String, String> {
+    let service = get_transcription_service().await?;
+    
+    service.stop_transcription(&job_id)
+        .map_err(|e| format!("Failed to stop transcription: {}", e))?;
+    
+    Ok(format!("Transcription job {} stopped", job_id))
 }
 
 /// Get transcription status
 #[tauri::command]
 pub async fn vfs_get_transcription_status(
     job_id: String,
-) -> Result<String, String> {
-    // Placeholder - would need access to service
-    Ok("running".to_string())
+) -> Result<TranscriptionStatus, String> {
+    let service = get_transcription_service().await?;
+    
+    service.get_status(&job_id)
+        .ok_or_else(|| format!("Transcription job {} not found", job_id))
 }
 
 /// Get transcription segments
@@ -3371,8 +3406,10 @@ pub async fn vfs_get_transcription_status(
 pub async fn vfs_get_transcription_segments(
     job_id: String,
 ) -> Result<Vec<TranscriptionSegment>, String> {
-    // Placeholder - would need access to service
-    Ok(Vec::new())
+    let service = get_transcription_service().await?;
+    
+    service.get_segments(&job_id)
+        .ok_or_else(|| format!("Transcription job {} not found", job_id))
 }
 
 #[cfg(test)]

@@ -1,16 +1,10 @@
-/**
- * Auto Updater Component
- * Checks for updates and shows progress during download/install
- */
 import { useState, useEffect, useCallback } from 'react';
 import './AutoUpdater.css';
 
-// Check if Tauri is available
 const isTauriAvailable = (): boolean => {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 };
 
-// Lazy load updater plugin to avoid crashes in dev mode
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let updaterModule: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,7 +16,6 @@ const loadUpdaterModule = async (): Promise<boolean> => {
     return updaterModule !== null && updaterModule !== false;
   }
 
-  // Check if we're in a Tauri environment first
   if (!isTauriAvailable()) {
     updaterModule = false;
     processModule = false;
@@ -30,14 +23,12 @@ const loadUpdaterModule = async (): Promise<boolean> => {
     return false;
   }
 
-  // Dynamic import with string concatenation to prevent Vite analysis
   const updaterPath = '@tauri-apps/plugin-updater';
   const processPath = '@tauri-apps/api/process';
 
   try {
     updaterModule = await import(/* @vite-ignore */ updaterPath);
   } catch (err) {
-    console.debug('Updater plugin not available (expected in dev mode):', err);
     updaterModule = false;
     modulesLoaded = true;
     return false;
@@ -46,15 +37,12 @@ const loadUpdaterModule = async (): Promise<boolean> => {
   try {
     processModule = await import(/* @vite-ignore */ processPath);
   } catch (err) {
-    console.debug('Process API not available:', err);
     processModule = false;
   }
 
   modulesLoaded = true;
   return true;
 };
-
-// Type-safe UpdateManifest - only used if module is available
 type UpdateManifest = {
   version: string;
   body?: string;
@@ -63,7 +51,6 @@ type UpdateManifest = {
 };
 
 export function AutoUpdater() {
-  // Early return if not in Tauri environment
   if (!isTauriAvailable()) {
     return null;
   }
@@ -95,11 +82,7 @@ export function AutoUpdater() {
         setUpdateAvailable(null);
       }
     } catch (err) {
-      console.debug(
-        'Update check failed (expected in dev or if not configured):',
-        err,
-      );
-      setError(null); // Don't show error in dev mode
+      setError(null);
     } finally {
       setIsChecking(false);
     }
@@ -127,15 +110,10 @@ export function AutoUpdater() {
 
     loadUpdaterModule().then((loaded) => {
       if (!loaded) {
-        setIsChecking(false); // Ensure checking state is cleared
-        console.debug(
-          'AutoUpdater: Plugin not available (expected in dev mode or if updater is disabled)',
-        );
-        return; // Plugin not available, skip setup
+        setIsChecking(false);
+        return;
       }
 
-      // Only check for updates if updater is properly configured
-      // Check if we're in production build and updater is enabled
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const isProduction =
         (globalThis as any).import?.meta?.env?.PROD === true ||
@@ -143,11 +121,8 @@ export function AutoUpdater() {
           process.env.NODE_ENV === 'production');
       if (isProduction) {
         checkForUpdates();
-      } else {
-        console.debug('AutoUpdater: Skipping update check in development mode');
       }
 
-      // Check for updates every 6 hours
       interval = setInterval(
         () => {
           checkForUpdates();
@@ -183,7 +158,6 @@ export function AutoUpdater() {
               break;
             }
             case 'INSTALL_PROGRESS':
-              // Not typically used for Tauri, install is fast
               break;
             case 'UPDATE_INSTALLED':
               if (processModule) {
@@ -210,11 +184,11 @@ export function AutoUpdater() {
   }, [checkForUpdates]);
 
   if (isChecking) {
-    return null; // Don't show anything while checking
+    return null;
   }
 
   if (error && !isUpdating) {
-    return null; // Don't show errors unless updating
+    return null;
   }
 
   if (isUpdating) {

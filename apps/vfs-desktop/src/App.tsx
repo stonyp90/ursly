@@ -27,15 +27,13 @@ function App() {
         await invoke('vfs_init');
         setIsLoading(false);
       } catch (err) {
-        // VFS init can fail gracefully - the app still works
-        console.warn('VFS init warning:', err);
-        setError(null); // Clear any previous error - VFS init failure is non-fatal
+        setError(null);
         setIsLoading(false);
       }
     };
 
     initVfs();
-    
+
     // Initialize global drag and drop enhancements
     createGlobalDragHandler();
   }, []);
@@ -65,8 +63,22 @@ function App() {
     return (
       <div className="app loading">
         <div className="loader">
-          <div className="loader-ring"></div>
-          <span>Initializing Virtual File System...</span>
+          <div className="loader-container">
+            <div className="loader-ring loader-ring-outer"></div>
+            <div className="loader-ring loader-ring-middle"></div>
+            <div className="loader-ring loader-ring-inner"></div>
+            <div className="loader-core"></div>
+          </div>
+          <div className="loader-text">
+            <span className="loader-text-main">
+              Initializing Virtual File System
+            </span>
+            <span className="loader-text-dots">
+              <span className="dot">.</span>
+              <span className="dot">.</span>
+              <span className="dot">.</span>
+            </span>
+          </div>
         </div>
       </div>
     );

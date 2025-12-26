@@ -79,13 +79,16 @@ if (typeof DragEvent === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (global as any).DragEvent = class DragEvent extends Event {
     dataTransfer: DataTransfer | null;
-    effectAllowed: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    effectAllowed: any;
     dropEffect: string;
 
     constructor(type: string, eventInitDict?: DragEventInit) {
       super(type, eventInitDict);
       this.dataTransfer = eventInitDict?.dataTransfer || null;
-      this.effectAllowed = eventInitDict?.effectAllowed || 'uninitialized';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.effectAllowed =
+        (eventInitDict as any)?.effectAllowed || 'uninitialized';
       this.dropEffect = 'none';
     }
   };

@@ -22,6 +22,7 @@ export interface DraggablePanelState {
   isDragging: boolean;
   isResizing: boolean;
   pinned: boolean;
+  followSelection?: boolean;
   zIndex: number;
 }
 
@@ -46,8 +47,15 @@ export function useDraggablePanel(config: DraggablePanelConfig) {
 
   const panelRef = useRef<HTMLDivElement>(null);
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
-  const resizeStartPos = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
-  const resizeHandle = useRef<'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null>(null);
+  const resizeStartPos = useRef<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const resizeHandle = useRef<
+    'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null
+  >(null);
 
   // Get bounds element
   const getBoundsElement = useCallback((): HTMLElement | null => {
@@ -126,7 +134,10 @@ export function useDraggablePanel(config: DraggablePanelConfig) {
 
   // Handle resize start
   const handleResizeStart = useCallback(
-    (e: React.MouseEvent, handle: 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw') => {
+    (
+      e: React.MouseEvent,
+      handle: 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw',
+    ) => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -161,7 +172,10 @@ export function useDraggablePanel(config: DraggablePanelConfig) {
 
         // Clamp to min/max
         newWidth = Math.max(minSize.width, Math.min(maxSize.width, newWidth));
-        newHeight = Math.max(minSize.height, Math.min(maxSize.height, newHeight));
+        newHeight = Math.max(
+          minSize.height,
+          Math.min(maxSize.height, newHeight),
+        );
 
         setState((prev) => ({
           ...prev,
@@ -213,4 +227,3 @@ export function useDraggablePanel(config: DraggablePanelConfig) {
     },
   };
 }
-

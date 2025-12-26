@@ -87,8 +87,8 @@ export function MetricsPreview({ onOpenMetrics }: MetricsPreviewProps) {
     try {
       const m = await invokeTauri<AllMetrics>('get_all_metrics');
       setMetrics(m);
-    } catch (err) {
-      console.debug('Metrics fetch failed:', err);
+    } catch {
+      // Silently fail - metrics are optional
     }
   }, []);
 
