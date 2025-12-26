@@ -59,11 +59,18 @@ jobs:
             --include "*.json"
 
       - name: Invalidate CloudFront cache
-        if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID != '' }}
+        if: always()
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+          if [ -n "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
+            echo "Invalidating CloudFront cache..."
+            aws cloudfront create-invalidation \
+              --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+              --paths "/*" \
+              --paths "/screenshots/vfs-performance-metrics-latest.png"
+            echo "✅ CloudFront cache invalidated successfully"
+          else
+            echo "⚠️ CLOUDFRONT_DISTRIBUTION_ID not set, skipping cache invalidation"
+          fi
 
       - name: Deployment summary
         run: |

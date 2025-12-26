@@ -120,7 +120,7 @@ Every action has a shortcut. Press `?` to see all shortcuts. Work faster with ke
 
 ### Performance Monitor
 
-<img src="website/screenshots/vfs-performance-metrics-latest.png" alt="Performance Monitor dashboard showing real-time system metrics: CPU 16% (14 cores), RAM 59% (28.5/48 GB), GPU 51% (Apple M4 Pro), VRAM 55%, Temperature 58°C, Load 49% (6.84/14 cores), with detailed line graphs for CPU Usage, Memory, GPU, Disk I/O, Network stats, and System Load Average" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+<img src="website/screenshots/vfs-performance-metrics-latest.png" alt="Performance Monitor dashboard showing real-time system metrics: CPU 16% (14 cores), RAM 59% (28.3/48 GB), GPU 73% (Apple M4 Pro), VRAM 73% (5.9 GB), Temperature 69°C, Load 33% (4.62/14 cores), with detailed line graphs for CPU Usage, Memory, GPU, Disk I/O, Network stats, and System Load Average" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
 
 ### Keyboard Shortcuts
 
@@ -131,7 +131,6 @@ Every action has a shortcut. Press `?` to see all shortcuts. Work faster with ke
 <img src="website/screenshots/vfs-add-storage-dark-latest.png" alt="Add Storage modal showing storage provider options" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
 
 </div>
-
 
 ---
 
