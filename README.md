@@ -122,7 +122,7 @@ Real-time performance monitoring with detailed CPU core activity (14 cores), mem
 Every action has a shortcut. Stay in your flow without touching the mouse.
 
 <p align="center">
-  <img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts dialog showing Navigation (Go back ⌘+[, Go forward ⌘+], Go to parent folder ⌘+↑, Open selected Enter, Navigate files ↑↓←→), Selection (Select all ⌘+A, Toggle selection ⌘+Click, Range select Shift+Click, Clear selection Escape), Clipboard (Copy ⌘+C, Paste ⌘+V, Duplicate ⌘+D), and File Operations (New folder ⌘+Shift+N, Rename Enter, Move to Trash ⌘+Delete, Delete Delete)" width="700" />
+  <img src="website/screenshots/vfs-keyboard-shortcuts.png" alt="Keyboard Shortcuts dialog showing four sections: NAVIGATION (Go back ⌘+[, Go forward ⌘+], Go to parent folder ⌘+↑, Open selected Enter, Navigate files ↑↓←→), SELECTION (Select all ⌘+A, Toggle selection ⌘+Click, Range select Shift+Click, Clear selection Escape), CLIPBOARD (Copy ⌘+C, Paste ⌘+V, Duplicate ⌘+D), and FILE OPERATIONS (New folder ⌘+Shift+N, Rename Enter, Move to Trash ⌘+Delete, Delete Delete). Bottom hint: Press ? to toggle this panel" width="700" />
 </p>
 
 ---
