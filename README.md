@@ -106,15 +106,15 @@ Your files are scattered across AWS S3, Azure Blob, Google Cloud, your NAS, loca
 Press `Cmd+K` to instantly search across all your storage. Use powerful operators like `tag:important`, `type:video`, `ext:mp4`, or `size:>1gb`.
 
 <p align="center">
-  <img src="website/screenshots/vfs-spotlight-search.png" alt="Spotlight Search overlay showing search input with magnifying glass icon, filter operators (tag:, type:, ext:, size:) with icons, keyboard shortcuts footer (↑ ↓ Navigate, ⏎ Select, Tab Complete, Esc Close)" width="700" />
+  <img src="website/screenshots/vfs-spotlight-search.png" alt="Spotlight Search overlay showing search input with magnifying glass icon on left, keyboard shortcut icon and X icon on right. Four filter operators displayed: tag: (blue tag icon), type: (blue document icon), ext: (blue file extension icon, highlighted with blue background and 'Tab to insert' hint), size: (blue chart icon). Footer shows keyboard shortcuts: ↑ ↓ Navigate, ⏎ Select, Tab Complete, Esc Close. All icons use consistent blue theme color" width="700" />
 </p>
 
 ### System Performance Monitor
 
-Real-time performance monitoring with detailed CPU core activity (14 cores), memory usage (58.4% - 28.0/48 GB), GPU metrics (58% Apple M4 Pro), VRAM (61%), temperature (61°C), disk I/O, network stats (117.7 KB/s), and system load averages (4.48 / 4.55 / 4.63). Perfect for keeping an eye on renders and heavy workloads.
+Real-time performance monitoring with detailed CPU core activity (14 cores), memory usage (54.6% - 26.2/48 GB), GPU metrics (64% Apple M4 Pro), VRAM (66%), temperature (64°C), disk I/O, network stats (2.5 KB/s), and system load averages (5.02 / 4.56 / 3.80). Perfect for keeping an eye on renders and heavy workloads.
 
 <p align="center">
-  <img src="website/screenshots/vfs-performance-metrics.png" alt="Performance Monitor dashboard showing macOS 15 with 14 Cores Apple M4 Pro. Summary metrics: CPU 16% (14 cores), RAM 55% (26.5/48 GB), GPU 27% (Apple M4 Pro), VRAM 35%, Temp 46°C, Load 35% (4.92). Detailed cards: CPU Usage with 14 core bars, Memory with Swap 75% (3.7/5 GB), GPU with temperature/power/fan/core clock, Disk I/O (0 B/s read/write), Network (575.5 KB/s, Download 18902.0, Upload 570361.0), System Load Average (1M: 4.92, 5M: 3.69, 15M: 3.29). Uptime: 4d 3h" width="700" />
+  <img src="website/screenshots/vfs-performance-metrics.png" alt="Performance Monitor dashboard showing macOS 15 with 14 Cores Apple M4 Pro. Header metrics: CPU 16% (14 cores), RAM 55% (26.2/48 GB), GPU 64% (Apple M4 Pro), VRAM 66% (5.2/0 GB), TEMP 64°C, LOAD 36% (5.02). Detailed cards: CPU Usage 15.9% with 14 individual core bars, Memory 54.6% (26.2/48 GB) with Swap 75% (3.7/5 GB), GPU 64% with Temperature 64°C, Power 170W, Fan Speed 58%, Core Clock 1986 MHz, Disk I/O 0 B/s (Read 0 B/s, Write 0 B/s), Network 2.5 KB/s (Download 1.0 KB/s, Upload 1.5 KB/s), System Load Average 5.02 (1M: 5.02, 5M: 4.56, 15M: 3.80). Uptime: 4d 3h" width="700" />
 </p>
 
 ### Keyboard-First Experience

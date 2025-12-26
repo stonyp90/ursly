@@ -43,15 +43,17 @@ interface InfoModalProps {
   isFavorite?: boolean;
 }
 
+// Color labels use CSS variables for theme consistency
+// Colors are derived from theme with slight variations
 const COLOR_LABELS = [
   { name: 'None', value: null, color: 'transparent' },
-  { name: 'Red', value: 'red', color: '#ff5555' },
-  { name: 'Orange', value: 'orange', color: '#ffb86c' },
-  { name: 'Yellow', value: 'yellow', color: '#f1fa8c' },
-  { name: 'Green', value: 'green', color: '#50fa7b' },
-  { name: 'Blue', value: 'blue', color: '#8be9fd' },
-  { name: 'Purple', value: 'purple', color: '#bd93f9' },
-  { name: 'Gray', value: 'gray', color: '#6272a4' },
+  { name: 'Primary', value: 'primary', color: 'var(--primary)' },
+  { name: 'Secondary', value: 'secondary', color: 'var(--secondary)' },
+  { name: 'Accent', value: 'accent', color: 'var(--accent)' },
+  { name: 'Success', value: 'success', color: 'var(--success)' },
+  { name: 'Warning', value: 'warning', color: 'var(--warning)' },
+  { name: 'Error', value: 'error', color: 'var(--error)' },
+  { name: 'Muted', value: 'muted', color: 'var(--text-muted)' },
 ];
 
 function formatDuration(seconds: number): string {
@@ -645,14 +647,14 @@ export const InfoModal: React.FC<InfoModalProps> = ({
             </div>
 
             {/* Color Label */}
-            <div className="info-field color-label-field">
-              <span className="info-label">Color Label</span>
+            <section className="info-section color-label-section">
+              <h3 className="info-section-title">Color Label</h3>
               <div className="color-labels">
-                {COLOR_LABELS.map(({ name, value, color }) => (
+                {COLOR_LABELS.map(({ name, value }) => (
                   <button
                     key={name}
                     className={`color-label-btn ${file.colorLabel === value ? 'active' : ''}`}
-                    style={{ '--label-color': color } as React.CSSProperties}
+                    data-color={value || undefined}
                     onClick={() => onSetColorLabel?.(file, value)}
                     title={name}
                   >
@@ -662,7 +664,7 @@ export const InfoModal: React.FC<InfoModalProps> = ({
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
 
             {/* Comments */}
             <div className="info-field comments-field">

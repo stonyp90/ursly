@@ -207,7 +207,7 @@
 
 /* Operator icon colors - using theme variables only */
 .result-icon.op-tag {
-  color: var(--secondary);
+  color: var(--primary);
 }
 
 .result-icon.op-type {
@@ -215,7 +215,7 @@
 }
 
 .result-icon.op-ext {
-  color: var(--accent);
+  color: var(--primary);
 }
 
 .result-icon.op-size {

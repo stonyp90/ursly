@@ -114,8 +114,13 @@
   font-weight: 500;
   color: var(--vfs-text-primary);
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-word;
+  line-height: 1.4;
+  max-height: calc(1.4em * 2); /* 2 lines max */
 }
 
 .vfs-file-card .file-meta {
@@ -185,8 +190,13 @@
   font-weight: 500;
   color: var(--vfs-text-primary);
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-word;
+  line-height: 1.4;
+  max-height: calc(1.4em * 2); /* 2 lines max */
 }
 
 .vfs-file-card.list-view .file-meta {

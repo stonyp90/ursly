@@ -549,21 +549,27 @@
    Color Labels
    ============================================================================= */
 
-.color-label-field {
-  margin-top: 12px;
+.color-label-section {
+  border-top: 1px solid var(--finder-border, rgba(255, 255, 255, 0.08));
+  padding-top: 16px;
+  margin-top: 8px;
+}
+
+.color-label-section .info-section-title {
+  color: var(--finder-secondary, var(--secondary, #5e5ce6));
+  border-bottom-color: rgba(var(--secondary-rgb, 94, 92, 230), 0.2);
 }
 
 .color-labels {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .color-label-btn {
   width: 24px;
   height: 24px;
   padding: 0;
-  background: var(--label-color);
   border: 2px solid transparent;
   border-radius: 50%;
   cursor: pointer;
@@ -578,19 +584,56 @@
   border: 2px dashed var(--finder-border, rgba(255, 255, 255, 0.2));
 }
 
-.color-label-btn:hover {
-  transform: scale(1.1);
+/* Theme-based color variations using CSS variables */
+.color-label-btn[data-color='primary'] {
+  background: var(--primary, #0a84ff);
 }
 
-.color-label-btn.active {
+.color-label-btn[data-color='secondary'] {
+  background: var(--secondary, #5e5ce6);
+}
+
+.color-label-btn[data-color='accent'] {
+  background: var(--accent, #ff9f0a);
+}
+
+.color-label-btn[data-color='success'] {
+  background: var(--success, #30d158);
+}
+
+.color-label-btn[data-color='warning'] {
+  background: var(--warning, #ff9f0a);
+}
+
+.color-label-btn[data-color='error'] {
+  background: var(--error, #ff453a);
+}
+
+.color-label-btn[data-color='muted'] {
+  background: var(--text-muted, #8e8e93);
+}
+
+.color-label-btn:hover:not(:first-child) {
+  transform: scale(1.1);
+  filter: brightness(1.15);
+}
+
+.color-label-btn.active:not(:first-child) {
   border-color: var(--finder-text-primary, #fff);
-  box-shadow: 0 0 8px var(--label-color);
+  box-shadow: 0 0 8px currentColor;
+  filter: brightness(1.2);
 }
 
 .color-label-btn .check {
   font-size: 11px;
   color: rgba(0, 0, 0, 0.8);
   font-weight: bold;
+}
+
+/* Light theme adjustments for check mark visibility */
+[data-theme='light'] .color-label-btn .check {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* =============================================================================
