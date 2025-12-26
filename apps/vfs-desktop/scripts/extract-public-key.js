@@ -41,27 +41,44 @@ try {
     publicKey = fs.readFileSync(publicKeyPath, 'utf8').trim();
     console.log('✅ Found existing public key file');
   } else {
-    // Try to extract using Tauri CLI (if available)
-    // This is a workaround - ideally the public key should be saved when generating
-    console.log('⚠️  Public key file not found. Generating from private key...');
-    console.log('⚠️  NOTE: You need to generate keys with --write-keys flag to save public key');
-    console.log('⚠️  Run: npx @tauri-apps/cli signer generate --write-keys');
-    
-    // For now, we'll output instructions
-    console.log('\n📝 To get the public key:');
-    console.log('   1. Generate a new keypair: npx @tauri-apps/cli signer generate --write-keys');
-    console.log('   2. Copy the public key from the output');
-    console.log('   3. Add it to tauri.conf.json plugins.updater.pubkey');
-    console.log('   4. Save the private key as GitHub Secret TAURI_SIGNING_PRIVATE_KEY');
-    
-    process.exit(1);
+    // Try to extract public key from private key using Tauri CLI
+    // The private key format is: "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+    // We need to use Tauri's signer to derive the public key
+    try {
+      // Use Tauri CLI to get public key (if available)
+      // Note: This requires the Tauri CLI to be installed
+      const { execSync } = require('child_process');
+      
+      // Try to use Tauri signer to extract public key
+      // The signer can derive public key from private key
+      const result = execSync('npx @tauri-apps/cli signer generate --ci 2>&1', {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      
+      // Parse output to find public key
+      // Tauri signer outputs: "Public key: <key>"
+      const publicKeyMatch = result.match(/Public key:\s*([A-Za-z0-9+\/=\s]+)/i);
+      if (publicKeyMatch) {
+        publicKey = publicKeyMatch[1].trim().replace(/\s+/g, '');
+        console.log('✅ Extracted public key from Tauri CLI');
+      } else {
+        throw new Error('Could not parse public key from Tauri CLI output');
+      }
+    } catch (error) {
+      console.error('⚠️  Could not extract public key automatically.');
+      console.error('⚠️  Error:', error.message);
+      console.error('⚠️  Please ensure:');
+      console.error('    1. Tauri CLI is installed: npm install -g @tauri-apps/cli');
+      console.error('    2. Private key is valid');
+      console.error('    3. Or generate keys with: npx @tauri-apps/cli signer generate --write-keys');
+      process.exit(1);
+    }
   }
   
-  // Output the public key
+  // Output the public key (for CI/CD to capture)
   console.log('\n✅ Public Key:');
   console.log(publicKey);
-  console.log('\n📋 Add this to tauri.conf.json:');
-  console.log(`   "pubkey": "${publicKey}"`);
   
   // Clean up temp file
   if (fs.existsSync(tempKeyPath)) {
