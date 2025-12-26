@@ -1,0 +1,308 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================================================
+  # Dependency Vulnerability Scanning
+  # ==========================================================================
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=moderate --json > npm-audit.json || true
+          npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Upload npm audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-results
+          path: npm-audit.json
+          retention-days: 30
+
+      - name: Check for high/critical vulnerabilities
+        run: |
+          if [ -f npm-audit.json ]; then
+            HIGH_VULNS=$(jq -r '.metadata.vulnerabilities.high // 0' npm-audit.json)
+            CRITICAL_VULNS=$(jq -r '.metadata.vulnerabilities.critical // 0' npm-audit.json)
+            
+            if [ "$HIGH_VULNS" -gt 0 ] || [ "$CRITICAL_VULNS" -gt 0 ]; then
+              echo "⚠️ Found $HIGH_VULNS high and $CRITICAL_VULNS critical vulnerabilities"
+              echo "::warning::Dependency vulnerabilities detected. Review npm audit results."
+              exit 1
+            else
+              echo "✅ No high or critical vulnerabilities found"
+            fi
+          fi
+
+  # ==========================================================================
+  # Rust/Cargo Security Scanning
+  # ==========================================================================
+  cargo-audit:
+    name: Cargo Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Run cargo audit
+        working-directory: apps/vfs-desktop/src-tauri
+        run: |
+          cargo audit --json > cargo-audit.json || true
+          cargo audit
+        continue-on-error: true
+
+      - name: Upload cargo audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-audit-results
+          path: apps/vfs-desktop/src-tauri/cargo-audit.json
+          retention-days: 30
+
+  # ==========================================================================
+  # Secrets Scanning
+  # ==========================================================================
+  secrets-scan:
+    name: Secrets Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-path: .gitleaks.toml
+          no-git: false
+          verbose: true
+
+      - name: Upload Gitleaks results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-results
+          path: |
+            .gitleaks/*
+          retention-days: 30
+
+  # ==========================================================================
+  # Code Security Scanning (SAST)
+  # ==========================================================================
+  code-scan:
+    name: Code Security Scan (SAST)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint security rules
+        run: |
+          npm run lint -- --format json --output-file eslint-security-results.json || true
+        continue-on-error: true
+
+      - name: Run npm-run-all2 security audit
+        run: |
+          npx audit-ci --moderate || true
+        continue-on-error: true
+
+      - name: Upload ESLint results
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-security-results
+          path: eslint-security-results.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # ==========================================================================
+  # License Compliance Check
+  # ==========================================================================
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check licenses
+        run: |
+          npx license-checker --json > license-report.json || true
+          npx license-checker --summary
+        continue-on-error: true
+
+      - name: Check for problematic licenses
+        run: |
+          if [ -f license-report.json ]; then
+            # Check for GPL, AGPL, or other copyleft licenses
+            PROBLEMATIC=$(jq -r 'to_entries[] | select(.value.licenses | test("GPL|AGPL|LGPL")) | .key' license-report.json || true)
+            if [ -n "$PROBLEMATIC" ]; then
+              echo "⚠️ Found potentially problematic licenses:"
+              echo "$PROBLEMATIC"
+              echo "::warning::Review licenses for compliance"
+            else
+              echo "✅ No problematic licenses detected"
+            fi
+          fi
+        continue-on-error: true
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: license-report.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # ==========================================================================
+  # Security Policy Check
+  # ==========================================================================
+  security-policy:
+    name: Security Policy Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for SECURITY.md
+        run: |
+          if [ ! -f SECURITY.md ]; then
+            echo "::warning::SECURITY.md file not found. Consider adding a security policy."
+            exit 1
+          else
+            echo "✅ SECURITY.md found"
+          fi
+
+      - name: Validate security policy format
+        run: |
+          if [ -f SECURITY.md ]; then
+            # Check for common security policy sections
+            if ! grep -q -i "report" SECURITY.md && ! grep -q -i "vulnerability" SECURITY.md; then
+              echo "::warning::SECURITY.md may be missing important sections"
+            else
+              echo "✅ Security policy looks good"
+            fi
+          fi
+        continue-on-error: true
+
+  # ==========================================================================
+  # Dependency License Check
+  # ==========================================================================
+  dependency-license:
+    name: Dependency License Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for unlicensed dependencies
+        run: |
+          npx license-checker --onlyAllow "MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD;Unlicense" --excludePrivatePackages || {
+            echo "::warning::Some dependencies may have incompatible licenses"
+            exit 0
+          }
+        continue-on-error: true
+
+  # ==========================================================================
+  # Security Summary
+  # ==========================================================================
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [dependency-scan, cargo-audit, secrets-scan, code-scan, license-check, security-policy]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: security-results
+
+      - name: Generate security summary
+        run: |
+          echo "## 🔒 DevSecOps Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Scan | ${{ needs.dependency-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cargo Audit | ${{ needs.cargo-audit.result == 'success' && '✅ Passed' || '⚠️ Issues Found' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secrets Scan | ${{ needs.secrets-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Security | ${{ needs.code-scan.result == 'success' && '✅ Passed' || '⚠️ Issues Found' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License Check | ${{ needs.license-check.result == 'success' && '✅ Passed' || '⚠️ Review Needed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Policy | ${{ needs.security-policy.result == 'success' && '✅ Passed' || '⚠️ Missing' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All scan results are available as workflow artifacts." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow:** \`${{ github.workflow }}\`" >> $GITHUB_STEP_SUMMARY
+

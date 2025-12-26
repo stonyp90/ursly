@@ -15,7 +15,7 @@ export default {
   transformIgnorePatterns: ['/node_modules/(?!(react-joyride|@tauri-apps)/)'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/vfs-desktop',
-  testMatch: ['**/*.spec.ts'], // Temporarily skip TSX tests due to React hooks env issue
+  testMatch: ['**/*.spec.ts', '**/*.spec.tsx'], // Include both TS and TSX test files
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',

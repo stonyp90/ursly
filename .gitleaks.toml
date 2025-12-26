@@ -1,0 +1,89 @@
+# Gitleaks configuration for secrets scanning
+title = "Ursly VFS Secrets Detection"
+
+[extend]
+# Use default rules
+useDefault = true
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+  '''\.md$''',
+  '''\.json$''',
+  '''package-lock\.json$''',
+  '''Cargo\.lock$''',
+  '''\.lock$''',
+  '''test/''',
+  '''tests/''',
+  '''__tests__/''',
+  '''\.test\.''',
+  '''\.spec\.''',
+  '''mock''',
+  '''example''',
+  '''sample''',
+  '''\.example\.''',
+  '''\.sample\.''',
+]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey)\s*[=:]\s*['"]([0-9a-zA-Z\-_]{20,})['"]'''
+tags = ["key", "api"]
+entropy = 3.5
+
+[[rules]]
+id = "aws-access-key-id"
+description = "AWS Access Key ID"
+regex = '''AKIA[0-9A-Z]{16}'''
+tags = ["key", "AWS"]
+
+[[rules]]
+id = "aws-secret-access-key"
+description = "AWS Secret Access Key"
+regex = '''(?i)aws[_-]?secret[_-]?access[_-]?key\s*[=:]\s*['"]([A-Za-z0-9/+=]{40})['"]'''
+tags = ["key", "AWS"]
+entropy = 4.0
+
+[[rules]]
+id = "github-token"
+description = "GitHub Token"
+regex = '''ghp_[0-9a-zA-Z]{36}'''
+tags = ["key", "GitHub"]
+
+[[rules]]
+id = "github-pat"
+description = "GitHub Personal Access Token"
+regex = '''gho_[0-9a-zA-Z]{36}'''
+tags = ["key", "GitHub"]
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----'''
+tags = ["key", "private"]
+
+[[rules]]
+id = "jwt-token"
+description = "JWT Token"
+regex = '''eyJ[A-Za-z0-9-_=]+\.eyJ[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*'''
+tags = ["key", "JWT"]
+
+[[rules]]
+id = "mongodb-connection-string"
+description = "MongoDB Connection String"
+regex = '''mongodb\+srv://[^\s]+'''
+tags = ["database", "MongoDB"]
+
+[[rules]]
+id = "postgres-connection-string"
+description = "PostgreSQL Connection String"
+regex = '''postgres://[^\s]+'''
+tags = ["database", "PostgreSQL"]
+
+[[rules]]
+id = "redis-connection-string"
+description = "Redis Connection String"
+regex = '''redis://[^\s]+'''
+tags = ["database", "Redis"]
+

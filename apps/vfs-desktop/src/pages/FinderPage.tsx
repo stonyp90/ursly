@@ -98,6 +98,49 @@ export function FinderPage({
     [],
   );
   const [filterByTag, setFilterByTag] = useState<string | null>(null);
+  // Sidebar section reordering - prepared for future implementation
+  // const [sidebarSectionOrder, setSidebarSectionOrder] = useState<string[]>([
+  //   'favorites',
+  //   'storage',
+  //   'tags',
+  // ]);
+
+  // Handle sidebar section reordering - prepared for future implementation
+  // const handleSectionReorder = useCallback(
+  //   (fromIndex: number, toIndex: number) => {
+  //     setSidebarSectionOrder((prev) => {
+  //       const newOrder = [...prev];
+  //       const [removed] = newOrder.splice(fromIndex, 1);
+  //       newOrder.splice(toIndex, 0, removed);
+  //       // Persist to localStorage
+  //       try {
+  //         localStorage.setItem(
+  //           'ursly-sidebar-section-order',
+  //           JSON.stringify(newOrder),
+  //         );
+  //       } catch {
+  //         // Ignore localStorage errors
+  //       }
+  //       return newOrder;
+  //     });
+  //   },
+  //   [],
+  // );
+
+  // Load sidebar section order from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('ursly-sidebar-section-order');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSidebarSectionOrder(parsed);
+        }
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, []);
 
   // Info modal state
   const [infoModal, setInfoModal] = useState<{

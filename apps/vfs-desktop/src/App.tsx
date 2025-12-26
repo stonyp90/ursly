@@ -10,6 +10,7 @@ import { ErrorDialogProvider } from './components/ErrorDialog';
 import { BottomToolbar } from './components/BottomToolbar';
 import { AutoUpdater } from './components/AutoUpdater';
 import { OnboardingTour } from './components/OnboardingTour';
+import { createGlobalDragHandler } from './utils/dragDropEnhancements';
 
 export type AppTab = 'files' | 'metrics' | 'settings';
 
@@ -34,6 +35,9 @@ function App() {
     };
 
     initVfs();
+    
+    // Initialize global drag and drop enhancements
+    createGlobalDragHandler();
   }, []);
 
   useEffect(() => {

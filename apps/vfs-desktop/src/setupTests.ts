@@ -47,3 +47,57 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: jest.fn(),
   })),
 });
+
+// Mock DragEvent for jsdom (not available by default)
+if (typeof DragEvent === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (global as any).DragEvent = class DragEvent extends Event {
+    dataTransfer: DataTransfer | null;
+    effectAllowed: string;
+    dropEffect: string;
+
+    constructor(type: string, eventInitDict?: DragEventInit) {
+      super(type, eventInitDict);
+      this.dataTransfer = eventInitDict?.dataTransfer || null;
+      this.effectAllowed = eventInitDict?.effectAllowed || 'uninitialized';
+      this.dropEffect = 'none';
+    }
+  };
+}
+
+// Mock DataTransfer for jsdom
+if (typeof DataTransfer === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (global as any).DataTransfer = class DataTransfer {
+    dropEffect = 'none';
+    effectAllowed = 'uninitialized';
+    files: FileList;
+    items: DataTransferItemList;
+    types: readonly string[] = [];
+
+    private _data: Map<string, string> = new Map();
+
+    constructor() {
+      this.files = [] as unknown as FileList;
+      this.items = [] as unknown as DataTransferItemList;
+    }
+
+    getData(format: string): string {
+      return this._data.get(format) || '';
+    }
+
+    setData(format: string, data: string): void {
+      this._data.set(format, data);
+      this.types = Array.from(this._data.keys());
+    }
+
+    clearData(format?: string): void {
+      if (format) {
+        this._data.delete(format);
+      } else {
+        this._data.clear();
+      }
+      this.types = Array.from(this._data.keys());
+    }
+  };
+}

@@ -1,0 +1,117 @@
+/**
+ * DraggableSection Styles - VSCode-inspired draggable sidebar sections
+ */
+
+.draggable-section {
+  position: relative;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.draggable-section.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.draggable-section.drag-over {
+  border-top: 2px solid var(--primary, #0a84ff);
+  margin-top: 4px;
+}
+
+.draggable-section.drag-over::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary, #0a84ff);
+  border-radius: 2px;
+  animation: drag-indicator-pulse 1s ease-in-out infinite;
+}
+
+@keyframes drag-indicator-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: grab;
+  user-select: none;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.draggable-section.dragging .section-header {
+  cursor: grabbing;
+}
+
+.section-header:hover {
+  background: var(--hover-bg, rgba(255, 255, 255, 0.06));
+}
+
+.section-drag-handle {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted, #8e8e93);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  cursor: grab;
+}
+
+.draggable-section:hover .section-drag-handle,
+.draggable-section.dragging .section-drag-handle {
+  opacity: 1;
+}
+
+.section-title {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary, #a1a1a6);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.section-collapse-btn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-muted, #8e8e93);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  opacity: 0;
+}
+
+.draggable-section:hover .section-collapse-btn {
+  opacity: 1;
+}
+
+.section-collapse-btn:hover {
+  background: var(--surface, #3a3a3c);
+  color: var(--text-primary, #f5f5f7);
+}
+
+.section-content {
+  padding: 4px 0;
+}
+

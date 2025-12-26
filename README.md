@@ -120,7 +120,7 @@ Every action has a shortcut. Press `?` to see all shortcuts. Work faster with ke
 
 ### Performance Monitor
 
-<img src="website/screenshots/vfs-performance-metrics-latest.png" alt="Performance Monitor dashboard showing real-time system metrics including CPU usage charts, Memory utilization, GPU metrics, Disk I/O, Network stats, and System Load Average with detailed visualizations" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
+<img src="website/screenshots/vfs-performance-metrics-latest.png" alt="Performance Monitor dashboard showing real-time system metrics: CPU 16% (14 cores), RAM 59% (28.5/48 GB), GPU 51% (Apple M4 Pro), VRAM 55%, Temperature 58°C, Load 49% (6.84/14 cores), with detailed line graphs for CPU Usage, Memory, GPU, Disk I/O, Network stats, and System Load Average" width="100%" style="max-width: 1200px; height: auto; border-radius: 8px;" />
 
 ### Keyboard Shortcuts
 
@@ -132,11 +132,6 @@ Every action has a shortcut. Press `?` to see all shortcuts. Work faster with ke
 
 </div>
 
-> **📸 Screenshot Update Needed**: Current screenshots may show outdated UI. New screenshots should show:
->
-> - Bottom toolbar with **Shortcuts** and **Search** buttons only (no Theme button)
-> - Header with **Files**, **Metrics**, and **Settings** tabs
-> - Settings tab accessible from header (not bottom toolbar)
 
 ---
 

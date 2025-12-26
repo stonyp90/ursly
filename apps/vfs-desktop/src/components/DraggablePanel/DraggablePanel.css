@@ -1,0 +1,194 @@
+/**
+ * DraggablePanel Styles - VSCode-inspired draggable panels
+ */
+
+.draggable-panel {
+  background: var(--surface, #2c2c2e);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.draggable-panel.dragging {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  cursor: grabbing !important;
+}
+
+.draggable-panel.resizing {
+  cursor: nwse-resize !important;
+}
+
+.draggable-panel.pinned {
+  position: relative !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Header */
+.draggable-panel-header {
+  padding: 8px 12px;
+  background: var(--surface-elevated, rgba(44, 44, 46, 0.9));
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  cursor: grab;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.draggable-panel.dragging .draggable-panel-header {
+  cursor: grabbing;
+}
+
+.panel-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #f5f5f7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.panel-action-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-muted, #8e8e93);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.panel-action-btn:hover {
+  background: var(--surface, #3a3a3c);
+  color: var(--text-primary, #f5f5f7);
+}
+
+.panel-action-btn.close-btn:hover {
+  background: rgba(255, 69, 58, 0.2);
+  color: var(--error, #ff453a);
+}
+
+.panel-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Content */
+.draggable-panel-content {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+}
+
+.resize-handle.resize-n,
+.resize-handle.resize-s {
+  left: 4px;
+  right: 4px;
+  height: 4px;
+  cursor: ns-resize;
+}
+
+.resize-handle.resize-n {
+  top: 0;
+}
+
+.resize-handle.resize-s {
+  bottom: 0;
+}
+
+.resize-handle.resize-e,
+.resize-handle.resize-w {
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  cursor: ew-resize;
+}
+
+.resize-handle.resize-e {
+  right: 0;
+}
+
+.resize-handle.resize-w {
+  left: 0;
+}
+
+.resize-handle.resize-ne {
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  cursor: ne-resize;
+}
+
+.resize-handle.resize-nw {
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  cursor: nw-resize;
+}
+
+.resize-handle.resize-se {
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  cursor: se-resize;
+}
+
+.resize-handle.resize-sw {
+  bottom: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  cursor: sw-resize;
+}
+
+/* Hover effect on resize handles */
+.resize-handle:hover {
+  background: rgba(var(--primary-rgb, 10, 132, 255), 0.2);
+}
+
+/* Corner handles get special treatment */
+.resize-handle.resize-ne:hover,
+.resize-handle.resize-nw:hover,
+.resize-handle.resize-se:hover,
+.resize-handle.resize-sw:hover {
+  background: rgba(var(--primary-rgb, 10, 132, 255), 0.3);
+}
+
