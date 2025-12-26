@@ -2408,42 +2408,117 @@ pub async fn vfs_get_apps_for_file(
 fn get_macos_apps_for_extension(extension: &str) -> Vec<AppInfo> {
     use std::process::Command;
     use std::collections::HashSet;
+    use std::path::Path;
     
     let mut apps = Vec::new();
+    // Track seen apps by bundle_id, normalized path, and name to prevent duplicates
     let mut seen_bundle_ids = HashSet::new();
+    let mut seen_paths = HashSet::new();
+    let mut seen_names = HashSet::new();
+    
+    // Helper to normalize paths (resolve symlinks, canonicalize)
+    let normalize_path = |path: &str| -> String {
+        Path::new(path)
+            .canonicalize()
+            .ok()
+            .and_then(|p| p.to_str().map(|s| s.to_string()))
+            .unwrap_or_else(|| path.to_string())
+    };
+    
+    // Helper to check if app is already seen
+    let is_app_seen = |app: &AppInfo| -> bool {
+        // Check by bundle_id first (most reliable)
+        if let Some(ref bundle_id) = app.bundle_id {
+            if seen_bundle_ids.contains(bundle_id) {
+                return true;
+            }
+        }
+        
+        // Check by normalized path
+        let normalized_path = normalize_path(&app.path);
+        if seen_paths.contains(&normalized_path) {
+            return true;
+        }
+        
+        // Check by name (fallback for apps without bundle_id)
+        // Only check name if we don't have bundle_id or path match
+        if app.bundle_id.is_none() && seen_names.contains(&app.name.to_lowercase()) {
+            return true;
+        }
+        
+        false
+    };
+    
+    // Helper to mark app as seen
+    let mark_app_seen = |app: &AppInfo| {
+        if let Some(ref bundle_id) = app.bundle_id {
+            seen_bundle_ids.insert(bundle_id.clone());
+        }
+        let normalized_path = normalize_path(&app.path);
+        seen_paths.insert(normalized_path);
+        seen_names.insert(app.name.to_lowercase());
+    };
     
     // First, try to get apps from macOS Launch Services using AppleScript
     // This queries the actual system database of registered applications
     if let Some(ls_apps) = get_apps_from_launch_services(extension) {
         for app in ls_apps {
-            let bundle_key = app.bundle_id.clone().unwrap_or_else(|| app.path.clone());
-            if !seen_bundle_ids.contains(&bundle_key) {
-                seen_bundle_ids.insert(bundle_key);
+            if !is_app_seen(&app) {
+                mark_app_seen(&app);
                 apps.push(app);
             }
         }
     }
     
     // Also add common apps that are known to handle this extension
+    // Only add if not already seen from Launch Services
     let common_apps = get_common_macos_apps_for_extension(extension);
     for (name, path) in common_apps {
-        if std::path::Path::new(path).exists() && !seen_bundle_ids.contains(&path.to_string()) {
-            seen_bundle_ids.insert(path.to_string());
-            apps.push(AppInfo {
-                name: name.to_string(),
-                path: path.to_string(),
-                bundle_id: None,
-                icon: None,
-            });
+        if !Path::new(path).exists() {
+            continue;
         }
+        
+        let normalized_path = normalize_path(path);
+        if seen_paths.contains(&normalized_path) {
+            continue;
+        }
+        
+        // Check if we already have an app with this name
+        let name_lower = name.to_lowercase();
+        if seen_names.contains(&name_lower) {
+            continue;
+        }
+        
+        // Try to get bundle_id for this app
+        let bundle_id = get_bundle_id_for_path(path);
+        
+        // If we have a bundle_id, check if it's already seen
+        if let Some(ref bid) = bundle_id {
+            if seen_bundle_ids.contains(bid) {
+                continue;
+            }
+        }
+        
+        mark_app_seen(&AppInfo {
+            name: name.to_string(),
+            path: path.to_string(),
+            bundle_id: bundle_id.clone(),
+            icon: None,
+        });
+        
+        apps.push(AppInfo {
+            name: name.to_string(),
+            path: path.to_string(),
+            bundle_id,
+            icon: None,
+        });
     }
     
     // Scan /Applications for additional known apps
     let additional_apps = scan_applications_folder(extension);
     for app in additional_apps {
-        let bundle_key = app.bundle_id.clone().unwrap_or_else(|| app.path.clone());
-        if !seen_bundle_ids.contains(&bundle_key) {
-            seen_bundle_ids.insert(bundle_key);
+        if !is_app_seen(&app) {
+            mark_app_seen(&app);
             apps.push(app);
         }
     }
@@ -2456,7 +2531,7 @@ fn get_macos_apps_for_extension(extension: &str) -> Vec<AppInfo> {
     
     // If still empty, add TextEdit as fallback
     if apps.is_empty() {
-        if std::path::Path::new("/System/Applications/TextEdit.app").exists() {
+        if Path::new("/System/Applications/TextEdit.app").exists() {
             apps.push(AppInfo {
                 name: "TextEdit".to_string(),
                 path: "/System/Applications/TextEdit.app".to_string(),
@@ -2467,6 +2542,40 @@ fn get_macos_apps_for_extension(extension: &str) -> Vec<AppInfo> {
     }
     
     apps
+}
+
+/// Get bundle ID for an app path (macOS only)
+#[cfg(target_os = "macos")]
+fn get_bundle_id_for_path(app_path: &str) -> Option<String> {
+    use std::process::Command;
+    
+    // Use AppleScript to get bundle ID
+    let script = format!(r#"
+tell application "System Events"
+    try
+        set appBundle to application file "{}"
+        set bundleId to bundle identifier of appBundle
+        return bundleId
+    on error
+        return ""
+    end try
+end tell
+"#, app_path);
+    
+    let output = Command::new("osascript")
+        .arg("-e")
+        .arg(&script)
+        .output()
+        .ok()?;
+    
+    if output.status.success() {
+        let bundle_id = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if !bundle_id.is_empty() {
+            return Some(bundle_id);
+        }
+    }
+    
+    None
 }
 
 /// Query macOS Launch Services for apps that can open a specific file type
@@ -3200,4 +3309,150 @@ pub async fn vfs_get_thumbnail(
     // TODO: Add API-based thumbnail fetching for cloud storage
     
     Ok(None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn test_no_duplicate_preview_for_pdf() {
+        let apps = get_macos_apps_for_extension("pdf");
+        
+        // Count occurrences of Preview
+        let preview_count = apps.iter()
+            .filter(|app| app.name.to_lowercase() == "preview")
+            .count();
+        
+        assert_eq!(preview_count, 1, "Preview should appear exactly once, found {}", preview_count);
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn test_no_duplicate_apps_by_name() {
+        let extensions = vec!["pdf", "jpg", "png", "mp4", "txt", "html"];
+        
+        for ext in extensions {
+            let apps = get_macos_apps_for_extension(ext);
+            
+            // Check for duplicate names (case-insensitive)
+            let mut seen_names = HashSet::new();
+            for app in &apps {
+                let name_lower = app.name.to_lowercase();
+                assert!(
+                    !seen_names.contains(&name_lower),
+                    "Duplicate app name '{}' found for extension '{}'",
+                    app.name,
+                    ext
+                );
+                seen_names.insert(name_lower);
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn test_no_duplicate_apps_by_bundle_id() {
+        let apps = get_macos_apps_for_extension("pdf");
+        
+        let mut seen_bundle_ids = HashSet::new();
+        for app in &apps {
+            if let Some(ref bundle_id) = app.bundle_id {
+                assert!(
+                    !seen_bundle_ids.contains(bundle_id),
+                    "Duplicate bundle ID '{}' found for app '{}'",
+                    bundle_id,
+                    app.name
+                );
+                seen_bundle_ids.insert(bundle_id.clone());
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn test_no_duplicate_apps_by_path() {
+        let apps = get_macos_apps_for_extension("pdf");
+        
+        // Normalize paths (resolve symlinks)
+        let mut seen_paths = HashSet::new();
+        for app in &apps {
+            let normalized = std::path::Path::new(&app.path)
+                .canonicalize()
+                .ok()
+                .and_then(|p| p.to_str().map(|s| s.to_string()))
+                .unwrap_or_else(|| app.path.clone());
+            
+            assert!(
+                !seen_paths.contains(&normalized),
+                "Duplicate path '{}' found for app '{}'",
+                normalized,
+                app.name
+            );
+            seen_paths.insert(normalized);
+        }
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn test_preview_appears_exactly_once_for_pdf() {
+        let apps = get_macos_apps_for_extension("pdf");
+        let preview_count = apps.iter()
+            .filter(|app| app.name.to_lowercase() == "preview")
+            .count();
+        
+        if std::path::Path::new("/System/Applications/Preview.app").exists() {
+            assert_eq!(
+                preview_count,
+                1,
+                "Preview should appear exactly once for PDF files, found {}",
+                preview_count
+            );
+        }
+    }
+
+    #[test]
+    fn test_apps_sorted_alphabetically() {
+        #[cfg(target_os = "macos")]
+        let apps = get_macos_apps_for_extension("pdf");
+        
+        #[cfg(target_os = "windows")]
+        let apps = get_windows_apps_for_extension("pdf");
+        
+        #[cfg(target_os = "linux")]
+        let apps = get_linux_apps_for_extension("pdf");
+        
+        let mut prev_name = String::new();
+        for app in &apps {
+            if !prev_name.is_empty() {
+                assert!(
+                    app.name.to_lowercase() >= prev_name.to_lowercase(),
+                    "Apps should be sorted alphabetically. '{}' should come before '{}'",
+                    prev_name,
+                    app.name
+                );
+            }
+            prev_name = app.name.clone();
+        }
+    }
+
+    #[test]
+    fn test_apps_limit() {
+        #[cfg(target_os = "macos")]
+        let apps = get_macos_apps_for_extension("pdf");
+        
+        #[cfg(target_os = "windows")]
+        let apps = get_windows_apps_for_extension("pdf");
+        
+        #[cfg(target_os = "linux")]
+        let apps = get_linux_apps_for_extension("pdf");
+        
+        assert!(
+            apps.len() <= 20,
+            "Should return at most 20 apps, found {}",
+            apps.len()
+        );
+    }
 }

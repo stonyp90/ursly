@@ -925,13 +925,38 @@ export function FinderPage({
     setAppsLoading(true);
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      const apps = await invoke<{ name: string; path: string }[]>(
-        'vfs_get_apps_for_file',
-        {
-          filePath: file.path,
-        },
-      );
-      setAvailableApps(apps);
+      const apps = await invoke<
+        { name: string; path: string; bundle_id?: string }[]
+      >('vfs_get_apps_for_file', {
+        filePath: file.path,
+      });
+
+      // Deduplicate apps on frontend as safety measure
+      // Check by bundle_id, path, and name (case-insensitive)
+      const seen = new Set<string>();
+      const deduplicated = apps.filter((app) => {
+        // Check by bundle_id first (most reliable)
+        if (app.bundle_id) {
+          const key = `bundle:${app.bundle_id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+        }
+
+        // Check by normalized path
+        const normalizedPath = app.path.toLowerCase().replace(/\/$/, '');
+        const pathKey = `path:${normalizedPath}`;
+        if (seen.has(pathKey)) return false;
+        seen.add(pathKey);
+
+        // Check by name (case-insensitive) as fallback
+        const nameKey = `name:${app.name.toLowerCase()}`;
+        if (seen.has(nameKey)) return false;
+        seen.add(nameKey);
+
+        return true;
+      });
+
+      setAvailableApps(deduplicated);
     } catch (err) {
       console.error('Failed to get apps:', err);
       setAvailableApps([]);
