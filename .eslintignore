@@ -1,0 +1,3 @@
+# ESLint ignore file
+**/*.spec.ts
+**/*.test.ts
