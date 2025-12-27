@@ -5214,10 +5214,12 @@ body.theme-light .theme-toggle-btn .theme-icon-dark {
   }
 }
 
-/* Remove navigation links to hidden sections (always hidden since sections are hidden on mobile) */
-.nav-links a[href='#product'],
-.mobile-menu a[href='#product'] {
-  display: none !important;
+/* Hide Product navigation link only on mobile (where section is hidden) */
+@media (max-width: 768px) {
+  .nav-links a[href='#product'],
+  .mobile-menu a[href='#product'] {
+    display: none !important;
+  }
 }
 
 @media (max-width: 900px) {
