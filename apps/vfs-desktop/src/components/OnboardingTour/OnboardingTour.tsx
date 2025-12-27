@@ -118,23 +118,22 @@ const TOUR_STEPS: Step[] = [
     disableOverlayClose: false,
   },
   {
-    target: '.finder-content, .file-browser',
+    target: '.metrics-header .settings-btn',
     content: (
       <div className="tour-step-content">
-        <h3>Unified File Browser</h3>
+        <h3>Alert Thresholds</h3>
         <p>
-          This is your main workspace. Browse files across all storage sources
-          in one unified view. Drag and drop files between storage providers
-          seamlessly.
+          Configure alert thresholds for CPU, memory, GPU, and temperature. Get
+          notified when metrics exceed your custom limits to stay on top of
+          system performance.
         </p>
         <div className="tour-step-tip">
-          <strong>Power features:</strong> Right-click for context menu, use{' '}
-          <kbd>Cmd+I</kbd> (Mac) or <kbd>Ctrl+I</kbd> (Windows/Linux) for file
-          details, and drag files to move them between storage sources.
+          <strong>Pro tip:</strong> Set thresholds based on your workload. Lower
+          thresholds for critical tasks, higher for general use.
         </div>
       </div>
     ),
-    placement: 'right',
+    placement: 'bottom',
     disableBeacon: true,
     disableOverlayClose: false,
   },
@@ -189,6 +188,9 @@ export function OnboardingTour({
         const favoritesSection =
           document.querySelector('.favorites-section') ||
           document.querySelector('.sidebar-section');
+        const alertThresholdsBtn = document.querySelector(
+          '.metrics-header .settings-btn',
+        );
 
         // Check all required elements exist
         if (
@@ -197,7 +199,8 @@ export function OnboardingTour({
           fileBrowser &&
           metricsTab &&
           settingsTab &&
-          favoritesSection
+          favoritesSection &&
+          alertThresholdsBtn
         ) {
           setRun(true);
         } else {
@@ -294,10 +297,29 @@ export function OnboardingTour({
                 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
               settingsTab.click();
             }
-          } else if (
-            step?.target === '.file-browser' ||
-            step?.target === '.favorites-section'
-          ) {
+          } else if (step?.target === '.metrics-header .settings-btn') {
+            // Ensure we're on the metrics tab first
+            const metricsTab = document.querySelector(
+              '.header-tab[data-tab="metrics"]',
+            ) as HTMLElement;
+            if (metricsTab && !metricsTab.classList.contains('active')) {
+              metricsTab.style.transition =
+                'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+              metricsTab.click();
+              // Wait for metrics page to load before highlighting settings button
+              setTimeout(() => {
+                const settingsBtn = document.querySelector(
+                  '.metrics-header .settings-btn',
+                ) as HTMLElement;
+                if (settingsBtn) {
+                  settingsBtn.scrollIntoView({
+                    block: 'nearest',
+                    behavior: 'smooth',
+                  });
+                }
+              }, 300);
+            }
+          } else if (step?.target === '.favorites-section') {
             const filesTab = document.querySelector(
               '.header-tab:not([data-tab="metrics"]):not([data-tab="settings"])',
             ) as HTMLElement;
