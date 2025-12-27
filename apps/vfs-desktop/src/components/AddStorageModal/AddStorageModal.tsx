@@ -354,36 +354,25 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
   // Handle paste events - ensure clipboard works from outside the app
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLInputElement>, fieldKey?: string) => {
-      // Don't prevent default - let the browser handle it naturally
-      // The onChange handler will fire automatically
-      // This ensures paste works from any source (browser, text editor, etc.)
-
-      // However, we can also read from clipboardData as a backup
+      // Read text from clipboard event
       const pastedText =
         e.clipboardData.getData('text/plain') ||
         e.clipboardData.getData('text');
 
-      if (pastedText) {
-        // Small delay to ensure the input value is updated after browser's default paste
-        setTimeout(() => {
-          if (fieldKey) {
-            setConfig((prev) => {
-              // Only update if the value hasn't been set by onChange
-              if (!prev[fieldKey] || prev[fieldKey] !== pastedText.trim()) {
-                return { ...prev, [fieldKey]: pastedText.trim() };
-              }
-              return prev;
-            });
-          } else {
-            // For display name, update if different
-            if (name !== pastedText.trim()) {
-              setName(pastedText.trim());
-            }
-          }
-        }, 0);
+      if (pastedText && pastedText.trim()) {
+        // Prevent default to handle paste manually (more reliable in Tauri)
+        e.preventDefault();
+
+        if (fieldKey) {
+          // Update specific config field
+          setConfig((prev) => ({ ...prev, [fieldKey]: pastedText.trim() }));
+        } else {
+          // Update display name
+          setName(pastedText.trim());
+        }
       }
     },
-    [name],
+    [],
   );
 
   const fields = selectedProvider

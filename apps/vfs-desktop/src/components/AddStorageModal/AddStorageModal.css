@@ -233,6 +233,10 @@
   color: var(--vfs-text-primary, var(--text-primary, #f5f5f7));
   outline: none;
   transition: all var(--vfs-transition-fast, 150ms);
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
 }
 
 .form-field input:focus,
