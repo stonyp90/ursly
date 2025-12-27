@@ -74,6 +74,7 @@ jobs:
       - name: Setup signing key and extract public key
         working-directory: apps/vfs-desktop
         shell: bash
+        continue-on-error: true
         run: |
           if [ -n "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
             mkdir -p .tauri-keys
@@ -114,6 +115,7 @@ jobs:
           VITE_API_URL: https://api.ursly.io
           VITE_WS_URL: wss://api.ursly.io
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        continue-on-error: false
 
       # macOS: Rename and upload DMG
       - name: Prepare macOS artifacts
@@ -191,6 +193,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: macos|windows|linux
+          merge-multiple: false
 
       - name: Display downloaded files
         run: |
@@ -216,25 +220,32 @@ jobs:
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
 
-      - name: Delete previous releases (keep only latest)
+      - name: Ensure tag exists
         run: |
-          releases=$(gh release list --repo ${{ github.repository }} --limit 10 --json tagName,isDraft --jq '.[] | select(.isDraft == false) | .tagName')
-          for tag in $releases; do
-            if [ "$tag" != "${{ steps.version.outputs.version }}" ]; then
-              echo "Deleting old release: $tag"
-              gh release delete "$tag" --repo ${{ github.repository }} --yes --cleanup-tag 2>/dev/null || true
-            fi
-          done
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Checking for tag: $VERSION"
+          
+          # Check if tag already exists
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists"
+          else
+            echo "Tag $VERSION does not exist, creating it..."
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "$VERSION" -m "Release $VERSION"
+            git push origin "$VERSION" || echo "Tag push failed, but continuing..."
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Release
+      - name: Create or Update Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: Ursly VFS ${{ steps.version.outputs.version }}
           draft: false
           prerelease: false
+          make_latest: true
           generate_release_notes: true
           files: |
             artifacts/macos/ursly-vfs.dmg
