@@ -137,12 +137,9 @@ jobs:
         run: |
           # Ensure PowerShell execution policy allows scripts
           Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-          # Display Windows version info for debugging
-          Write-Host "Windows Version:"
-          Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, OsArchitecture
-          # Ensure MSVC tools are available
-          Write-Host "MSVC Tools:"
-          where.exe cl.exe 2>$null || Write-Host "MSVC tools will be installed by Rust toolchain"
+          # Display basic Windows info
+          Write-Host "Windows Build Environment Ready"
+          Write-Host "MSVC tools will be installed by Rust toolchain"
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
