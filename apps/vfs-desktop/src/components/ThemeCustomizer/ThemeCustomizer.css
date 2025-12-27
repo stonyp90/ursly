@@ -190,13 +190,14 @@
 /* Color Grid */
 .color-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
 }
 
 .color-swatch {
   aspect-ratio: 1;
-  border-radius: 12px;
+  min-width: 0;
+  border-radius: 8px;
   border: 2px solid transparent;
   background: linear-gradient(
     135deg,
@@ -212,29 +213,31 @@
 .color-swatch::before {
   content: '';
   position: absolute;
-  inset: 2px;
-  border-radius: 9px;
+  inset: 1px;
+  border-radius: 6px;
   background: var(--surface);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 
 .color-swatch:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--background) 70%, transparent);
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--background) 60%, transparent);
+  border-color: var(--border-hover);
 }
 
 .color-swatch.active {
   border-color: var(--text-primary);
   box-shadow:
-    0 0 0 3px var(--surface),
-    0 0 20px var(--swatch-color);
+    0 0 0 2px var(--surface),
+    0 0 12px var(--swatch-color);
+  transform: scale(1.05);
 }
 
 .swatch-inner {
   position: absolute;
-  inset: 3px;
-  border-radius: 8px;
+  inset: 2px;
+  border-radius: 6px;
   background: linear-gradient(
     135deg,
     var(--swatch-color),
@@ -247,8 +250,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
   /* White for contrast on colored swatches - uses CSS variable for theme consistency */
   stroke: var(--text-primary, #ffffff);
   filter: drop-shadow(
@@ -258,8 +261,8 @@
 }
 
 .selected-color {
-  margin: 14px 0 0;
-  font-size: 14px;
+  margin: 12px 0 0;
+  font-size: 13px;
   color: var(--primary);
   font-weight: 500;
   text-align: center;
