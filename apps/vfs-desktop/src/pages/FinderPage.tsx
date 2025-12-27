@@ -1764,6 +1764,41 @@ export function FinderPage({
     }
   };
 
+  // Handle removing a storage source
+  const handleRemoveStorage = async (sourceId: string) => {
+    try {
+      const confirmed = await DialogService.confirm({
+        title: 'Remove Storage',
+        message: `Are you sure you want to remove this storage source? This will not delete any files, only remove it from the list.`,
+        okLabel: 'Remove',
+        cancelLabel: 'Cancel',
+      });
+
+      if (!confirmed) return;
+
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('vfs_remove_source', { sourceId });
+
+      // Remove from sources list
+      setSources((prev) => prev.filter((s) => s.id !== sourceId));
+
+      // If the removed source was selected, clear selection
+      if (selectedSource?.id === sourceId) {
+        setSelectedSource(null);
+        setCurrentPath('');
+        setFiles([]);
+      }
+
+      toast.showToast({
+        type: 'success',
+        message: 'Storage source removed',
+      });
+    } catch (err) {
+      console.error('Failed to remove storage:', err);
+      DialogService.error(`Failed to remove storage: ${err}`, 'Storage Error');
+    }
+  };
+
   const handleUploadToS3 = async () => {
     console.log('[FinderPage] handleUploadToS3 called');
 
@@ -1797,15 +1832,26 @@ export function FinderPage({
 
     try {
       console.log('[FinderPage] Opening file dialog...');
-      const selectedFiles = await DialogService.open({
+
+      // Use Tauri dialog directly for better reliability
+      const { open } = await import('@tauri-apps/plugin-dialog');
+      const result = await open({
         multiple: true,
         directory: false,
         title: `Upload files to ${selectedSource.name}`,
       });
 
+      console.log('[FinderPage] Dialog result:', result);
+
+      if (!result) {
+        console.log('[FinderPage] No files selected, cancelling upload');
+        return;
+      }
+
+      const selectedFiles = Array.isArray(result) ? result : [result];
       console.log('[FinderPage] Selected files:', selectedFiles);
 
-      if (!selectedFiles || selectedFiles.length === 0) {
+      if (selectedFiles.length === 0) {
         console.log('[FinderPage] No files selected, cancelling upload');
         return;
       }
@@ -4100,6 +4146,26 @@ export function FinderPage({
               </svg>
               Copy Path
             </button>
+            {/* Don't show remove for system locations */}
+            {!storageContextMenu.source.isSystemLocation && (
+              <button
+                className="storage-action-btn danger"
+                onClick={async () => {
+                  const source = storageContextMenu.source;
+                  setStorageContextMenu(null);
+                  await handleRemoveStorage(source.id);
+                }}
+              >
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                  <path
+                    fillRule="evenodd"
+                    d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
+                  />
+                </svg>
+                Remove Storage
+              </button>
+            )}
             {storageContextMenu.source.isEjectable && (
               <button
                 className="storage-action-btn eject"

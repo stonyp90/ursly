@@ -358,6 +358,28 @@ pub async fn vfs_add_source(
     })
 }
 
+/// Remove a storage source
+#[tauri::command]
+pub async fn vfs_remove_source(
+    source_id: String,
+    state: State<'_, VfsStateWrapper>,
+) -> Result<String, String> {
+    info!("vfs_remove_source: source_id={}", source_id);
+    
+    let service = state.get_service()
+        .ok_or_else(|| "VFS not initialized. Call vfs_init first.".to_string())?;
+    
+    // Check if source exists
+    let source = service.get_source(&source_id)
+        .ok_or_else(|| format!("Storage source not found: {}", source_id))?;
+    
+    // Remove the source from VFS internal state
+    service.remove_source(&source_id);
+    
+    info!("Removed storage source: {} ({})", source.name, source_id);
+    Ok(format!("Removed storage source: {}", source.name))
+}
+
 /// Mount a local storage source (VFS version)
 #[tauri::command]
 pub async fn vfs_mount_local(
