@@ -24,10 +24,15 @@ function App() {
   useEffect(() => {
     const initVfs = async () => {
       try {
-        // Add timeout to prevent hanging
+        // Add timeout to prevent hanging - but don't fail if it times out
         const initPromise = invoke('vfs_init');
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Initialization timeout')), 10000),
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => {
+            console.warn(
+              'VFS initialization taking longer than expected, continuing anyway...',
+            );
+            resolve(null);
+          }, 5000),
         );
 
         await Promise.race([initPromise, timeoutPromise]);
@@ -40,10 +45,19 @@ function App() {
       }
     };
 
+    // Start initialization but don't block
     initVfs();
 
     // Initialize global drag and drop enhancements
     createGlobalDragHandler();
+
+    // Fallback: ensure loading state clears after max time
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('Forcing app to load after timeout');
+      setIsLoading(false);
+    }, 10000);
+
+    return () => clearTimeout(fallbackTimeout);
   }, []);
 
   useEffect(() => {
