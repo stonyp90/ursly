@@ -298,58 +298,56 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
     }
   }, [isOpen]);
 
-  // Handle paste events - use native clipboard API for better Tauri compatibility
+  // Handle paste events - support both native and cross-app pastes
   const handlePaste = useCallback(
     async (e: React.ClipboardEvent<HTMLInputElement>, fieldKey?: string) => {
       try {
-        // First try to read from clipboard event (works for in-app pastes)
+        // First try to read from clipboard event (works for native pastes)
         let pastedText =
           e.clipboardData.getData('text/plain') ||
           e.clipboardData.getData('text');
 
-        // If clipboard event doesn't have data, try native clipboard API
-        // This is needed for pasting from outside the app in Tauri
-        if (!pastedText || pastedText.trim() === '') {
-          try {
-            if (navigator.clipboard && navigator.clipboard.readText) {
-              pastedText = await navigator.clipboard.readText();
+        // If clipboard event has data, let native paste work normally
+        if (pastedText && pastedText.trim()) {
+          // Don't prevent default - let native paste work
+          // Just sync our state after native paste completes
+          const trimmedText = pastedText.trim();
+          setTimeout(() => {
+            if (fieldKey) {
+              setConfig((prev) => ({ ...prev, [fieldKey]: trimmedText }));
+            } else {
+              setName(trimmedText);
             }
-          } catch (clipboardErr) {
-            console.warn(
-              '[AddStorageModal] Clipboard API not available:',
-              clipboardErr,
-            );
-            // Fallback: try to get from event anyway
-            pastedText =
-              e.clipboardData.getData('text/plain') ||
-              e.clipboardData.getData('text');
-          }
+          }, 0);
+          return; // Native paste will handle it
         }
 
-        // Always prevent default to handle paste manually
+        // No data in clipboard event - need to use clipboard API (cross-app paste)
         e.preventDefault();
         e.stopPropagation();
 
-        if (pastedText && pastedText.trim()) {
-          const trimmedText = pastedText.trim();
-
-          if (fieldKey) {
-            // Update specific config field
-            setConfig((prev) => ({ ...prev, [fieldKey]: trimmedText }));
-          } else {
-            // Update display name
-            setName(trimmedText);
+        try {
+          if (navigator.clipboard && navigator.clipboard.readText) {
+            pastedText = await navigator.clipboard.readText();
+            if (pastedText && pastedText.trim()) {
+              const trimmedText = pastedText.trim();
+              if (fieldKey) {
+                setConfig((prev) => ({ ...prev, [fieldKey]: trimmedText }));
+              } else {
+                setName(trimmedText);
+              }
+            }
           }
-
-          console.log(
-            '[AddStorageModal] Pasted text:',
-            trimmedText.substring(0, 20) + '...',
+        } catch (clipboardErr) {
+          console.warn(
+            '[AddStorageModal] Clipboard API not available:',
+            clipboardErr,
           );
+          // Let browser handle paste normally if all else fails
         }
       } catch (err) {
         console.error('[AddStorageModal] Error handling paste:', err);
-        // Fallback: let browser handle paste normally
-        // Don't prevent default so native paste can work
+        // Don't prevent default on error - let native paste work
       }
     },
     [],
