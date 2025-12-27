@@ -24,9 +24,17 @@ function App() {
   useEffect(() => {
     const initVfs = async () => {
       try {
-        await invoke('vfs_init');
+        // Add timeout to prevent hanging
+        const initPromise = invoke('vfs_init');
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Initialization timeout')), 10000),
+        );
+
+        await Promise.race([initPromise, timeoutPromise]);
         setIsLoading(false);
       } catch (err) {
+        console.error('VFS initialization error:', err);
+        // Don't block the app if initialization fails - allow user to continue
         setError(null);
         setIsLoading(false);
       }
