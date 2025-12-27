@@ -42,6 +42,7 @@ import { SearchBox } from '../components/SearchBox';
 import { SpotlightSearch } from '../components/SpotlightSearch';
 import { MetricsPreview } from '../components/MetricsPreview';
 import { UploadProgressPanel } from '../components/UploadProgress';
+import { UploadStatusWidget } from '../components/UploadStatusWidget';
 import { truncateMiddle } from '../utils/file-utils';
 import '../styles/finder.css';
 
@@ -3095,6 +3096,9 @@ export function FinderPage({
 
           {/* Metrics Preview */}
           {onOpenMetrics && <MetricsPreview onOpenMetrics={onOpenMetrics} />}
+
+          {/* Upload Status Widget */}
+          <UploadStatusWidget />
         </aside>
 
         {/* Main Content */}
