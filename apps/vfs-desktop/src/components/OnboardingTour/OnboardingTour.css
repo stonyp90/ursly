@@ -193,6 +193,12 @@
   z-index: 10002 !important;
 }
 
+/* Hide logo/header area if present */
+.react-joyride__tooltip__header,
+.react-joyride__tooltip__logo {
+  display: none !important;
+}
+
 .react-joyride__tooltip__footer {
   pointer-events: auto !important;
   z-index: 10003 !important;
@@ -345,20 +351,7 @@
 }
 
 .react-joyride__button--close {
-  color: var(--text-muted, #8e8e93) !important;
-  transition: all 0.15s ease !important;
-  cursor: pointer !important;
-  opacity: 1 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  position: absolute !important;
-  top: 12px !important;
-  right: 12px !important;
+  display: none !important;
 }
 
 .react-joyride__button--close:hover {

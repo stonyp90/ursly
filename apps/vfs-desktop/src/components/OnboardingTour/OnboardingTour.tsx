@@ -329,7 +329,7 @@ export function OnboardingTour({
         showProgress
         showSkipButton
         disableCloseOnEsc={false}
-        hideCloseButton={false}
+        hideCloseButton={true}
         disableScrolling={false}
         scrollOffset={100}
         scrollToFirstStep={true}
