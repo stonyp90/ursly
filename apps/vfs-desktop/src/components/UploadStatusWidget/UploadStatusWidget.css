@@ -128,6 +128,54 @@
   opacity: 0.7;
 }
 
+.upload-status-item-failed {
+  border-left: 3px solid var(--vfs-error, #ff453a);
+}
+
+.upload-status-error-message {
+  font-size: 10px;
+  color: var(--vfs-error, #ff453a);
+  margin-bottom: var(--space-1, 4px);
+  padding: var(--space-1, 4px);
+  background: rgba(var(--vfs-error-rgb, 255, 69, 58), 0.1);
+  border-radius: var(--radius-sm, 4px);
+  word-break: break-word;
+}
+
+.upload-status-retry-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--vfs-primary, #6366f1);
+  background: rgba(var(--vfs-primary-rgb, 99, 102, 241), 0.1);
+  border: 1px solid rgba(var(--vfs-primary-rgb, 99, 102, 241), 0.2);
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.upload-status-retry-btn:hover {
+  background: rgba(var(--vfs-primary-rgb, 99, 102, 241), 0.2);
+  border-color: rgba(var(--vfs-primary-rgb, 99, 102, 241), 0.3);
+}
+
+.upload-status-retry-btn:active {
+  transform: scale(0.98);
+}
+
+.upload-status-retry-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.upload-status-progress-failed {
+  background: var(--vfs-error, #ff453a) !important;
+}
+
 .upload-status-item-header {
   display: flex;
   align-items: center;

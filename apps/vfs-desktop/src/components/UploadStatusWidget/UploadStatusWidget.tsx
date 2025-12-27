@@ -67,8 +67,12 @@ export const UploadStatusWidget: React.FC = () => {
       u.status === 'Paused',
   );
 
+  const failedUploads = uploads.filter((u) => u.status === 'Failed');
+
   const hasAnyUploads =
-    activeUploads.length > 0 || recentCompletions.length > 0;
+    activeUploads.length > 0 ||
+    failedUploads.length > 0 ||
+    recentCompletions.length > 0;
 
   if (!hasAnyUploads) {
     return null;
@@ -101,6 +105,18 @@ export const UploadStatusWidget: React.FC = () => {
   const getProgressPercentage = (upload: UploadState): number => {
     if (upload.total_size === 0) return 0;
     return Math.round((upload.bytes_uploaded / upload.total_size) * 100);
+  };
+
+  const handleRetry = async (uploadId: string, sourceId: string) => {
+    try {
+      await invoke('vfs_resume_upload', { uploadId, sourceId });
+      // Reload uploads to reflect the status change
+      setTimeout(() => {
+        loadUploads();
+      }, 500);
+    } catch (err) {
+      console.error('Failed to retry upload:', err);
+    }
   };
 
   return (
@@ -178,6 +194,72 @@ export const UploadStatusWidget: React.FC = () => {
                         <>
                           <span className="upload-status-separator">•</span>
                           <span>{formatTime(upload.eta_seconds)} left</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Failed Uploads */}
+          {failedUploads.length > 0 && (
+            <div className="upload-status-section">
+              <div className="upload-status-section-header">Failed</div>
+              {failedUploads.map((upload) => {
+                const fileName = getFileName(upload);
+                const percentage = getProgressPercentage(upload);
+                return (
+                  <div
+                    key={upload.upload_id}
+                    className="upload-status-item upload-status-item-failed"
+                  >
+                    <div className="upload-status-item-header">
+                      <span className="upload-status-filename" title={fileName}>
+                        {fileName}
+                      </span>
+                      <button
+                        className="upload-status-retry-btn"
+                        onClick={() =>
+                          handleRetry(upload.upload_id, upload.source_id)
+                        }
+                        title="Retry upload"
+                      >
+                        <svg
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          className="upload-status-retry-icon"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"
+                          />
+                          <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
+                        </svg>
+                        Retry
+                      </button>
+                    </div>
+                    {upload.error && (
+                      <div className="upload-status-error-message">
+                        {upload.error}
+                      </div>
+                    )}
+                    <div className="upload-status-progress-bar">
+                      <div
+                        className="upload-status-progress-fill upload-status-progress-failed"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <div className="upload-status-item-details">
+                      <span>
+                        {formatBytes(upload.bytes_uploaded)} /{' '}
+                        {formatBytes(upload.total_size)}
+                      </span>
+                      {percentage > 0 && (
+                        <>
+                          <span className="upload-status-separator">•</span>
+                          <span>{percentage}% uploaded</span>
                         </>
                       )}
                     </div>
