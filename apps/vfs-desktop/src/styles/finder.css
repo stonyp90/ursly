@@ -1261,8 +1261,9 @@
 /* Action Buttons */
 .storage-info-actions {
   display: flex;
-  gap: var(--space-2, 8px);
-  padding: var(--space-3, 12px) var(--space-4, 16px);
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
   border-top: 1px solid var(--vfs-separator);
   background: var(--vfs-bg-tertiary);
   flex-shrink: 0;
@@ -1270,12 +1271,13 @@
 
 .storage-action-btn {
   flex: 1;
+  min-width: calc(50% - 2px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
-  font-size: 12px;
+  gap: 4px;
+  padding: 6px 8px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--vfs-text-secondary);
   background: var(--vfs-bg-secondary);
@@ -1286,8 +1288,8 @@
 }
 
 .storage-action-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   flex-shrink: 0;
 }
 
