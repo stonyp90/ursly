@@ -298,30 +298,58 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
     }
   }, [isOpen]);
 
-  // Handle paste events - ensure clipboard works from outside the app
+  // Handle paste events - use native clipboard API for better Tauri compatibility
   const handlePaste = useCallback(
-    (e: React.ClipboardEvent<HTMLInputElement>, fieldKey?: string) => {
+    async (e: React.ClipboardEvent<HTMLInputElement>, fieldKey?: string) => {
       try {
-        // Read text from clipboard event
-        const pastedText =
+        // First try to read from clipboard event (works for in-app pastes)
+        let pastedText =
           e.clipboardData.getData('text/plain') ||
           e.clipboardData.getData('text');
 
+        // If clipboard event doesn't have data, try native clipboard API
+        // This is needed for pasting from outside the app in Tauri
+        if (!pastedText || pastedText.trim() === '') {
+          try {
+            if (navigator.clipboard && navigator.clipboard.readText) {
+              pastedText = await navigator.clipboard.readText();
+            }
+          } catch (clipboardErr) {
+            console.warn(
+              '[AddStorageModal] Clipboard API not available:',
+              clipboardErr,
+            );
+            // Fallback: try to get from event anyway
+            pastedText =
+              e.clipboardData.getData('text/plain') ||
+              e.clipboardData.getData('text');
+          }
+        }
+
+        // Always prevent default to handle paste manually
+        e.preventDefault();
+        e.stopPropagation();
+
         if (pastedText && pastedText.trim()) {
-          // Prevent default to handle paste manually (more reliable in Tauri)
-          e.preventDefault();
+          const trimmedText = pastedText.trim();
 
           if (fieldKey) {
             // Update specific config field
-            setConfig((prev) => ({ ...prev, [fieldKey]: pastedText.trim() }));
+            setConfig((prev) => ({ ...prev, [fieldKey]: trimmedText }));
           } else {
             // Update display name
-            setName(pastedText.trim());
+            setName(trimmedText);
           }
+
+          console.log(
+            '[AddStorageModal] Pasted text:',
+            trimmedText.substring(0, 20) + '...',
+          );
         }
       } catch (err) {
         console.error('[AddStorageModal] Error handling paste:', err);
         // Fallback: let browser handle paste normally
+        // Don't prevent default so native paste can work
       }
     },
     [],
@@ -465,7 +493,36 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  onPaste={(e) => handlePaste(e)}
+                  onPaste={(e) => {
+                    handlePaste(e).catch((err) => {
+                      console.error(
+                        '[AddStorageModal] Paste handler error:',
+                        err,
+                      );
+                    });
+                  }}
+                  onKeyDown={async (e) => {
+                    // Handle Cmd+V / Ctrl+V as backup
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+                      try {
+                        if (
+                          navigator.clipboard &&
+                          navigator.clipboard.readText
+                        ) {
+                          const text = await navigator.clipboard.readText();
+                          if (text && text.trim()) {
+                            e.preventDefault();
+                            setName(text.trim());
+                          }
+                        }
+                      } catch (err) {
+                        console.warn(
+                          '[AddStorageModal] Keyboard paste failed:',
+                          err,
+                        );
+                      }
+                    }
+                  }}
                   placeholder={`My ${providerName}`}
                 />
               </div>
@@ -483,7 +540,39 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
                     onChange={(e) =>
                       setConfig({ ...config, [field.key]: e.target.value })
                     }
-                    onPaste={(e) => handlePaste(e, field.key)}
+                    onPaste={(e) => {
+                      handlePaste(e, field.key).catch((err) => {
+                        console.error(
+                          '[AddStorageModal] Paste handler error:',
+                          err,
+                        );
+                      });
+                    }}
+                    onKeyDown={async (e) => {
+                      // Handle Cmd+V / Ctrl+V as backup
+                      if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+                        try {
+                          if (
+                            navigator.clipboard &&
+                            navigator.clipboard.readText
+                          ) {
+                            const text = await navigator.clipboard.readText();
+                            if (text && text.trim()) {
+                              e.preventDefault();
+                              setConfig({
+                                ...config,
+                                [field.key]: text.trim(),
+                              });
+                            }
+                          }
+                        } catch (err) {
+                          console.warn(
+                            '[AddStorageModal] Keyboard paste failed:',
+                            err,
+                          );
+                        }
+                      }
+                    }}
                     placeholder={field.placeholder}
                   />
                 </div>
