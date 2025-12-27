@@ -3837,9 +3837,10 @@ export function FinderPage({
                 <div className="context-divider" />
                 <button
                   className="context-item"
-                  onClick={() => {
-                    handleUploadToS3();
+                  onClick={async () => {
+                    console.log('[FinderPage] Upload Files to S3 clicked');
                     closeContextMenu();
+                    await handleUploadToS3();
                   }}
                 >
                   <svg
