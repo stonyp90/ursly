@@ -1872,7 +1872,7 @@ mod feature_tests {
         fn process_hydration(request: &HydrationRequest) -> HydrationResult {
             match request.source_tier {
                 StorageTier::Hot => HydrationResult::AlreadyHot,
-                StorageTier::Warm | StorageTier::Cold | StorageTier::Nearline | StorageTier::Archive => {
+                StorageTier::Warm | StorageTier::Cold | StorageTier::Nearline | StorageTier::Archive | StorageTier::InstantRetrieval => {
                     // In real impl, would queue hydration job
                     HydrationResult::Success
                 }
@@ -1924,6 +1924,7 @@ mod feature_tests {
                 StorageTier::Cold => 60,         // ~1 minute
                 StorageTier::Nearline => 30,     // ~30 seconds
                 StorageTier::Archive => 43200,   // ~12 hours (Glacier)
+                StorageTier::InstantRetrieval => 0, // Instant retrieval (millisecond access)
             }
         }
         
@@ -1932,6 +1933,7 @@ mod feature_tests {
         assert_eq!(estimate_retrieval_seconds(StorageTier::Cold), 60);
         assert_eq!(estimate_retrieval_seconds(StorageTier::Nearline), 30);
         assert_eq!(estimate_retrieval_seconds(StorageTier::Archive), 43200);
+        assert_eq!(estimate_retrieval_seconds(StorageTier::InstantRetrieval), 0);
     }
     
     /// **Feature**: Context menu respects storage category

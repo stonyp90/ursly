@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 
 use crate::vfs::adapters::{LocalStorageAdapter, NvmeCacheAdapter};
 use crate::vfs::domain::{
@@ -161,10 +161,13 @@ impl VfsService {
             },
         };
         
+        // S3StorageAdapter implements IFileOperations, so we can use it for file operations
+        let file_ops: Arc<dyn IFileOperations> = adapter.clone();
+        
         self.sources.write().insert(source.id.clone(), StorageSourceState {
             source: source.clone(),
             adapter,
-            file_ops: None, // S3 adapter doesn't implement IFileOperations yet
+            file_ops: Some(file_ops),
         });
         
         info!("Added S3 storage source: {}", name);

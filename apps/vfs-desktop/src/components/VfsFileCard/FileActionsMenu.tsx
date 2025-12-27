@@ -21,7 +21,10 @@ export type FileAction =
   | 'archive'
   | 'retrieve'
   | 'mkdir'
-  | 'preview';
+  | 'preview'
+  | 'tier-hot'
+  | 'tier-instant-retrieval'
+  | 'tier-cold';
 
 interface MenuAction {
   id: FileAction;
@@ -38,6 +41,8 @@ interface FileActionsMenuProps {
   position: { x: number; y: number };
   onAction: (action: FileAction) => void;
   onClose: () => void;
+  /** If true, show only limited features for object storage (download, tier management, delete) */
+  isObjectStorage?: boolean;
 }
 
 export function FileActionsMenu({
@@ -45,6 +50,7 @@ export function FileActionsMenu({
   position,
   onAction,
   onClose,
+  isObjectStorage = false,
 }: FileActionsMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -81,6 +87,52 @@ export function FileActionsMenu({
 
   const getMenuActions = (): MenuAction[] => {
     const actions: MenuAction[] = [];
+
+    // For object storage, show only limited features: download, tier management, delete
+    if (isObjectStorage) {
+      // Download
+      if (!file.isDirectory) {
+        actions.push({
+          id: 'download',
+          label: 'Download',
+          icon: '⬇️',
+          shortcut: '⌘D',
+        });
+      }
+
+      // Tier management (only for files)
+      if (!file.isDirectory) {
+        actions.push({
+          id: 'tier-hot',
+          label: 'Move to Hot Tier',
+          icon: '🔥',
+          divider: true,
+        });
+        actions.push({
+          id: 'tier-instant-retrieval',
+          label: 'Move to Instant Retrieval',
+          icon: '⚡',
+        });
+        actions.push({
+          id: 'tier-cold',
+          label: 'Move to Cold Tier',
+          icon: '❄️',
+        });
+      }
+
+      // Delete
+      actions.push({
+        id: 'delete',
+        label: 'Delete',
+        icon: '🗑️',
+        shortcut: '⌘⌫',
+        danger: true,
+      });
+
+      return actions;
+    }
+
+    // Full feature set for non-object storage (mount-based storage)
 
     // Open action
     actions.push({

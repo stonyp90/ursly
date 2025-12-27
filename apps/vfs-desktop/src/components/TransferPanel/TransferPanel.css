@@ -1,0 +1,391 @@
+.transfer-panel {
+  /* Full page mode when used as main tab */
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--vfs-bg-secondary, #1a1a1a);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Ensure panel is always visible */
+  visibility: visible;
+  opacity: 1;
+  /* Prevent black screen issues */
+  min-height: 200px;
+}
+
+/* Side panel mode (when used as overlay) */
+.transfer-panel.side-panel {
+  position: fixed;
+  right: 0;
+  top: 60px; /* Below toolbar */
+  bottom: 0;
+  width: 400px;
+  border-left: 1px solid var(--vfs-border, #333);
+  z-index: 999;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+  transition:
+    width 0.3s ease,
+    height 0.3s ease;
+}
+
+.transfer-panel.minimized {
+  width: 300px;
+  height: auto;
+  max-height: 120px;
+  bottom: auto;
+}
+
+.transfer-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--vfs-border, #333);
+  flex-shrink: 0;
+}
+
+.transfer-panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.transfer-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vfs-text-primary, #fff);
+}
+
+.transfer-panel-badge {
+  background: var(--vfs-primary, #00d4ff);
+  color: var(--vfs-bg-primary, #1a1a1a);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.transfer-panel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transfer-panel-minimize {
+  background: none;
+  border: none;
+  color: var(--vfs-text-secondary, #999);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.transfer-panel-minimize:hover {
+  background: var(--vfs-bg-hover, #2a2a2a);
+  color: var(--vfs-text-primary, #fff);
+}
+
+.transfer-panel-close {
+  background: none;
+  border: none;
+  color: var(--vfs-text-secondary, #999);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.transfer-panel-close:hover {
+  background: var(--vfs-bg-hover, #2a2a2a);
+  color: var(--vfs-text-primary, #fff);
+}
+
+.transfer-panel-minimized-content {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--vfs-border, #333);
+}
+
+.transfer-panel-minimized-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--vfs-text-secondary, #999);
+}
+
+.transfer-panel-expand-btn {
+  background: var(--vfs-bg-tertiary, #222);
+  border: 1px solid var(--vfs-border, #333);
+  border-radius: 4px;
+  color: var(--vfs-text-primary, #fff);
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.transfer-panel-expand-btn:hover {
+  background: var(--vfs-bg-hover, #2a2a2a);
+  border-color: var(--vfs-primary, #00d4ff);
+}
+
+.transfer-panel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--vfs-border, #333);
+}
+
+.transfer-tab {
+  flex: 1;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: var(--vfs-text-secondary, #999);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.transfer-tab:hover {
+  background: var(--vfs-bg-hover, #2a2a2a);
+  color: var(--vfs-text-primary, #fff);
+}
+
+.transfer-tab.active {
+  color: var(--vfs-primary, #00d4ff);
+  border-bottom-color: var(--vfs-primary, #00d4ff);
+}
+
+.transfer-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  /* Ensure content is visible */
+  background: transparent;
+  min-height: 0;
+  /* Prevent rendering issues */
+  position: relative;
+}
+
+.transfer-section {
+  margin-bottom: 24px;
+}
+
+.transfer-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--vfs-text-secondary, #999);
+  margin: 0 0 12px 0;
+  letter-spacing: 0.5px;
+}
+
+.transfer-item {
+  background: var(--vfs-bg-tertiary, #222);
+  border: 1px solid var(--vfs-border, #333);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.transfer-item-compact {
+  padding: 8px 12px;
+}
+
+.transfer-item-compact .transfer-item-header {
+  margin-bottom: 4px;
+}
+
+.transfer-item-compact .transfer-item-details {
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.transfer-item-compact .transfer-progress-bar {
+  height: 3px;
+  margin: 6px 0;
+}
+
+.transfer-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.transfer-item-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.transfer-item-storage-badge {
+  background: var(--vfs-bg-tertiary, #2a2a2a);
+  color: var(--vfs-text-secondary, #999);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.transfer-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vfs-text-primary, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.transfer-item-compact .transfer-item-name {
+  font-size: 12px;
+}
+
+.transfer-item-percentage {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vfs-primary, #00d4ff);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.transfer-item-compact .transfer-item-percentage {
+  font-size: 11px;
+}
+
+.transfer-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--vfs-bg-secondary, #1a1a1a);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.transfer-item-compact .transfer-progress-bar {
+  height: 3px;
+  margin-bottom: 6px;
+}
+
+.transfer-progress-fill {
+  height: 100%;
+  background: var(--vfs-primary, #00d4ff);
+  transition: width 0.3s ease;
+}
+
+.transfer-progress-fill.download {
+  background: var(--vfs-success, #00ff88);
+}
+
+.transfer-item-details {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--vfs-text-secondary, #999);
+  margin-bottom: 8px;
+}
+
+.transfer-item-compact .transfer-item-details {
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.transfer-separator {
+  margin: 0 6px;
+}
+
+.transfer-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.transfer-action-btn {
+  flex: 1;
+  padding: 6px 12px;
+  background: var(--vfs-bg-secondary, #1a1a1a);
+  border: 1px solid var(--vfs-border, #333);
+  border-radius: 4px;
+  color: var(--vfs-text-primary, #fff);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.transfer-action-btn.compact {
+  flex: 0;
+  padding: 4px 8px;
+  font-size: 11px;
+  min-width: 28px;
+}
+
+.transfer-action-btn:hover {
+  background: var(--vfs-bg-hover, #2a2a2a);
+  border-color: var(--vfs-primary, #00d4ff);
+}
+
+.transfer-action-btn.danger:hover {
+  border-color: var(--vfs-error, #ff4444);
+  color: var(--vfs-error, #ff4444);
+}
+
+.transfer-item-completed {
+  opacity: 0.8;
+}
+
+.transfer-item-completed.failed {
+  border-color: var(--vfs-error, #ff4444);
+}
+
+.transfer-status-icon {
+  font-size: 14px;
+  color: var(--vfs-success, #00ff88);
+}
+
+.transfer-status-icon.failed {
+  color: var(--vfs-error, #ff4444);
+}
+
+.transfer-error {
+  font-size: 11px;
+  color: var(--vfs-error, #ff4444);
+  margin-top: 4px;
+  word-break: break-word;
+}
+
+.transfer-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--vfs-text-secondary, #999);
+}
+
+.transfer-empty p {
+  margin: 0;
+  font-size: 14px;
+}

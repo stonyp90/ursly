@@ -2,7 +2,7 @@
  * macOS Finder-inspired Virtual File System Browser
  * Supports multiple view modes and hybrid storage backends
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { StorageService, VfsService } from '../services/storage.service';
 import { DialogService } from '../services/dialog.service';
@@ -43,6 +43,7 @@ import { SpotlightSearch } from '../components/SpotlightSearch';
 import { MetricsPreview } from '../components/MetricsPreview';
 import { UploadProgressPanel } from '../components/UploadProgress';
 import { UploadStatusWidget } from '../components/UploadStatusWidget';
+import { TransferPanel } from '../components/TransferPanel';
 import { truncateMiddle } from '../utils/file-utils';
 import '../styles/finder.css';
 
@@ -78,6 +79,7 @@ export function FinderPage({
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [loading, setLoading] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [activeTab, setActiveTab] = useState<'files' | 'transfers'>('files');
   const [showAddStorage, setShowAddStorage] = useState(false);
   const [editingSource, setEditingSource] = useState<StorageSource | null>(
     null,
@@ -104,12 +106,61 @@ export function FinderPage({
     [],
   );
   const [filterByTag, setFilterByTag] = useState<string | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    // Load saved sidebar width from localStorage, default to 200px
+    try {
+      const saved = localStorage.getItem('ursly-sidebar-width');
+      if (saved) {
+        const width = parseInt(saved, 10);
+        if (width >= 180 && width <= 800) {
+          return width;
+        }
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+    return 200;
+  });
+  const [isResizing, setIsResizing] = useState(false);
   // Sidebar section reordering - prepared for future implementation
   // const [sidebarSectionOrder, setSidebarSectionOrder] = useState<string[]>([
   //   'favorites',
   //   'storage',
   //   'tags',
   // ]);
+
+  // Handle sidebar resizing
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.max(180, Math.min(800, e.clientX));
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      // Save to localStorage
+      try {
+        localStorage.setItem('ursly-sidebar-width', sidebarWidth.toString());
+      } catch {
+        // Ignore localStorage errors
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, sidebarWidth]);
 
   // Handle sidebar section reordering - prepared for future implementation
   // const handleSectionReorder = useCallback(
@@ -630,12 +681,18 @@ export function FinderPage({
     if (source.category === 'cloud') {
       // Check config for hints
       const config = source.config || {};
-      if (config.endpoint && config.endpoint.includes('googleapis.com')) {
+      const endpoint = config.endpoint as string | undefined;
+      if (
+        endpoint &&
+        typeof endpoint === 'string' &&
+        endpoint.includes('googleapis.com')
+      ) {
         return 'gcs';
       }
       if (
-        config.endpoint &&
-        config.endpoint.includes('blob.core.windows.net')
+        endpoint &&
+        typeof endpoint === 'string' &&
+        endpoint.includes('blob.core.windows.net')
       ) {
         return 'azure-blob';
       }
@@ -1546,8 +1603,11 @@ export function FinderPage({
             path: normalizedPath,
           });
         } catch (err) {
-          console.error(`[VFS Delete] Failed to delete ${path}:`, err);
-          failedPaths.push(path);
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          console.error(`[VFS Delete] Failed to delete ${path}:`, errorMessage);
+
+          // Store error message with path for better error reporting
+          failedPaths.push(`${path}: ${errorMessage}`);
         }
       }
 
@@ -1559,8 +1619,18 @@ export function FinderPage({
 
       // Show error if some deletions failed
       if (failedPaths.length > 0) {
+        const errorDetails =
+          failedPaths.length > 5
+            ? `${failedPaths.slice(0, 5).join('\n')}\n... and ${failedPaths.length - 5} more`
+            : failedPaths.join('\n');
+
         DialogService.error(
-          `Failed to delete ${failedPaths.length} item(s):\n${failedPaths.join('\n')}`,
+          `Failed to delete ${failedPaths.length} item(s):\n\n${errorDetails}\n\nCommon causes:\n` +
+            `• Insufficient IAM permissions (s3:DeleteObject, s3:ListBucket)\n` +
+            `• Object in Glacier/DEEP_ARCHIVE (needs restore first)\n` +
+            `• Bucket versioning enabled (need s3:DeleteObjectVersion)\n` +
+            `• Object Lock retention/legal hold active\n` +
+            `• Orphaned multipart upload part (use AWS CLI to abort)`,
           'Delete Error',
         );
       }
@@ -2221,24 +2291,14 @@ export function FinderPage({
     }
   };
 
-  const handleUploadToS3 = async () => {
-    console.log('[FinderPage] handleUploadToS3 called');
-
+  const checkObjectStorage = () => {
     if (!selectedSource) {
-      console.warn('[FinderPage] No source selected');
       DialogService.error(
         'Please select a storage source first',
         'Upload Error',
       );
-      return;
+      return false;
     }
-
-    // SECURITY: Never log source config as it may contain credentials
-    console.log(
-      '[FinderPage] Selected source:',
-      selectedSource?.name,
-      selectedSource?.id,
-    );
 
     const storageType =
       selectedSource.providerId || selectedSource.type || 'local';
@@ -2250,101 +2310,173 @@ export function FinderPage({
       storageType === 'azure-blob' ||
       selectedSource.category === 'cloud';
 
-    console.log(
-      '[FinderPage] Storage type:',
-      storageType,
-      'isObjectStorage:',
-      isObjectStorage,
-    );
-
     if (!isObjectStorage) {
       DialogService.error(
         'Upload is only available for object storage (S3, GCS, Azure Blob)',
         'Upload Error',
       );
-      return;
+      return false;
     }
 
+    return true;
+  };
+
+  const handleUpload = async () => {
+    if (!checkObjectStorage()) return;
+
     try {
-      console.log('[FinderPage] Opening file dialog...');
-
-      // Use Tauri dialog directly for better reliability
       const { open } = await import('@tauri-apps/plugin-dialog');
-      const result = await open({
-        multiple: true,
-        directory: false,
-        title: `Upload files to ${selectedSource.name}`,
-      });
-
-      console.log('[FinderPage] Dialog result:', result);
-
-      if (!result) {
-        console.log('[FinderPage] No files selected, cancelling upload');
-        return;
-      }
-
-      const selectedFiles = Array.isArray(result) ? result : [result];
-      console.log('[FinderPage] Selected files:', selectedFiles);
-
-      if (selectedFiles.length === 0) {
-        console.log('[FinderPage] No files selected, cancelling upload');
-        return;
-      }
-
       const { invoke } = await import('@tauri-apps/api/core');
 
-      for (const localPath of selectedFiles) {
-        const fileName =
-          localPath.split('/').pop() || localPath.split('\\').pop() || 'file';
-        const s3Path =
-          currentPath === '/'
-            ? fileName
-            : `${currentPath.replace(/^\//, '')}/${fileName}`;
+      const s3BasePath =
+        currentPath === '/' ? '' : currentPath.replace(/^\//, '');
 
-        console.log('[FinderPage] Starting upload:', {
-          fileName,
-          localPath,
-          s3Path,
+      // Show folder dialog first (allows selecting folders)
+      // On macOS, you can select folders in this dialog
+      const folderResult = await open({
+        multiple: true,
+        directory: true,
+        title: `Select folders to upload to ${selectedSource!.name} (or Cancel to select files)`,
+      });
+
+      // If folders were selected, process them
+      let folders: string[] = [];
+      const files: string[] = [];
+
+      if (folderResult) {
+        folders = Array.isArray(folderResult) ? folderResult : [folderResult];
+      } else {
+        // If no folders selected, show file dialog
+        // Don't specify filters to allow ALL file types (no restrictions)
+        const fileResult = await open({
+          multiple: true,
+          directory: false,
+          // No filters specified = allow all file types
+          title: `Select files to upload to ${selectedSource!.name}`,
         });
 
+        if (!fileResult) {
+          return; // User canceled both dialogs
+        }
+
+        const selectedPaths = Array.isArray(fileResult)
+          ? fileResult
+          : [fileResult];
+
+        // Check each selected path - some might be folders if user used Cmd+Click
+        for (const path of selectedPaths) {
+          try {
+            const isDir = await invoke<boolean>('vfs_is_directory', {
+              path: path,
+            });
+            if (isDir) {
+              folders.push(path);
+            } else {
+              files.push(path);
+            }
+          } catch {
+            // If check fails, assume it's a file
+            files.push(path);
+          }
+        }
+      }
+
+      let totalUploads = 0;
+      const errors: string[] = [];
+
+      // Process folders
+      for (const folderPath of folders) {
         try {
-          console.log('[FinderPage] Calling vfs_start_multipart_upload with:', {
-            sourceId: selectedSource.id,
-            localPath,
+          const uploadIds = await invoke<string[]>(`vfs_upload_folder`, {
+            sourceId: selectedSource!.id,
+            localFolderPath: folderPath,
+            s3BasePath: s3BasePath,
+            partSize: null,
+          });
+
+          uploadIds.forEach((uploadId) => {
+            setActiveUploads((prev) => new Set([...prev, uploadId]));
+          });
+
+          totalUploads += uploadIds.length;
+          const folderName =
+            folderPath.split('/').pop() ||
+            folderPath.split('\\').pop() ||
+            'folder';
+          toast.showToast({
+            type: 'success',
+            message: `Started uploading folder "${folderName}" (${uploadIds.length} files)`,
+          });
+        } catch (err) {
+          console.error(
+            `[FinderPage] Failed to upload folder ${folderPath}:`,
+            err,
+          );
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          errors.push(`Folder ${folderPath}: ${errorMessage}`);
+        }
+      }
+
+      // Process files
+      for (const filePath of files) {
+        try {
+          // Upload as single file
+          const fileName =
+            filePath.split('/').pop() || filePath.split('\\').pop() || 'file';
+          const s3Path =
+            currentPath === '/'
+              ? fileName
+              : `${currentPath.replace(/^\//, '')}/${fileName}`;
+
+          const uploadId = await invoke<string>('vfs_start_multipart_upload', {
+            sourceId: selectedSource!.id,
+            localPath: filePath,
             s3Path,
             partSize: null,
           });
 
-          const uploadId = await invoke<string>('vfs_start_multipart_upload', {
-            sourceId: selectedSource.id,
-            localPath,
-            s3Path, // Note: parameter name is s3Path but works for all object storage
-            partSize: null, // Use default 5MB
-          });
-
-          console.log(
-            '[FinderPage] Upload started successfully, ID:',
-            uploadId,
-          );
-
           setActiveUploads((prev) => new Set([...prev, uploadId]));
+          totalUploads += 1;
 
           toast.showToast({
             type: 'success',
             message: `Started uploading ${fileName}`,
           });
         } catch (err) {
-          console.error('[FinderPage] Failed to start upload:', err);
+          console.error(`[FinderPage] Failed to upload ${filePath}:`, err);
           const errorMessage = err instanceof Error ? err.message : String(err);
-          DialogService.error(
-            `Failed to upload ${fileName}: ${errorMessage}`,
-            'Upload Error',
-          );
+          const fileName =
+            filePath.split('/').pop() || filePath.split('\\').pop() || 'file';
+          errors.push(`File ${fileName}: ${errorMessage}`);
         }
       }
+
+      // Show summary if there were errors
+      if (errors.length > 0) {
+        DialogService.error(
+          `Upload completed with ${errors.length} error(s):\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n... and ${errors.length - 5} more` : ''}`,
+          'Upload Errors',
+        );
+      } else if (totalUploads > 0) {
+        // Success summary
+        const summary =
+          folders.length > 0 && files.length > 0
+            ? `Started uploading ${folders.length} folder(s) and ${files.length} file(s)`
+            : folders.length > 0
+              ? `Started uploading ${folders.length} folder(s)`
+              : `Started uploading ${files.length} file(s)`;
+
+        toast.showToast({
+          type: 'success',
+          message: summary,
+        });
+      }
     } catch (err) {
-      console.error('[FinderPage] Failed to open file dialog:', err);
-      DialogService.error(`Failed to open file dialog: ${err}`, 'Upload Error');
+      console.error('[FinderPage] Failed to open upload dialog:', err);
+      DialogService.error(
+        `Failed to open upload dialog: ${err}`,
+        'Upload Error',
+      );
     }
   };
 
@@ -2384,6 +2516,72 @@ export function FinderPage({
 
   const closeContextMenu = () => {
     setContextMenu({ visible: false, x: 0, y: 0 });
+  };
+
+  // Handler for downloading files (object storage)
+  const handleDownloadFile = async (file: FileMetadata) => {
+    if (!selectedSource) return;
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const { save } = await import('@tauri-apps/plugin-dialog');
+
+      const fileName = file.name;
+      const savePath = await save({
+        defaultPath: fileName,
+        filters: [
+          {
+            name: 'All Files',
+            extensions: ['*'],
+          },
+        ],
+      });
+
+      if (!savePath) {
+        return; // User cancelled
+      }
+
+      await invoke('vfs_download_file', {
+        sourceId: selectedSource.id,
+        path: file.path,
+        destinationPath: savePath,
+      });
+
+      toast.showToast({
+        type: 'success',
+        message: `Downloaded ${fileName}`,
+        duration: 3000,
+      });
+    } catch (err) {
+      console.error('Download failed:', err);
+      DialogService.error(`Download failed: ${err}`, 'Download Error');
+    }
+  };
+
+  // Handler for changing storage tier (object storage)
+  const handleChangeTier = async (filePath: string, targetTier: string) => {
+    if (!selectedSource) return;
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('vfs_change_tier', {
+        sourceId: selectedSource.id,
+        paths: [filePath],
+        targetTier: targetTier,
+      });
+
+      // Refresh the file list
+      await loadFilesList(selectedSource.id, currentPath);
+
+      toast.showToast({
+        type: 'success',
+        message: `Moved to ${targetTier} tier`,
+        duration: 3000,
+      });
+    } catch (err) {
+      console.error('Tier change failed:', err);
+      DialogService.error(`Failed to change tier: ${err}`, 'Tier Change Error');
+    }
   };
 
   // Close context menus on click anywhere
@@ -2899,2007 +3097,2386 @@ export function FinderPage({
 
   return (
     <div className="finder">
-      {/* Toolbar */}
-      <div className="finder-toolbar">
-        <div className="toolbar-nav">
-          {/* Back button */}
-          <button
-            className="toolbar-btn nav"
-            onClick={goBack}
-            disabled={!canGoBack}
-            title="Go Back (⌘[)"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-          {/* Forward button */}
-          <button
-            className="toolbar-btn nav"
-            onClick={goForward}
-            disabled={!canGoForward}
-            title="Go Forward (⌘])"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-          {/* Up button */}
-          <button
-            className="toolbar-btn nav"
-            onClick={goUp}
-            disabled={!canGoUp}
-            title="Go Up (⌘↑)"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M18 15l-6-6-6 6" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="toolbar-center">
-          <Breadcrumbs
-            items={getBreadcrumbs()}
-            onNavigate={navigateTo}
-            maxVisible={5}
-            showIcons={true}
-          />
-        </div>
-
-        <div className="toolbar-right">
-          {/* Upload button - only show for object storage (S3, GCS, Azure) */}
-          {selectedSource &&
-            (selectedSource.category === 'cloud' ||
-              selectedSource.providerId === 's3' ||
-              selectedSource.providerId === 'aws-s3' ||
-              selectedSource.providerId === 's3-compatible' ||
-              selectedSource.providerId === 'gcs' ||
-              selectedSource.providerId === 'azure-blob') && (
-              <button
-                className="toolbar-btn upload-btn"
-                onClick={async () => {
-                  await handleUploadToS3();
-                }}
-                title="Upload Files to Object Storage"
-              >
-                <svg
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  width="18"
-                  height="18"
-                >
-                  <path d="M8 11V1M8 1l3 3M8 1L5 4" />
-                  <path d="M2 6v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
-                </svg>
-                <span className="upload-btn-label">Upload</span>
-              </button>
-            )}
-
-          <div className="view-switcher">
-            <button
-              className={`view-btn ${viewMode === 'icon' ? 'active' : ''}`}
-              onClick={() => setViewMode('icon')}
-              title="Grid View"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
-                <rect x="1" y="1" width="6" height="6" rx="1.5" />
-                <rect x="9" y="1" width="6" height="6" rx="1.5" />
-                <rect x="1" y="9" width="6" height="6" rx="1.5" />
-                <rect x="9" y="9" width="6" height="6" rx="1.5" />
-              </svg>
-            </button>
-            <button
-              className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => setViewMode('list')}
-              title="List View"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
-                <rect x="1" y="2" width="14" height="2.5" rx="1" />
-                <rect x="1" y="6.75" width="14" height="2.5" rx="1" />
-                <rect x="1" y="11.5" width="14" height="2.5" rx="1" />
-              </svg>
-            </button>
-          </div>
-
-          <SearchBox
-            value={searchQuery}
-            onChange={setSearchQuery}
-            files={files}
-            placeholder="Search files..."
-          />
-
-          {/* Toggle hidden files */}
-          <button
-            className={`toolbar-btn ${showHiddenFiles ? 'active' : ''}`}
-            onClick={() => setShowHiddenFiles(!showHiddenFiles)}
-            title={showHiddenFiles ? 'Hide Hidden Files' : 'Show Hidden Files'}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              width="20"
-              height="20"
-            >
-              {showHiddenFiles ? (
-                // Eye open - visible
-                <>
-                  <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z" />
-                  <circle cx="12" cy="12" r="3.5" />
-                  <circle cx="12" cy="12" r="1" fill="currentColor" />
-                </>
-              ) : (
-                // Eye closed - hidden
-                <>
-                  <path d="M2 2l20 20" strokeWidth="2" />
-                  <path d="M6.7 6.7C4.2 8.5 2.5 12 2.5 12s3.5 7 9.5 7c2 0 3.8-.6 5.3-1.5" />
-                  <path d="M17.3 14.3c1.3-1.2 2.2-2.3 2.2-2.3s-3.5-7-9.5-7c-.7 0-1.4.1-2 .2" />
-                  <circle cx="12" cy="12" r="3.5" />
-                </>
-              )}
-            </svg>
-          </button>
-
-          {/* Toggle Info Panel */}
-          <button
-            className={`toolbar-btn ${showInfoPanel ? 'active' : ''}`}
-            onClick={() => setShowInfoPanel(!showInfoPanel)}
-            title="Toggle Info Panel"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              width="20"
-              height="20"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2.5" />
-              <line x1="9" y1="3" x2="9" y2="21" />
-              <circle cx="15" cy="10" r="1.5" fill="currentColor" />
-              <line
-                x1="15"
-                y1="13"
-                x2="15"
-                y2="17"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
+      {/* Main Tab Navigation */}
+      <div className="finder-tabs">
+        <button
+          className={`finder-tab ${activeTab === 'files' ? 'active' : ''}`}
+          onClick={() => setActiveTab('files')}
+        >
+          <IconFolder size={16} />
+          <span>Files</span>
+        </button>
+        <button
+          className={`finder-tab ${activeTab === 'transfers' ? 'active' : ''}`}
+          onClick={() => setActiveTab('transfers')}
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16">
+            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+          </svg>
+          <span>Operations</span>
+        </button>
       </div>
 
-      <div className="finder-body">
-        {/* Sidebar */}
-        <aside className="finder-sidebar">
-          <div
-            className={`sidebar-section favorites-section ${dropTarget === 'favorites' ? 'drop-target' : ''}`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDropTarget('favorites');
-              e.dataTransfer.dropEffect = 'link';
-            }}
-            onDragLeave={(e) => {
-              e.preventDefault();
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setDropTarget(null);
-              }
-            }}
-            onDrop={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDropTarget(null);
-
-              // Get the source for the dragged files
-              const dropSourceId = dragSourceId || selectedSource?.id;
-              const dropSource =
-                sources.find((s) => s.id === dropSourceId) || selectedSource;
-
-              // Add dragged files to global favorites using stored file objects
-              if (dropSource && draggedFileObjects.length > 0) {
-                for (const file of draggedFileObjects) {
-                  addToGlobalFavorites(file, dropSource);
-                }
-              } else if (dropSource && draggedFiles.length > 0) {
-                for (const filePath of draggedFiles) {
-                  const file = files.find((f) => f.path === filePath);
-                  if (file) {
-                    addToGlobalFavorites(file, dropSource);
-                  }
-                }
-              }
-
-              setDraggedFiles([]);
-              setDraggedFileObjects([]);
-              setDragSourceId(null);
-            }}
-          >
-            <div className="section-header">
-              <IconStar size={14} glow={false} />
-              <span>Favorites</span>
-              {favorites.length > 0 && (
-                <span className="section-count">({favorites.length})</span>
-              )}
-            </div>
-            {favorites.length === 0 ? (
-              <div className="sidebar-empty">
-                <span className="empty-text">Drop files here</span>
-                <span className="empty-hint">Drag to add favorites</span>
-              </div>
-            ) : (
-              favorites.slice(0, 10).map((fav) => (
-                <button
-                  key={fav.id}
-                  className="sidebar-item"
-                  onClick={() => navigateToFavorite(fav)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    removeFromGlobalFavorites(fav.id);
-                  }}
-                  title={`${fav.sourceName}: ${fav.path}\nRight-click to remove`}
+      {/* Files Tab Content */}
+      {activeTab === 'files' && (
+        <>
+          {/* Toolbar */}
+          <div className="finder-toolbar">
+            <div className="toolbar-nav">
+              {/* Back button */}
+              <button
+                className="toolbar-btn nav"
+                onClick={goBack}
+                disabled={!canGoBack}
+                title="Go Back (⌘[)"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
                 >
-                  <span className="item-icon">
-                    {fav.isDirectory ? (
-                      <IconFolder size={16} />
-                    ) : (
-                      <IconStar size={16} />
-                    )}
-                  </span>
-                  <span className="item-name">{fav.name}</span>
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              {/* Forward button */}
+              <button
+                className="toolbar-btn nav"
+                onClick={goForward}
+                disabled={!canGoForward}
+                title="Go Forward (⌘])"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+              {/* Up button */}
+              <button
+                className="toolbar-btn nav"
+                onClick={goUp}
+                disabled={!canGoUp}
+                title="Go Up (⌘↑)"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M18 15l-6-6-6 6" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="toolbar-center">
+              <Breadcrumbs
+                items={getBreadcrumbs()}
+                onNavigate={navigateTo}
+                maxVisible={5}
+                showIcons={true}
+              />
+            </div>
+
+            <div className="toolbar-right">
+              {/* Upload button - only show for object storage (S3, GCS, Azure) */}
+              {selectedSource &&
+                (selectedSource.category === 'cloud' ||
+                  selectedSource.providerId === 's3' ||
+                  selectedSource.providerId === 'aws-s3' ||
+                  selectedSource.providerId === 's3-compatible' ||
+                  selectedSource.providerId === 'gcs' ||
+                  selectedSource.providerId === 'azure-blob') && (
+                  <button
+                    className="toolbar-btn upload-btn"
+                    onClick={handleUpload}
+                    title="Upload files, folders, or a mix of both to Object Storage"
+                  >
+                    <svg
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      width="18"
+                      height="18"
+                    >
+                      <path d="M8 11V1M8 1l3 3M8 1L5 4" />
+                      <path d="M2 6v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+                    </svg>
+                    <span className="upload-btn-label">Upload</span>
+                  </button>
+                )}
+
+              <div className="view-switcher">
+                <button
+                  className={`view-btn ${viewMode === 'icon' ? 'active' : ''}`}
+                  onClick={() => setViewMode('icon')}
+                  title="Grid View"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
+                    <rect x="1" y="1" width="6" height="6" rx="1.5" />
+                    <rect x="9" y="1" width="6" height="6" rx="1.5" />
+                    <rect x="1" y="9" width="6" height="6" rx="1.5" />
+                    <rect x="9" y="9" width="6" height="6" rx="1.5" />
+                  </svg>
                 </button>
-              ))
-            )}
-            {favorites.length > 10 && (
-              <div className="sidebar-item show-more">
-                <span className="item-icon">+</span>
-                <span>{favorites.length - 10} more</span>
+                <button
+                  className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+                  onClick={() => setViewMode('list')}
+                  title="List View"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
+                    <rect x="1" y="2" width="14" height="2.5" rx="1" />
+                    <rect x="1" y="6.75" width="14" height="2.5" rx="1" />
+                    <rect x="1" y="11.5" width="14" height="2.5" rx="1" />
+                  </svg>
+                </button>
               </div>
-            )}
+
+              <SearchBox
+                value={searchQuery}
+                onChange={setSearchQuery}
+                files={files}
+                placeholder="Search files..."
+              />
+
+              {/* Toggle hidden files */}
+              <button
+                className={`toolbar-btn ${showHiddenFiles ? 'active' : ''}`}
+                onClick={() => setShowHiddenFiles(!showHiddenFiles)}
+                title={
+                  showHiddenFiles ? 'Hide Hidden Files' : 'Show Hidden Files'
+                }
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  width="20"
+                  height="20"
+                >
+                  {showHiddenFiles ? (
+                    // Eye open - visible
+                    <>
+                      <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z" />
+                      <circle cx="12" cy="12" r="3.5" />
+                      <circle cx="12" cy="12" r="1" fill="currentColor" />
+                    </>
+                  ) : (
+                    // Eye closed - hidden
+                    <>
+                      <path d="M2 2l20 20" strokeWidth="2" />
+                      <path d="M6.7 6.7C4.2 8.5 2.5 12 2.5 12s3.5 7 9.5 7c2 0 3.8-.6 5.3-1.5" />
+                      <path d="M17.3 14.3c1.3-1.2 2.2-2.3 2.2-2.3s-3.5-7-9.5-7c-.7 0-1.4.1-2 .2" />
+                      <circle cx="12" cy="12" r="3.5" />
+                    </>
+                  )}
+                </svg>
+              </button>
+
+              {/* Toggle Info Panel */}
+              <button
+                className={`toolbar-btn ${showInfoPanel ? 'active' : ''}`}
+                onClick={() => setShowInfoPanel(!showInfoPanel)}
+                title="Toggle Info Panel"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  width="20"
+                  height="20"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2.5" />
+                  <line x1="9" y1="3" x2="9" y2="21" />
+                  <circle cx="15" cy="10" r="1.5" fill="currentColor" />
+                  <line
+                    x1="15"
+                    y1="13"
+                    x2="15"
+                    y2="17"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
-          {/* Storage Section - Grouped by type with collapsible submenus */}
-          <div className="sidebar-section storage-section">
-            <div className="section-header">
-              <IconDatabase size={14} glow={false} />
-              <span>Storage</span>
-              <span className="section-count">({sources.length})</span>
-            </div>
+          <div className="finder-body">
+            {/* Sidebar */}
+            <aside
+              className="finder-sidebar"
+              style={{ width: `${sidebarWidth}px` }}
+            >
+              <div
+                className={`sidebar-section favorites-section ${dropTarget === 'favorites' ? 'drop-target' : ''}`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDropTarget('favorites');
+                  e.dataTransfer.dropEffect = 'link';
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDropTarget(null);
+                  }
+                }}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDropTarget(null);
 
-            {/* Local Storage - Split into Volumes and Locations */}
-            {sources.filter((s) => s.category === 'local').length > 0 && (
-              <>
-                {/* Mounted Volumes (ejectable) */}
-                {sources.filter((s) => s.category === 'local' && s.isEjectable)
-                  .length > 0 && (
+                  // Get the source for the dragged files
+                  const dropSourceId = dragSourceId || selectedSource?.id;
+                  const dropSource =
+                    sources.find((s) => s.id === dropSourceId) ||
+                    selectedSource;
+
+                  // Add dragged files to global favorites using stored file objects
+                  if (dropSource && draggedFileObjects.length > 0) {
+                    for (const file of draggedFileObjects) {
+                      addToGlobalFavorites(file, dropSource);
+                    }
+                  } else if (dropSource && draggedFiles.length > 0) {
+                    for (const filePath of draggedFiles) {
+                      const file = files.find((f) => f.path === filePath);
+                      if (file) {
+                        addToGlobalFavorites(file, dropSource);
+                      }
+                    }
+                  }
+
+                  setDraggedFiles([]);
+                  setDraggedFileObjects([]);
+                  setDragSourceId(null);
+                }}
+              >
+                <div className="section-header">
+                  <IconStar size={14} glow={false} />
+                  <span>Favorites</span>
+                  {favorites.length > 0 && (
+                    <span className="section-count">({favorites.length})</span>
+                  )}
+                </div>
+                {favorites.length === 0 ? (
+                  <div className="sidebar-empty">
+                    <span className="empty-text">Drop files here</span>
+                    <span className="empty-hint">Drag to add favorites</span>
+                  </div>
+                ) : (
+                  favorites.slice(0, 10).map((fav) => (
+                    <button
+                      key={fav.id}
+                      className="sidebar-item"
+                      onClick={() => navigateToFavorite(fav)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeFromGlobalFavorites(fav.id);
+                      }}
+                      title={`${fav.sourceName}: ${fav.path}\nRight-click to remove`}
+                    >
+                      <span className="item-icon">
+                        {fav.isDirectory ? (
+                          <IconFolder size={16} />
+                        ) : (
+                          <IconStar size={16} />
+                        )}
+                      </span>
+                      <span className="item-name">{fav.name}</span>
+                    </button>
+                  ))
+                )}
+                {favorites.length > 10 && (
+                  <div className="sidebar-item show-more">
+                    <span className="item-icon">+</span>
+                    <span>{favorites.length - 10} more</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Storage Section - Grouped by type with collapsible submenus */}
+              <div className="sidebar-section storage-section">
+                <div className="section-header">
+                  <IconDatabase size={14} glow={false} />
+                  <span>Storage</span>
+                  <span className="section-count">({sources.length})</span>
+                </div>
+
+                {/* Local Storage - Top level with Volumes and Locations as sub-items */}
+                {sources.filter((s) => s.category === 'local').length > 0 && (
                   <div
-                    className={`storage-group ${collapsedGroups.has('volumes') ? 'collapsed' : ''}`}
+                    className={`storage-group ${collapsedGroups.has('local') ? 'collapsed' : ''}`}
                   >
                     <button
-                      className="storage-group-header subgroup"
-                      onClick={() => toggleGroup('volumes')}
+                      className="storage-group-header"
+                      onClick={() => toggleGroup('local')}
                     >
                       <span className="group-chevron">
                         <svg viewBox="0 0 16 16" fill="currentColor">
                           <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
                         </svg>
                       </span>
-                      <span className="group-icon volumes">
+                      <span className="group-icon local">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                        </svg>
+                      </span>
+                      <span className="group-label">Local</span>
+                      <span className="group-count">
+                        {sources.filter((s) => s.category === 'local').length}
+                      </span>
+                    </button>
+                    <div className="storage-group-items">
+                      {/* System Locations (non-ejectable) */}
+                      {sources.filter(
+                        (s) => s.category === 'local' && !s.isEjectable,
+                      ).length > 0 && (
+                        <div
+                          className={`storage-subgroup ${collapsedGroups.has('locations') ? 'collapsed' : ''}`}
+                        >
+                          <button
+                            className="storage-group-header subgroup"
+                            onClick={() => toggleGroup('locations')}
+                          >
+                            <span className="group-chevron">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                              </svg>
+                            </span>
+                            <span className="group-icon locations">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z" />
+                              </svg>
+                            </span>
+                            <span className="group-label">Locations</span>
+                            <span className="group-count">
+                              {
+                                sources.filter(
+                                  (s) =>
+                                    s.category === 'local' && !s.isEjectable,
+                                ).length
+                              }
+                            </span>
+                          </button>
+                          <div className="storage-group-items">
+                            {sources
+                              .filter(
+                                (s) => s.category === 'local' && !s.isEjectable,
+                              )
+                              .map((source) => renderStorageItem(source))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mounted Volumes (ejectable) */}
+                      {sources.filter(
+                        (s) => s.category === 'local' && s.isEjectable,
+                      ).length > 0 && (
+                        <div
+                          className={`storage-subgroup ${collapsedGroups.has('volumes') ? 'collapsed' : ''}`}
+                        >
+                          <button
+                            className="storage-group-header subgroup"
+                            onClick={() => toggleGroup('volumes')}
+                          >
+                            <span className="group-chevron">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                              </svg>
+                            </span>
+                            <span className="group-icon volumes">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v2A1.5 1.5 0 0 1 14.5 5h-13A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-13z" />
+                                <path d="M2 2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm10 0a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0z" />
+                              </svg>
+                            </span>
+                            <span className="group-label">Volumes</span>
+                            <span className="group-count">
+                              {
+                                sources.filter(
+                                  (s) =>
+                                    s.category === 'local' && s.isEjectable,
+                                ).length
+                              }
+                            </span>
+                          </button>
+                          <div className="storage-group-items">
+                            {sources
+                              .filter(
+                                (s) => s.category === 'local' && s.isEjectable,
+                              )
+                              .map((source) => renderStorageItem(source))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Network Storage (NFS, SMB, NAS) */}
+                {sources.filter(
+                  (s) => s.category === 'network' || s.category === 'hybrid',
+                ).length > 0 && (
+                  <div
+                    className={`storage-group ${collapsedGroups.has('network') ? 'collapsed' : ''}`}
+                  >
+                    <button
+                      className="storage-group-header"
+                      onClick={() => toggleGroup('network')}
+                    >
+                      <span className="group-chevron">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg>
+                      </span>
+                      <span className="group-icon network">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M0 8a4 4 0 0 1 4-4h8a4 4 0 0 1 0 8H4a4 4 0 0 1-4-4zm4-3a3 3 0 0 0 0 6h8a3 3 0 0 0 0-6H4z" />
+                          <path d="M8 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
+                        </svg>
+                      </span>
+                      <span className="group-label">Network</span>
+                      <span className="group-count">
+                        {
+                          sources.filter(
+                            (s) =>
+                              s.category === 'network' ||
+                              s.category === 'hybrid',
+                          ).length
+                        }
+                      </span>
+                    </button>
+                    <div className="storage-group-items">
+                      {sources
+                        .filter(
+                          (s) =>
+                            s.category === 'network' || s.category === 'hybrid',
+                        )
+                        .map((source) => renderStorageItem(source))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Cloud Storage - Top level with CSPs (AWS, Azure, GCP) as sub-items */}
+                {sources.filter((s) => s.category === 'cloud').length > 0 && (
+                  <div
+                    className={`storage-group ${collapsedGroups.has('cloud') ? 'collapsed' : ''}`}
+                  >
+                    <button
+                      className="storage-group-header"
+                      onClick={() => toggleGroup('cloud')}
+                    >
+                      <span className="group-chevron">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg>
+                      </span>
+                      <span className="group-icon cloud">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z" />
+                        </svg>
+                      </span>
+                      <span className="group-label">Cloud</span>
+                      <span className="group-count">
+                        {sources.filter((s) => s.category === 'cloud').length}
+                      </span>
+                    </button>
+                    <div className="storage-group-items">
+                      {/* AWS (S3, S3-Compatible) */}
+                      {sources.filter(
+                        (s) =>
+                          s.category === 'cloud' &&
+                          (s.providerId === 'aws-s3' ||
+                            s.providerId === 's3' ||
+                            s.providerId === 's3-compatible'),
+                      ).length > 0 && (
+                        <div
+                          className={`storage-subgroup ${collapsedGroups.has('aws') ? 'collapsed' : ''}`}
+                        >
+                          <button
+                            className="storage-group-header subgroup"
+                            onClick={() => toggleGroup('aws')}
+                          >
+                            <span className="group-chevron">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                              </svg>
+                            </span>
+                            <span className="group-icon aws">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM7 11.5a.5.5 0 0 1-1 0V7.707L5.354 8.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L7 7.707V11.5z" />
+                              </svg>
+                            </span>
+                            <span className="group-label">AWS</span>
+                            <span className="group-count">
+                              {
+                                sources.filter(
+                                  (s) =>
+                                    s.category === 'cloud' &&
+                                    (s.providerId === 'aws-s3' ||
+                                      s.providerId === 's3' ||
+                                      s.providerId === 's3-compatible'),
+                                ).length
+                              }
+                            </span>
+                          </button>
+                          <div className="storage-group-items">
+                            {sources
+                              .filter(
+                                (s) =>
+                                  s.category === 'cloud' &&
+                                  (s.providerId === 'aws-s3' ||
+                                    s.providerId === 's3' ||
+                                    s.providerId === 's3-compatible'),
+                              )
+                              .map((source) => renderStorageItem(source))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Azure Blob Storage */}
+                      {sources.filter(
+                        (s) =>
+                          s.category === 'cloud' &&
+                          s.providerId === 'azure-blob',
+                      ).length > 0 && (
+                        <div
+                          className={`storage-subgroup ${collapsedGroups.has('azure') ? 'collapsed' : ''}`}
+                        >
+                          <button
+                            className="storage-group-header subgroup"
+                            onClick={() => toggleGroup('azure')}
+                          >
+                            <span className="group-chevron">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                              </svg>
+                            </span>
+                            <span className="group-icon azure">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM7 11.5a.5.5 0 0 1-1 0V7.707L5.354 8.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L7 7.707V11.5z" />
+                              </svg>
+                            </span>
+                            <span className="group-label">Azure</span>
+                            <span className="group-count">
+                              {
+                                sources.filter(
+                                  (s) =>
+                                    s.category === 'cloud' &&
+                                    s.providerId === 'azure-blob',
+                                ).length
+                              }
+                            </span>
+                          </button>
+                          <div className="storage-group-items">
+                            {sources
+                              .filter(
+                                (s) =>
+                                  s.category === 'cloud' &&
+                                  s.providerId === 'azure-blob',
+                              )
+                              .map((source) => renderStorageItem(source))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* GCP (Google Cloud Storage) */}
+                      {sources.filter(
+                        (s) => s.category === 'cloud' && s.providerId === 'gcs',
+                      ).length > 0 && (
+                        <div
+                          className={`storage-subgroup ${collapsedGroups.has('gcp') ? 'collapsed' : ''}`}
+                        >
+                          <button
+                            className="storage-group-header subgroup"
+                            onClick={() => toggleGroup('gcp')}
+                          >
+                            <span className="group-chevron">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                              </svg>
+                            </span>
+                            <span className="group-icon gcp">
+                              <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM7 11.5a.5.5 0 0 1-1 0V7.707L5.354 8.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L7 7.707V11.5z" />
+                              </svg>
+                            </span>
+                            <span className="group-label">GCP</span>
+                            <span className="group-count">
+                              {
+                                sources.filter(
+                                  (s) =>
+                                    s.category === 'cloud' &&
+                                    s.providerId === 'gcs',
+                                ).length
+                              }
+                            </span>
+                          </button>
+                          <div className="storage-group-items">
+                            {sources
+                              .filter(
+                                (s) =>
+                                  s.category === 'cloud' &&
+                                  s.providerId === 'gcs',
+                              )
+                              .map((source) => renderStorageItem(source))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Block Storage */}
+                {sources.filter((s) => s.category === 'block').length > 0 && (
+                  <div
+                    className={`storage-group ${collapsedGroups.has('block') ? 'collapsed' : ''}`}
+                  >
+                    <button
+                      className="storage-group-header"
+                      onClick={() => toggleGroup('block')}
+                    >
+                      <span className="group-chevron">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg>
+                      </span>
+                      <span className="group-icon block">
                         <svg viewBox="0 0 16 16" fill="currentColor">
                           <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v2A1.5 1.5 0 0 1 14.5 5h-13A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-13z" />
-                          <path d="M2 2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm10 0a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0z" />
+                          <path d="M0 6.5A1.5 1.5 0 0 1 1.5 5h13A1.5 1.5 0 0 1 16 6.5v2A1.5 1.5 0 0 1 14.5 10h-13A1.5 1.5 0 0 1 0 8.5v-2z" />
                         </svg>
                       </span>
-                      <span className="group-label">Volumes</span>
+                      <span className="group-label">Block</span>
                       <span className="group-count">
-                        {
-                          sources.filter(
-                            (s) => s.category === 'local' && s.isEjectable,
-                          ).length
-                        }
+                        {sources.filter((s) => s.category === 'block').length}
                       </span>
                     </button>
                     <div className="storage-group-items">
                       {sources
-                        .filter((s) => s.category === 'local' && s.isEjectable)
+                        .filter((s) => s.category === 'block')
                         .map((source) => renderStorageItem(source))}
                     </div>
                   </div>
                 )}
 
-                {/* System Locations (non-ejectable) */}
-                {sources.filter((s) => s.category === 'local' && !s.isEjectable)
-                  .length > 0 && (
-                  <div
-                    className={`storage-group ${collapsedGroups.has('locations') ? 'collapsed' : ''}`}
-                  >
-                    <button
-                      className="storage-group-header subgroup"
-                      onClick={() => toggleGroup('locations')}
-                    >
-                      <span className="group-chevron">
-                        <svg viewBox="0 0 16 16" fill="currentColor">
-                          <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                        </svg>
-                      </span>
-                      <span className="group-icon locations">
-                        <svg viewBox="0 0 16 16" fill="currentColor">
-                          <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z" />
-                        </svg>
-                      </span>
-                      <span className="group-label">Locations</span>
-                      <span className="group-count">
-                        {
-                          sources.filter(
-                            (s) => s.category === 'local' && !s.isEjectable,
-                          ).length
-                        }
-                      </span>
-                    </button>
-                    <div className="storage-group-items">
-                      {sources
-                        .filter((s) => s.category === 'local' && !s.isEjectable)
-                        .map((source) => renderStorageItem(source))}
-                    </div>
+                {sources.length === 0 && (
+                  <div className="sidebar-empty">
+                    <span className="empty-text">No storage connected</span>
                   </div>
                 )}
-              </>
-            )}
+              </div>
 
-            {/* Network Storage (NFS, SMB, NAS) */}
-            {sources.filter(
-              (s) => s.category === 'network' || s.category === 'hybrid',
-            ).length > 0 && (
-              <div
-                className={`storage-group ${collapsedGroups.has('network') ? 'collapsed' : ''}`}
-              >
+              {/* Add Storage Button */}
+              <div className="sidebar-section">
                 <button
-                  className="storage-group-header"
-                  onClick={() => toggleGroup('network')}
+                  className="add-storage-btn"
+                  onClick={() => {
+                    console.log('[FinderPage] Add Storage button clicked');
+                    setShowAddStorage(true);
+                  }}
+                  title="Add Storage"
                 >
-                  <span className="group-chevron">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                    </svg>
-                  </span>
-                  <span className="group-icon network">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M0 8a4 4 0 0 1 4-4h8a4 4 0 0 1 0 8H4a4 4 0 0 1-4-4zm4-3a3 3 0 0 0 0 6h8a3 3 0 0 0 0-6H4z" />
-                      <path d="M8 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
-                    </svg>
-                  </span>
-                  <span className="group-label">Network</span>
-                  <span className="group-count">
-                    {
-                      sources.filter(
-                        (s) =>
-                          s.category === 'network' || s.category === 'hybrid',
-                      ).length
-                    }
-                  </span>
+                  <span className="add-icon">+</span>
+                  <span>Add Storage</span>
                 </button>
-                <div className="storage-group-items">
-                  {sources
-                    .filter(
-                      (s) =>
-                        s.category === 'network' || s.category === 'hybrid',
-                    )
-                    .map((source) => renderStorageItem(source))}
+              </div>
+
+              {/* Tags Section - Using same list design as Storage */}
+              <div className="sidebar-section storage-section">
+                <div className="section-header">
+                  <IconTag size={14} glow={false} />
+                  <span>Tags</span>
+                  {allTags.length > 0 && (
+                    <span className="section-count">({allTags.length})</span>
+                  )}
                 </div>
-              </div>
-            )}
-
-            {/* Object Storage (S3, GCS, Azure) */}
-            {sources.filter((s) => s.category === 'cloud').length > 0 && (
-              <div
-                className={`storage-group ${collapsedGroups.has('cloud') ? 'collapsed' : ''}`}
-              >
-                <button
-                  className="storage-group-header"
-                  onClick={() => toggleGroup('cloud')}
-                >
-                  <span className="group-chevron">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                    </svg>
-                  </span>
-                  <span className="group-icon cloud">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z" />
-                    </svg>
-                  </span>
-                  <span className="group-label">Cloud</span>
-                  <span className="group-count">
-                    {sources.filter((s) => s.category === 'cloud').length}
-                  </span>
-                </button>
-                <div className="storage-group-items">
-                  {sources
-                    .filter((s) => s.category === 'cloud')
-                    .map((source) => renderStorageItem(source))}
-                </div>
-              </div>
-            )}
-
-            {/* Block Storage */}
-            {sources.filter((s) => s.category === 'block').length > 0 && (
-              <div
-                className={`storage-group ${collapsedGroups.has('block') ? 'collapsed' : ''}`}
-              >
-                <button
-                  className="storage-group-header"
-                  onClick={() => toggleGroup('block')}
-                >
-                  <span className="group-chevron">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                    </svg>
-                  </span>
-                  <span className="group-icon block">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v2A1.5 1.5 0 0 1 14.5 5h-13A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-13z" />
-                      <path d="M0 6.5A1.5 1.5 0 0 1 1.5 5h13A1.5 1.5 0 0 1 16 6.5v2A1.5 1.5 0 0 1 14.5 10h-13A1.5 1.5 0 0 1 0 8.5v-2z" />
-                    </svg>
-                  </span>
-                  <span className="group-label">Block</span>
-                  <span className="group-count">
-                    {sources.filter((s) => s.category === 'block').length}
-                  </span>
-                </button>
-                <div className="storage-group-items">
-                  {sources
-                    .filter((s) => s.category === 'block')
-                    .map((source) => renderStorageItem(source))}
-                </div>
-              </div>
-            )}
-
-            {sources.length === 0 && (
-              <div className="sidebar-empty">
-                <span className="empty-text">No storage connected</span>
-              </div>
-            )}
-          </div>
-
-          {/* Add Storage Button */}
-          <div className="sidebar-section">
-            <button
-              className="add-storage-btn"
-              onClick={() => {
-                console.log('[FinderPage] Add Storage button clicked');
-                setShowAddStorage(true);
-              }}
-              title="Add Storage"
-            >
-              <span className="add-icon">+</span>
-              <span>Add Storage</span>
-            </button>
-          </div>
-
-          {/* Tags Section - Using same list design as Storage */}
-          <div className="sidebar-section storage-section">
-            <div className="section-header">
-              <IconTag size={14} glow={false} />
-              <span>Tags</span>
-              {allTags.length > 0 && (
-                <span className="section-count">({allTags.length})</span>
-              )}
-            </div>
-            {filterByTag && (
-              <div className="storage-group-items">
-                <button
-                  className="sidebar-item storage-item active filter-active"
-                  onClick={() => setFilterByTag(null)}
-                >
-                  <span className="item-icon">
-                    <span
-                      className="tag-dot"
-                      style={{
-                        background:
-                          allTags.find((t) => t.name === filterByTag)?.color ||
-                          'var(--vfs-primary)',
-                      }}
-                    />
-                  </span>
-                  <span className="item-name">{filterByTag}</span>
-                  <span className="clear-filter">✕</span>
-                </button>
-              </div>
-            )}
-            {allTags.length === 0 ? (
-              <div className="sidebar-empty">
-                <span className="empty-text">No tags yet</span>
-              </div>
-            ) : (
-              <div className="storage-group-items">
-                {allTags
-                  .filter((t) => t.name !== filterByTag)
-                  .slice(0, 8)
-                  .map((tag) => (
+                {filterByTag && (
+                  <div className="storage-group-items">
                     <button
-                      key={tag.name}
-                      className={`sidebar-item storage-item ${filterByTag === tag.name ? 'active' : ''}`}
-                      onClick={() => setFilterByTag(tag.name)}
+                      className="sidebar-item storage-item active filter-active"
+                      onClick={() => setFilterByTag(null)}
                     >
                       <span className="item-icon">
                         <span
                           className="tag-dot"
                           style={{
-                            background: tag.color || 'var(--vfs-primary)',
+                            background:
+                              allTags.find((t) => t.name === filterByTag)
+                                ?.color || 'var(--vfs-primary)',
                           }}
                         />
                       </span>
-                      <span className="item-name">{tag.name}</span>
+                      <span className="item-name">{filterByTag}</span>
+                      <span className="clear-filter">✕</span>
                     </button>
-                  ))}
-              </div>
-            )}
-          </div>
-
-          {/* Metrics Preview */}
-          {onOpenMetrics && <MetricsPreview onOpenMetrics={onOpenMetrics} />}
-
-          {/* Upload Status Widget */}
-          <UploadStatusWidget
-            onUploadComplete={() => {
-              // Refresh file list when upload completes
-              if (selectedSource) {
-                loadFilesList(selectedSource.id, currentPath);
-              }
-            }}
-          />
-        </aside>
-
-        {/* Main Content */}
-        <main
-          className="finder-content file-browser"
-          onContextMenu={(e) => handleContextMenu(e)}
-          onDragOver={(e) => handleDragOver(e)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, currentPath)}
-        >
-          {loading ? (
-            <div className="empty-state">
-              <div className="spinner" />
-              <span className="empty-state-text">Loading...</span>
-            </div>
-          ) : files.length === 0 ? (
-            <div className="empty-state">
-              <IconFolder
-                size={48}
-                color="var(--finder-text-quaternary)"
-                glow={false}
-              />
-              <span className="empty-state-text">No files</span>
-              <span className="empty-state-hint">
-                Right-click to create or paste
-              </span>
-            </div>
-          ) : (
-            <>
-              {viewMode === 'icon' && (
-                <div
-                  className={`icon-view ${isDraggingOver && dropTarget === null ? 'drop-zone-active' : ''}`}
-                  onContextMenu={(e) => handleContextMenu(e)}
-                  onDragOver={(e) => handleDragOver(e)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, currentPath)}
-                >
-                  {filteredFiles.map((file, index) => {
-                    const isFolder =
-                      file.mimeType === 'folder' || file.path.endsWith('/');
-                    const isDropTarget = isFolder && dropTarget === file.path;
-                    const isDragging = draggedFiles.includes(file.path);
-                    const fileIsHidden =
-                      file.isHidden ?? file.name.startsWith('.');
-                    return (
-                      <div
-                        key={file.path}
-                        data-path={file.path}
-                        className={`file-item ${selectedFiles.has(file.path) ? 'selected' : ''} ${isFolder ? 'folder' : ''} ${isDropTarget ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${fileIsHidden ? 'is-hidden' : ''}`}
-                        onClick={(e) => handleFileClick(file, e)}
-                        onDoubleClick={() => handleFileDoubleClick(file)}
-                        onContextMenu={(e) => handleContextMenu(e, file)}
-                        data-type={isFolder ? 'folder' : 'file'}
-                        tabIndex={0}
-                        // Drag and drop
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, file)}
-                        onDragEnd={handleDragEnd}
-                        onDragOver={(e) =>
-                          handleDragOver(e, file.path, isFolder)
-                        }
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => {
-                          if (isFolder) {
-                            handleDrop(e, file.path);
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleFileDoubleClick(file);
-                          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                            e.preventDefault();
-                            const nextEl = e.currentTarget
-                              .nextElementSibling as HTMLElement;
-                            if (nextEl) {
-                              nextEl.focus();
-                              const next = filteredFiles[index + 1];
-                              if (next) setSelectedFiles(new Set([next.path]));
-                            }
-                          }
-                          if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                            e.preventDefault();
-                            const prevEl = e.currentTarget
-                              .previousElementSibling as HTMLElement;
-                            if (prevEl) {
-                              prevEl.focus();
-                              const prev = filteredFiles[index - 1];
-                              if (prev) setSelectedFiles(new Set([prev.path]));
-                            }
-                          }
-                        }}
-                      >
-                        <div className="file-icon">
-                          {file.thumbnail ? (
-                            <img src={file.thumbnail} alt="" />
-                          ) : (
-                            <span className="icon-placeholder">
-                              {getFileIcon(file, 48)}
-                            </span>
-                          )}
-                          {getTierIndicator(file, warmProgress[file.path])}
-                          <span
-                            className={`grid-tier-badge ${file.tierStatus || 'hot'}`}
-                            title={`Storage: ${file.tierStatus || 'Hot'}`}
-                          >
-                            {file.tierStatus || 'hot'}
-                          </span>
-                        </div>
-                        <div className="file-name" title={file.name}>
-                          {renamingFile === file.path ? (
-                            <input
-                              ref={renameInputRef}
-                              type="text"
-                              className="rename-input"
-                              value={renameValue}
-                              onChange={(e) => setRenameValue(e.target.value)}
-                              onKeyDown={handleRenameKeyDown}
-                              onBlur={commitRename}
-                              onClick={(e) => e.stopPropagation()}
+                  </div>
+                )}
+                {allTags.length === 0 ? (
+                  <div className="sidebar-empty">
+                    <span className="empty-text">No tags yet</span>
+                  </div>
+                ) : (
+                  <div className="storage-group-items">
+                    {allTags
+                      .filter((t) => t.name !== filterByTag)
+                      .slice(0, 8)
+                      .map((tag) => (
+                        <button
+                          key={tag.name}
+                          className={`sidebar-item storage-item ${filterByTag === tag.name ? 'active' : ''}`}
+                          onClick={() => setFilterByTag(tag.name)}
+                        >
+                          <span className="item-icon">
+                            <span
+                              className="tag-dot"
+                              style={{
+                                background: tag.color || 'var(--vfs-primary)',
+                              }}
                             />
-                          ) : (
-                            truncateMiddle(file.name, 28)
+                          </span>
+                          <span className="item-name">{tag.name}</span>
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Metrics Preview */}
+              {onOpenMetrics && (
+                <MetricsPreview onOpenMetrics={onOpenMetrics} />
+              )}
+
+              {/* Upload Status Widget */}
+              <UploadStatusWidget
+                onUploadComplete={() => {
+                  // Refresh file list when upload completes
+                  if (selectedSource) {
+                    loadFilesList(selectedSource.id, currentPath);
+                  }
+                }}
+              />
+            </aside>
+
+            {/* Resizer Handle */}
+            <div
+              className={`sidebar-resizer ${isResizing ? 'resizing' : ''}`}
+              onMouseDown={handleResizeStart}
+              title="Drag to resize sidebar"
+            >
+              <div className="resizer-handle" />
+            </div>
+
+            {/* Main Content */}
+            <main
+              className="finder-content file-browser"
+              onContextMenu={(e) => handleContextMenu(e)}
+              onDragOver={(e) => handleDragOver(e)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, currentPath)}
+            >
+              {loading ? (
+                <div className="empty-state">
+                  <div className="spinner" />
+                  <span className="empty-state-text">Loading...</span>
+                </div>
+              ) : files.length === 0 ? (
+                <div className="empty-state">
+                  <IconFolder
+                    size={48}
+                    color="var(--finder-text-quaternary)"
+                    glow={false}
+                  />
+                  <span className="empty-state-text">No files</span>
+                  <span className="empty-state-hint">
+                    Right-click to create or paste
+                  </span>
+                </div>
+              ) : (
+                <>
+                  {viewMode === 'icon' && (
+                    <div
+                      className={`icon-view ${isDraggingOver && dropTarget === null ? 'drop-zone-active' : ''}`}
+                      onContextMenu={(e) => handleContextMenu(e)}
+                      onDragOver={(e) => handleDragOver(e)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, currentPath)}
+                    >
+                      {filteredFiles.map((file, index) => {
+                        const isFolder =
+                          file.mimeType === 'folder' || file.path.endsWith('/');
+                        const isDropTarget =
+                          isFolder && dropTarget === file.path;
+                        const isDragging = draggedFiles.includes(file.path);
+                        const fileIsHidden =
+                          file.isHidden ?? file.name.startsWith('.');
+                        return (
+                          <div
+                            key={file.path}
+                            data-path={file.path}
+                            className={`file-item ${selectedFiles.has(file.path) ? 'selected' : ''} ${isFolder ? 'folder' : ''} ${isDropTarget ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${fileIsHidden ? 'is-hidden' : ''}`}
+                            onClick={(e) => handleFileClick(file, e)}
+                            onDoubleClick={() => handleFileDoubleClick(file)}
+                            onContextMenu={(e) => handleContextMenu(e, file)}
+                            data-type={isFolder ? 'folder' : 'file'}
+                            tabIndex={0}
+                            // Drag and drop
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, file)}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={(e) =>
+                              handleDragOver(e, file.path, isFolder)
+                            }
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => {
+                              if (isFolder) {
+                                handleDrop(e, file.path);
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter')
+                                handleFileDoubleClick(file);
+                              if (
+                                e.key === 'ArrowRight' ||
+                                e.key === 'ArrowDown'
+                              ) {
+                                e.preventDefault();
+                                const nextEl = e.currentTarget
+                                  .nextElementSibling as HTMLElement;
+                                if (nextEl) {
+                                  nextEl.focus();
+                                  const next = filteredFiles[index + 1];
+                                  if (next)
+                                    setSelectedFiles(new Set([next.path]));
+                                }
+                              }
+                              if (
+                                e.key === 'ArrowLeft' ||
+                                e.key === 'ArrowUp'
+                              ) {
+                                e.preventDefault();
+                                const prevEl = e.currentTarget
+                                  .previousElementSibling as HTMLElement;
+                                if (prevEl) {
+                                  prevEl.focus();
+                                  const prev = filteredFiles[index - 1];
+                                  if (prev)
+                                    setSelectedFiles(new Set([prev.path]));
+                                }
+                              }
+                            }}
+                          >
+                            <div className="file-icon">
+                              {file.thumbnail ? (
+                                <img src={file.thumbnail} alt="" />
+                              ) : (
+                                <span className="icon-placeholder">
+                                  {getFileIcon(file, 48)}
+                                </span>
+                              )}
+                              {getTierIndicator(file, warmProgress[file.path])}
+                              <span
+                                className={`grid-tier-badge ${file.tierStatus || 'hot'}`}
+                                title={`Storage: ${file.tierStatus || 'Hot'}`}
+                              >
+                                {file.tierStatus || 'hot'}
+                              </span>
+                            </div>
+                            <div className="file-name" title={file.name}>
+                              {renamingFile === file.path ? (
+                                <input
+                                  ref={renameInputRef}
+                                  type="text"
+                                  className="rename-input"
+                                  value={renameValue}
+                                  onChange={(e) =>
+                                    setRenameValue(e.target.value)
+                                  }
+                                  onKeyDown={handleRenameKeyDown}
+                                  onBlur={commitRename}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              ) : (
+                                truncateMiddle(file.name, 28)
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {viewMode === 'list' && (
+                    <div
+                      className={`list-view ${isDraggingOver && dropTarget === null ? 'drop-zone-active' : ''}`}
+                      onContextMenu={(e) => handleContextMenu(e)}
+                      onDragOver={(e) => handleDragOver(e)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, currentPath)}
+                    >
+                      <div className="list-header">
+                        <div className="col-name">Name</div>
+                        <div className="col-date">Date Modified</div>
+                        <div className="col-size">Size</div>
+                        <div className="col-tier">Tier</div>
+                      </div>
+                      <div className="list-body">
+                        {filteredFiles.map((file, index) => {
+                          const isFolder =
+                            file.mimeType === 'folder' ||
+                            file.path.endsWith('/');
+                          const isDropTarget =
+                            isFolder && dropTarget === file.path;
+                          const isDragging = draggedFiles.includes(file.path);
+                          const fileIsHidden =
+                            file.isHidden ?? file.name.startsWith('.');
+                          return (
+                            <div
+                              key={file.path}
+                              data-path={file.path}
+                              className={`list-row ${selectedFiles.has(file.path) ? 'selected' : ''} ${isFolder ? 'folder' : ''} ${isDropTarget ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${fileIsHidden ? 'is-hidden' : ''}`}
+                              onClick={(e) => handleFileClick(file, e)}
+                              onDoubleClick={() => handleFileDoubleClick(file)}
+                              onContextMenu={(e) => handleContextMenu(e, file)}
+                              data-type={isFolder ? 'folder' : 'file'}
+                              tabIndex={0}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, file)}
+                              onDragEnd={handleDragEnd}
+                              onDragOver={(e) =>
+                                handleDragOver(e, file.path, isFolder)
+                              }
+                              onDragLeave={handleDragLeave}
+                              onDrop={(e) => {
+                                if (isFolder) {
+                                  handleDrop(e, file.path);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter')
+                                  handleFileDoubleClick(file);
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const nextEl = e.currentTarget
+                                    .nextElementSibling as HTMLElement;
+                                  if (nextEl) {
+                                    nextEl.focus();
+                                    const next = filteredFiles[index + 1];
+                                    if (next)
+                                      setSelectedFiles(new Set([next.path]));
+                                  }
+                                }
+                                if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  const prevEl = e.currentTarget
+                                    .previousElementSibling as HTMLElement;
+                                  if (prevEl) {
+                                    prevEl.focus();
+                                    const prev = filteredFiles[index - 1];
+                                    if (prev)
+                                      setSelectedFiles(new Set([prev.path]));
+                                  }
+                                }
+                              }}
+                            >
+                              <div className="col-name" title={file.name}>
+                                <span className="row-icon">
+                                  {getFileIcon(file, 18)}
+                                </span>
+                                {renamingFile === file.path ? (
+                                  <input
+                                    ref={renameInputRef}
+                                    type="text"
+                                    className="rename-input"
+                                    value={renameValue}
+                                    onChange={(e) =>
+                                      setRenameValue(e.target.value)
+                                    }
+                                    onKeyDown={handleRenameKeyDown}
+                                    onBlur={commitRename}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                ) : (
+                                  file.name
+                                )}
+                              </div>
+                              <div className="col-date">
+                                {new Date(
+                                  file.lastModified,
+                                ).toLocaleDateString()}
+                              </div>
+                              <div className="col-size">
+                                {formatSize(file.size)}
+                              </div>
+                              <div className="col-tier">
+                                {getTierBadge(file, warmProgress[file.path])}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </main>
+
+            {/* Info Panel */}
+            {showInfoPanel && (
+              <aside className="finder-info">
+                {selectedFile ? (
+                  <>
+                    <div className="info-preview">
+                      {selectedFile.thumbnail ? (
+                        <img src={selectedFile.thumbnail} alt="" />
+                      ) : (
+                        <span className="info-icon">
+                          {getFileIcon(selectedFile, 64)}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="info-name">{selectedFile.name}</h3>
+                    <div className="info-meta">
+                      {/* Basic Info */}
+                      <div className="meta-section">
+                        <div className="meta-section-title">General</div>
+                        <div className="meta-row">
+                          <span className="meta-label">Size</span>
+                          <span className="meta-value">
+                            {formatSize(selectedFile.size)}
+                          </span>
+                        </div>
+                        <div className="meta-row">
+                          <span className="meta-label">Modified</span>
+                          <span className="meta-value">
+                            {new Date(
+                              selectedFile.lastModified,
+                            ).toLocaleString()}
+                          </span>
+                        </div>
+                        {selectedFile.createdAt && (
+                          <div className="meta-row">
+                            <span className="meta-label">Created</span>
+                            <span className="meta-value">
+                              {new Date(
+                                selectedFile.createdAt,
+                              ).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="meta-row">
+                          <span className="meta-label">Tier</span>
+                          <span className="meta-value">
+                            {getTierBadge(
+                              selectedFile,
+                              warmProgress[selectedFile.path],
+                            )}
+                          </span>
+                        </div>
+                        {selectedFile.container && (
+                          <div className="meta-row">
+                            <span className="meta-label">Container</span>
+                            <span className="meta-value">
+                              {selectedFile.container.toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Video Info */}
+                      {(selectedFile.videoCodec || selectedFile.width) && (
+                        <div className="meta-section">
+                          <div className="meta-section-title">Video</div>
+                          {selectedFile.width && selectedFile.height && (
+                            <div className="meta-row">
+                              <span className="meta-label">Resolution</span>
+                              <span className="meta-value">
+                                {selectedFile.width} x {selectedFile.height}
+                              </span>
+                            </div>
+                          )}
+                          {selectedFile.videoCodec && (
+                            <div className="meta-row">
+                              <span className="meta-label">Codec</span>
+                              <span className="meta-value">
+                                {selectedFile.videoCodec.toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          {selectedFile.frameRate && (
+                            <div className="meta-row">
+                              <span className="meta-label">Frame Rate</span>
+                              <span className="meta-value">
+                                {selectedFile.frameRate} fps
+                              </span>
+                            </div>
+                          )}
+                          {selectedFile.videoBitrate && (
+                            <div className="meta-row">
+                              <span className="meta-label">Bitrate</span>
+                              <span className="meta-value">
+                                {selectedFile.videoBitrate} kbps
+                              </span>
+                            </div>
+                          )}
+                          {selectedFile.colorSpace && (
+                            <div className="meta-row">
+                              <span className="meta-label">Color</span>
+                              <span className="meta-value">
+                                {selectedFile.colorSpace}
+                              </span>
+                            </div>
+                          )}
+                          {selectedFile.hdrFormat && (
+                            <div className="meta-row">
+                              <span className="meta-label">HDR</span>
+                              <span className="meta-value highlight">
+                                {selectedFile.hdrFormat.toUpperCase()}
+                              </span>
+                            </div>
                           )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      )}
 
-              {viewMode === 'list' && (
-                <div
-                  className={`list-view ${isDraggingOver && dropTarget === null ? 'drop-zone-active' : ''}`}
-                  onContextMenu={(e) => handleContextMenu(e)}
-                  onDragOver={(e) => handleDragOver(e)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, currentPath)}
-                >
-                  <div className="list-header">
-                    <div className="col-name">Name</div>
-                    <div className="col-date">Date Modified</div>
-                    <div className="col-size">Size</div>
-                    <div className="col-tier">Tier</div>
-                  </div>
-                  <div className="list-body">
-                    {filteredFiles.map((file, index) => {
-                      const isFolder =
-                        file.mimeType === 'folder' || file.path.endsWith('/');
-                      const isDropTarget = isFolder && dropTarget === file.path;
-                      const isDragging = draggedFiles.includes(file.path);
-                      const fileIsHidden =
-                        file.isHidden ?? file.name.startsWith('.');
-                      return (
-                        <div
-                          key={file.path}
-                          data-path={file.path}
-                          className={`list-row ${selectedFiles.has(file.path) ? 'selected' : ''} ${isFolder ? 'folder' : ''} ${isDropTarget ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${fileIsHidden ? 'is-hidden' : ''}`}
-                          onClick={(e) => handleFileClick(file, e)}
-                          onDoubleClick={() => handleFileDoubleClick(file)}
-                          onContextMenu={(e) => handleContextMenu(e, file)}
-                          data-type={isFolder ? 'folder' : 'file'}
-                          tabIndex={0}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, file)}
-                          onDragEnd={handleDragEnd}
-                          onDragOver={(e) =>
-                            handleDragOver(e, file.path, isFolder)
-                          }
-                          onDragLeave={handleDragLeave}
-                          onDrop={(e) => {
-                            if (isFolder) {
-                              handleDrop(e, file.path);
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleFileDoubleClick(file);
-                            if (e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const nextEl = e.currentTarget
-                                .nextElementSibling as HTMLElement;
-                              if (nextEl) {
-                                nextEl.focus();
-                                const next = filteredFiles[index + 1];
-                                if (next)
-                                  setSelectedFiles(new Set([next.path]));
-                              }
-                            }
-                            if (e.key === 'ArrowUp') {
-                              e.preventDefault();
-                              const prevEl = e.currentTarget
-                                .previousElementSibling as HTMLElement;
-                              if (prevEl) {
-                                prevEl.focus();
-                                const prev = filteredFiles[index - 1];
-                                if (prev)
-                                  setSelectedFiles(new Set([prev.path]));
-                              }
-                            }
-                          }}
-                        >
-                          <div className="col-name" title={file.name}>
-                            <span className="row-icon">
-                              {getFileIcon(file, 18)}
+                      {/* Audio Info */}
+                      {(selectedFile.audioCodec ||
+                        selectedFile.audioChannels) && (
+                        <div className="meta-section">
+                          <div className="meta-section-title">Audio</div>
+                          {selectedFile.audioCodec && (
+                            <div className="meta-row">
+                              <span className="meta-label">Codec</span>
+                              <span className="meta-value">
+                                {selectedFile.audioCodec.toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          {selectedFile.audioChannels && (
+                            <div className="meta-row">
+                              <span className="meta-label">Channels</span>
+                              <span className="meta-value">
+                                {selectedFile.audioChannels === 1
+                                  ? 'Mono'
+                                  : selectedFile.audioChannels === 2
+                                    ? 'Stereo'
+                                    : selectedFile.audioChannels === 6
+                                      ? '5.1 Surround'
+                                      : selectedFile.audioChannels === 8
+                                        ? '7.1 Surround'
+                                        : `${selectedFile.audioChannels} ch`}
+                              </span>
+                            </div>
+                          )}
+                          {selectedFile.audioSampleRate && (
+                            <div className="meta-row">
+                              <span className="meta-label">Sample Rate</span>
+                              <span className="meta-value">
+                                {selectedFile.audioSampleRate / 1000} kHz
+                              </span>
+                            </div>
+                          )}
+                          {selectedFile.audioBitrate && (
+                            <div className="meta-row">
+                              <span className="meta-label">Bitrate</span>
+                              <span className="meta-value">
+                                {selectedFile.audioBitrate} kbps
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Duration */}
+                      {selectedFile.duration && (
+                        <div className="meta-section">
+                          <div className="meta-section-title">Duration</div>
+                          <div className="meta-row">
+                            <span className="meta-label">Length</span>
+                            <span className="meta-value highlight">
+                              {Math.floor(selectedFile.duration / 3600) > 0
+                                ? `${Math.floor(selectedFile.duration / 3600)}h ${Math.floor((selectedFile.duration % 3600) / 60)}m ${Math.floor(selectedFile.duration % 60)}s`
+                                : `${Math.floor(selectedFile.duration / 60)}m ${Math.floor(selectedFile.duration % 60)}s`}
                             </span>
-                            {renamingFile === file.path ? (
-                              <input
-                                ref={renameInputRef}
-                                type="text"
-                                className="rename-input"
-                                value={renameValue}
-                                onChange={(e) => setRenameValue(e.target.value)}
-                                onKeyDown={handleRenameKeyDown}
-                                onBlur={commitRename}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              file.name
-                            )}
-                          </div>
-                          <div className="col-date">
-                            {new Date(file.lastModified).toLocaleDateString()}
-                          </div>
-                          <div className="col-size">
-                            {formatSize(file.size)}
-                          </div>
-                          <div className="col-tier">
-                            {getTierBadge(file, warmProgress[file.path])}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </main>
+                      )}
 
-        {/* Info Panel */}
-        {showInfoPanel && (
-          <aside className="finder-info">
-            {selectedFile ? (
-              <>
-                <div className="info-preview">
-                  {selectedFile.thumbnail ? (
-                    <img src={selectedFile.thumbnail} alt="" />
-                  ) : (
-                    <span className="info-icon">
-                      {getFileIcon(selectedFile, 64)}
-                    </span>
-                  )}
-                </div>
-                <h3 className="info-name">{selectedFile.name}</h3>
-                <div className="info-meta">
-                  {/* Basic Info */}
-                  <div className="meta-section">
-                    <div className="meta-section-title">General</div>
-                    <div className="meta-row">
-                      <span className="meta-label">Size</span>
-                      <span className="meta-value">
-                        {formatSize(selectedFile.size)}
-                      </span>
+                      {/* Tags */}
+                      {selectedFile.tags && selectedFile.tags.length > 0 && (
+                        <div className="meta-section">
+                          <div className="meta-section-title">Tags</div>
+                          <div className="meta-tags">
+                            {selectedFile.tags.map((tag, i) => (
+                              <span key={i} className="meta-tag">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="meta-row">
-                      <span className="meta-label">Modified</span>
-                      <span className="meta-value">
-                        {new Date(selectedFile.lastModified).toLocaleString()}
-                      </span>
-                    </div>
-                    {selectedFile.createdAt && (
-                      <div className="meta-row">
-                        <span className="meta-label">Created</span>
-                        <span className="meta-value">
-                          {new Date(selectedFile.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="meta-row">
-                      <span className="meta-label">Tier</span>
-                      <span className="meta-value">
-                        {getTierBadge(
-                          selectedFile,
-                          warmProgress[selectedFile.path],
+                    <div className="info-actions">
+                      {/* Warm to Hot - only for cloud/remote storage */}
+                      {!isMountedStorage() &&
+                        selectedFile.canWarm &&
+                        !selectedFile.isWarmed && (
+                          <button
+                            className="action-btn warm"
+                            onClick={() => handleWarm(selectedFile)}
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                            >
+                              <path d="M12 23a7.5 7.5 0 0 1-5.138-12.963C8.204 8.774 11.5 6.5 11 1.5c0 0 6.5 3.5 6.5 9a5.5 5.5 0 0 1-3 4.9v.1a5 5 0 0 0 5 5c0 3.866-3.134 2.5-7.5 2.5z" />
+                            </svg>
+                            Warm to Hot
+                          </button>
                         )}
-                      </span>
-                    </div>
-                    {selectedFile.container && (
-                      <div className="meta-row">
-                        <span className="meta-label">Container</span>
-                        <span className="meta-value">
-                          {selectedFile.container.toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Video Info */}
-                  {(selectedFile.videoCodec || selectedFile.width) && (
-                    <div className="meta-section">
-                      <div className="meta-section-title">Video</div>
-                      {selectedFile.width && selectedFile.height && (
-                        <div className="meta-row">
-                          <span className="meta-label">Resolution</span>
-                          <span className="meta-value">
-                            {selectedFile.width} x {selectedFile.height}
-                          </span>
-                        </div>
-                      )}
-                      {selectedFile.videoCodec && (
-                        <div className="meta-row">
-                          <span className="meta-label">Codec</span>
-                          <span className="meta-value">
-                            {selectedFile.videoCodec.toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      {selectedFile.frameRate && (
-                        <div className="meta-row">
-                          <span className="meta-label">Frame Rate</span>
-                          <span className="meta-value">
-                            {selectedFile.frameRate} fps
-                          </span>
-                        </div>
-                      )}
-                      {selectedFile.videoBitrate && (
-                        <div className="meta-row">
-                          <span className="meta-label">Bitrate</span>
-                          <span className="meta-value">
-                            {selectedFile.videoBitrate} kbps
-                          </span>
-                        </div>
-                      )}
-                      {selectedFile.colorSpace && (
-                        <div className="meta-row">
-                          <span className="meta-label">Color</span>
-                          <span className="meta-value">
-                            {selectedFile.colorSpace}
-                          </span>
-                        </div>
-                      )}
-                      {selectedFile.hdrFormat && (
-                        <div className="meta-row">
-                          <span className="meta-label">HDR</span>
-                          <span className="meta-value highlight">
-                            {selectedFile.hdrFormat.toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Audio Info */}
-                  {(selectedFile.audioCodec || selectedFile.audioChannels) && (
-                    <div className="meta-section">
-                      <div className="meta-section-title">Audio</div>
-                      {selectedFile.audioCodec && (
-                        <div className="meta-row">
-                          <span className="meta-label">Codec</span>
-                          <span className="meta-value">
-                            {selectedFile.audioCodec.toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      {selectedFile.audioChannels && (
-                        <div className="meta-row">
-                          <span className="meta-label">Channels</span>
-                          <span className="meta-value">
-                            {selectedFile.audioChannels === 1
-                              ? 'Mono'
-                              : selectedFile.audioChannels === 2
-                                ? 'Stereo'
-                                : selectedFile.audioChannels === 6
-                                  ? '5.1 Surround'
-                                  : selectedFile.audioChannels === 8
-                                    ? '7.1 Surround'
-                                    : `${selectedFile.audioChannels} ch`}
-                          </span>
-                        </div>
-                      )}
-                      {selectedFile.audioSampleRate && (
-                        <div className="meta-row">
-                          <span className="meta-label">Sample Rate</span>
-                          <span className="meta-value">
-                            {selectedFile.audioSampleRate / 1000} kHz
-                          </span>
-                        </div>
-                      )}
-                      {selectedFile.audioBitrate && (
-                        <div className="meta-row">
-                          <span className="meta-label">Bitrate</span>
-                          <span className="meta-value">
-                            {selectedFile.audioBitrate} kbps
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Duration */}
-                  {selectedFile.duration && (
-                    <div className="meta-section">
-                      <div className="meta-section-title">Duration</div>
-                      <div className="meta-row">
-                        <span className="meta-label">Length</span>
-                        <span className="meta-value highlight">
-                          {Math.floor(selectedFile.duration / 3600) > 0
-                            ? `${Math.floor(selectedFile.duration / 3600)}h ${Math.floor((selectedFile.duration % 3600) / 60)}m ${Math.floor(selectedFile.duration % 60)}s`
-                            : `${Math.floor(selectedFile.duration / 60)}m ${Math.floor(selectedFile.duration % 60)}s`}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tags */}
-                  {selectedFile.tags && selectedFile.tags.length > 0 && (
-                    <div className="meta-section">
-                      <div className="meta-section-title">Tags</div>
-                      <div className="meta-tags">
-                        {selectedFile.tags.map((tag, i) => (
-                          <span key={i} className="meta-tag">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="info-actions">
-                  {/* Warm to Hot - only for cloud/remote storage */}
-                  {!isMountedStorage() &&
-                    selectedFile.canWarm &&
-                    !selectedFile.isWarmed && (
-                      <button
-                        className="action-btn warm"
-                        onClick={() => handleWarm(selectedFile)}
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
+                      {/* Transcode - only for cloud/remote storage */}
+                      {!isMountedStorage() && selectedFile.canTranscode && (
+                        <button
+                          className="action-btn secondary"
+                          onClick={() => handleTranscode(selectedFile)}
                         >
-                          <path d="M12 23a7.5 7.5 0 0 1-5.138-12.963C8.204 8.774 11.5 6.5 11 1.5c0 0 6.5 3.5 6.5 9a5.5 5.5 0 0 1-3 4.9v.1a5 5 0 0 0 5 5c0 3.866-3.134 2.5-7.5 2.5z" />
-                        </svg>
-                        Warm to Hot
-                      </button>
-                    )}
-                  {/* Transcode - only for cloud/remote storage */}
-                  {!isMountedStorage() && selectedFile.canTranscode && (
-                    <button
-                      className="action-btn secondary"
-                      onClick={() => handleTranscode(selectedFile)}
-                    >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
+                          Transcode
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="info-empty">
+                    <div className="info-empty-icon">
                       <svg
-                        width="14"
-                        height="14"
+                        width="48"
+                        height="48"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="1"
                       >
-                        <polygon points="5 3 19 12 5 21 5 3" />
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4" />
+                        <path d="M12 8h.01" />
                       </svg>
-                      Transcode
-                    </button>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="info-empty">
-                <div className="info-empty-icon">
-                  <svg
-                    width="48"
-                    height="48"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 16v-4" />
-                    <path d="M12 8h.01" />
-                  </svg>
-                </div>
-                <p>No selection</p>
-                <p className="info-hint">{files.length} items</p>
-              </div>
+                    </div>
+                    <p>No selection</p>
+                    <p className="info-hint">{files.length} items</p>
+                  </div>
+                )}
+              </aside>
             )}
-          </aside>
-        )}
-      </div>
+          </div>
 
-      {/* Status Bar */}
-      <div className="finder-statusbar">
-        <span>
-          {filteredFiles.length} items
-          {selectedFiles.size > 0 && ` · ${selectedFiles.size} selected`}
-          {showHiddenFiles && ` · Hidden files visible`}
-        </span>
-        {selectedSource && (
-          <span className="statusbar-source">{selectedSource.name}</span>
-        )}
-      </div>
+          {/* Status Bar */}
+          <div className="finder-statusbar">
+            <span>
+              {filteredFiles.length} items
+              {selectedFiles.size > 0 && ` · ${selectedFiles.size} selected`}
+              {showHiddenFiles && ` · Hidden files visible`}
+            </span>
+            {selectedSource && (
+              <span className="statusbar-source">{selectedSource.name}</span>
+            )}
+          </div>
 
-      {/* Context Menu - Minimal Native-like Menu */}
-      {contextMenu.visible && (
-        <div
-          className="context-menu"
-          style={{
-            position: 'fixed',
-            top: contextMenu.y,
-            left: contextMenu.x,
-            zIndex: 1000,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Open action for file/folder */}
-          {contextMenu.targetFile && (
-            <>
-              <button
-                className="context-item"
-                onClick={() => {
-                  if (contextMenu.targetFile) {
-                    if (
-                      contextMenu.targetFile.mimeType === 'folder' ||
-                      contextMenu.targetFile.path.endsWith('/')
-                    ) {
-                      navigateTo(contextMenu.targetFile.path);
-                    } else {
-                      handleOpenFile(contextMenu.targetFile);
-                    }
-                  }
-                  closeContextMenu();
-                }}
-              >
-                <svg
-                  className="context-icon"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                >
-                  <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.172a1.5 1.5 0 0 1 1.06.44l.708.706a.5.5 0 0 0 .354.147H13.5A1.5 1.5 0 0 1 15 4.793v7.707A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9z" />
-                </svg>
-                Open
-              </button>
+          {/* Context Menu - Minimal Native-like Menu */}
+          {contextMenu.visible && (
+            <div
+              className="context-menu"
+              style={{
+                position: 'fixed',
+                top: contextMenu.y,
+                left: contextMenu.x,
+                zIndex: 1000,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Check if current source is object storage */}
+              {(() => {
+                const isObjectStorage = selectedSource?.category === 'cloud';
 
-              {/* Open With submenu - only for files, not folders */}
-              {contextMenu.targetFile &&
-                !(
-                  contextMenu.targetFile.mimeType === 'folder' ||
-                  contextMenu.targetFile.path.endsWith('/')
-                ) && (
-                  <div
-                    className="context-item has-submenu"
-                    onMouseEnter={() => {
-                      if (contextMenu.targetFile) {
-                        loadAppsForFile(contextMenu.targetFile);
-                        setShowOpenWith(true);
-                      }
-                    }}
-                    onMouseLeave={() => setShowOpenWith(false)}
-                  >
-                    <svg
-                      className="context-icon"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v8A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1h-3zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5z" />
-                    </svg>
-                    Open With
-                    <svg
-                      className="context-arrow"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      <path d="M6 12.796V3.204L11.481 8 6 12.796z" />
-                    </svg>
-                    {/* Open With submenu */}
-                    {showOpenWith && (
-                      <div className="context-submenu">
-                        {appsLoading ? (
-                          <div className="context-item disabled">
-                            Loading apps...
-                          </div>
-                        ) : availableApps.length > 0 ? (
-                          availableApps.map((app, index) => (
-                            <button
-                              key={index}
-                              className="context-item"
-                              onClick={(e) => {
-                                e.stopPropagation();
+                // For object storage, show only limited features
+                if (
+                  isObjectStorage &&
+                  contextMenu.targetFile &&
+                  !contextMenu.targetFile.isDirectory
+                ) {
+                  return (
+                    <>
+                      {/* Download */}
+                      <button
+                        className="context-item"
+                        onClick={() => {
+                          if (contextMenu.targetFile) {
+                            handleDownloadFile(contextMenu.targetFile);
+                          }
+                          closeContextMenu();
+                        }}
+                      >
+                        <svg
+                          className="context-icon"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                        >
+                          <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                          <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                        </svg>
+                        Download
+                      </button>
+
+                      <div className="context-divider" />
+
+                      {/* Move to Storage Tier - Unified and marked as under development */}
+                      {contextMenu.targetFile && (
+                        <button
+                          className="context-item"
+                          onClick={() => {
+                            toast.showToast({
+                              type: 'info',
+                              message:
+                                'Move to Storage Tier: This feature is under development and will be available soon.',
+                              duration: 4000,
+                            });
+                            closeContextMenu();
+                          }}
+                        >
+                          <svg
+                            className="context-icon storage-tier"
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                          >
+                            <path d="M.5 3l.04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9.81a2 2 0 0 0 1.991-1.819l.637-7a1.99 1.99 0 0 0-.342-1.311L12.5 3H.5zm.217 1h11.566l-.166 2.894a.5.5 0 0 1-.421.45l-5.5.894a.5.5 0 0 1-.578-.45L1.717 4zM14 2H2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zM2 1a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2H2z" />
+                            <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-1z" />
+                          </svg>
+                          Move to Storage Tier
+                        </button>
+                      )}
+
+                      <div className="context-divider" />
+
+                      {/* Delete */}
+                      <button
+                        className="context-item danger"
+                        onClick={() => {
+                          handleDelete();
+                          closeContextMenu();
+                        }}
+                      >
+                        <svg
+                          className="context-icon"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                        >
+                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                          <path
+                            fillRule="evenodd"
+                            d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
+                          />
+                        </svg>
+                        Delete
+                      </button>
+                    </>
+                  );
+                }
+
+                // Full feature set for mount-based storage
+                return (
+                  <>
+                    {/* Open action for file/folder */}
+                    {contextMenu.targetFile && (
+                      <>
+                        <button
+                          className="context-item"
+                          onClick={() => {
+                            if (contextMenu.targetFile) {
+                              if (
+                                contextMenu.targetFile.mimeType === 'folder' ||
+                                contextMenu.targetFile.path.endsWith('/')
+                              ) {
+                                navigateTo(contextMenu.targetFile.path);
+                              } else {
+                                handleOpenFile(contextMenu.targetFile);
+                              }
+                            }
+                            closeContextMenu();
+                          }}
+                        >
+                          <svg
+                            className="context-icon"
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                          >
+                            <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.172a1.5 1.5 0 0 1 1.06.44l.708.706a.5.5 0 0 0 .354.147H13.5A1.5 1.5 0 0 1 15 4.793v7.707A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9z" />
+                          </svg>
+                          Open
+                        </button>
+
+                        {/* Open With submenu - only for files, not folders */}
+                        {contextMenu.targetFile &&
+                          !(
+                            contextMenu.targetFile.mimeType === 'folder' ||
+                            contextMenu.targetFile.path.endsWith('/')
+                          ) && (
+                            <div
+                              className="context-item has-submenu"
+                              onMouseEnter={() => {
                                 if (contextMenu.targetFile) {
-                                  handleOpenFileWith(
-                                    contextMenu.targetFile,
-                                    app.path,
-                                  );
+                                  loadAppsForFile(contextMenu.targetFile);
+                                  setShowOpenWith(true);
+                                }
+                              }}
+                              onMouseLeave={() => setShowOpenWith(false)}
+                            >
+                              <svg
+                                className="context-icon"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                              >
+                                <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v8A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1h-3zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5z" />
+                              </svg>
+                              Open With
+                              <svg
+                                className="context-arrow"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                              >
+                                <path d="M6 12.796V3.204L11.481 8 6 12.796z" />
+                              </svg>
+                              {/* Open With submenu */}
+                              {showOpenWith && (
+                                <div className="context-submenu">
+                                  {appsLoading ? (
+                                    <div className="context-item disabled">
+                                      Loading apps...
+                                    </div>
+                                  ) : availableApps.length > 0 ? (
+                                    availableApps.map((app, index) => (
+                                      <button
+                                        key={index}
+                                        className="context-item"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (contextMenu.targetFile) {
+                                            handleOpenFileWith(
+                                              contextMenu.targetFile,
+                                              app.path,
+                                            );
+                                          }
+                                          closeContextMenu();
+                                        }}
+                                      >
+                                        {app.name}
+                                      </button>
+                                    ))
+                                  ) : (
+                                    <div className="context-item disabled">
+                                      No apps found
+                                    </div>
+                                  )}
+                                  <div className="context-divider" />
+                                  <button
+                                    className="context-item"
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      // Don't close menu immediately - wait for user selection
+                                      if (contextMenu.targetFile) {
+                                        try {
+                                          const { open } =
+                                            await import('@tauri-apps/plugin-dialog');
+
+                                          // Close the context menu before opening dialog
+                                          closeContextMenu();
+
+                                          // Open file picker to choose an application
+                                          const selectedApp = await open({
+                                            title: 'Choose Application',
+                                            directory: false,
+                                            multiple: false,
+                                            filters:
+                                              navigator.platform.includes('Mac')
+                                                ? [
+                                                    {
+                                                      name: 'Applications',
+                                                      extensions: ['app'],
+                                                    },
+                                                  ]
+                                                : navigator.platform.includes(
+                                                      'Win',
+                                                    )
+                                                  ? [
+                                                      {
+                                                        name: 'Executables',
+                                                        extensions: ['exe'],
+                                                      },
+                                                    ]
+                                                  : [],
+                                            defaultPath:
+                                              navigator.platform.includes('Mac')
+                                                ? '/Applications'
+                                                : navigator.platform.includes(
+                                                      'Win',
+                                                    )
+                                                  ? 'C:\\Program Files'
+                                                  : '/usr/bin',
+                                          });
+
+                                          // Handle different return types from dialog
+                                          let appPath: string | null = null;
+
+                                          if (selectedApp === null) {
+                                            // User cancelled
+                                            return;
+                                          } else if (
+                                            typeof selectedApp === 'string'
+                                          ) {
+                                            appPath = selectedApp;
+                                          } else if (
+                                            Array.isArray(selectedApp)
+                                          ) {
+                                            // Dialog might return an array (even with multiple: false)
+                                            const firstItem = selectedApp[0];
+                                            if (
+                                              typeof firstItem === 'string' &&
+                                              firstItem
+                                            ) {
+                                              appPath = firstItem;
+                                            }
+                                          }
+
+                                          if (appPath) {
+                                            await handleOpenFileWith(
+                                              contextMenu.targetFile,
+                                              appPath,
+                                            );
+                                          }
+                                        } catch (err) {
+                                          console.error(
+                                            'Failed to open app picker:',
+                                            err,
+                                          );
+                                          DialogService.error(
+                                            `Failed to open application picker: ${err}`,
+                                            'Open With Error',
+                                          );
+                                        }
+                                      } else {
+                                        closeContextMenu();
+                                      }
+                                    }}
+                                  >
+                                    Other...
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                        {/* Asset Details - Get Info */}
+                        {contextMenu.targetFile && (
+                          <>
+                            <div className="context-divider" />
+                            <button
+                              className="context-item"
+                              onClick={() => {
+                                if (contextMenu.targetFile) {
+                                  setInfoModal({
+                                    visible: true,
+                                    file: contextMenu.targetFile,
+                                  });
                                 }
                                 closeContextMenu();
                               }}
                             >
-                              {app.name}
+                              <svg
+                                className="context-icon"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                              >
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                              </svg>
+                              Asset Details
+                              <span className="context-shortcut">⌘I</span>
                             </button>
-                          ))
-                        ) : (
-                          <div className="context-item disabled">
-                            No apps found
-                          </div>
+                          </>
                         )}
+
+                        {/* Move to Storage Tier - Available for files and folders */}
+                        {contextMenu.targetFile && (
+                          <>
+                            <div className="context-divider" />
+                            <button
+                              className="context-item"
+                              onClick={() => {
+                                toast.showToast({
+                                  type: 'info',
+                                  message:
+                                    'Move to Storage Tier: This feature is under development and will be available soon.',
+                                  duration: 4000,
+                                });
+                                closeContextMenu();
+                              }}
+                            >
+                              <svg
+                                className="context-icon storage-tier"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                              >
+                                <path d="M.5 3l.04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9.81a2 2 0 0 0 1.991-1.819l.637-7a1.99 1.99 0 0 0-.342-1.311L12.5 3H.5zm.217 1h11.566l-.166 2.894a.5.5 0 0 1-.421.45l-5.5.894a.5.5 0 0 1-.578-.45L1.717 4zM14 2H2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zM2 1a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2H2z" />
+                                <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-1z" />
+                              </svg>
+                              Move to Storage Tier
+                            </button>
+                          </>
+                        )}
+
+                        <div className="context-divider" />
+                      </>
+                    )}
+
+                    {/* Clipboard actions */}
+                    {selectedFiles.size > 0 && (
+                      <>
+                        <button
+                          className="context-item"
+                          onClick={() => {
+                            handleCopy();
+                            closeContextMenu();
+                          }}
+                        >
+                          <svg
+                            className="context-icon"
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                          >
+                            <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6z" />
+                            <path d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z" />
+                          </svg>
+                          Copy
+                          <span className="context-shortcut">⌘C</span>
+                        </button>
+                      </>
+                    )}
+
+                    <button
+                      className={`context-item ${!(clipboardHasFiles || nativeClipboardCount > 0) ? 'disabled' : ''}`}
+                      onClick={() => {
+                        if (clipboardHasFiles || nativeClipboardCount > 0) {
+                          // If right-clicking on a folder, paste into it; otherwise paste into current directory
+                          const isTargetFolder =
+                            contextMenu.targetFile &&
+                            (contextMenu.targetFile.mimeType === 'folder' ||
+                              contextMenu.targetFile.isDirectory);
+                          handlePaste(
+                            isTargetFolder
+                              ? contextMenu.targetFile?.path
+                              : undefined,
+                          );
+                        }
+                        closeContextMenu();
+                      }}
+                      disabled={
+                        !(clipboardHasFiles || nativeClipboardCount > 0)
+                      }
+                    >
+                      <svg
+                        className="context-icon"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                      >
+                        <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1zM3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z" />
+                      </svg>
+                      {nativeClipboardCount > 0
+                        ? `Paste ${nativeClipboardCount} items`
+                        : 'Paste'}
+                      <span className="context-shortcut">⌘V</span>
+                    </button>
+
+                    {selectedFiles.size > 0 && (
+                      <>
+                        <div className="context-divider" />
+
+                        {selectedFiles.size === 1 && contextMenu.targetFile && (
+                          <>
+                            <button
+                              className="context-item"
+                              onClick={() => {
+                                if (contextMenu.targetFile)
+                                  handleRename(contextMenu.targetFile);
+                                closeContextMenu();
+                              }}
+                            >
+                              <svg
+                                className="context-icon"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                              >
+                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5z" />
+                              </svg>
+                              Rename
+                            </button>
+                            <button
+                              className="context-item"
+                              onClick={() => {
+                                if (contextMenu.targetFile)
+                                  handleDuplicate(contextMenu.targetFile);
+                                closeContextMenu();
+                              }}
+                            >
+                              <svg
+                                className="context-icon"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                              >
+                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                                <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
+                              </svg>
+                              Duplicate
+                            </button>
+                          </>
+                        )}
+
+                        <div className="context-divider" />
+
+                        <button
+                          className="context-item danger"
+                          onClick={() => {
+                            handleDelete();
+                            closeContextMenu();
+                          }}
+                        >
+                          <svg
+                            className="context-icon"
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                          >
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                            <path
+                              fillRule="evenodd"
+                              d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
+                            />
+                          </svg>
+                          Move to Trash
+                        </button>
+                      </>
+                    )}
+
+                    {/* Upload to S3 - only when storage is S3 */}
+                    {!contextMenu.targetFile &&
+                      selectedSource &&
+                      (selectedSource.providerId === 's3' ||
+                        selectedSource.providerId === 'aws-s3' ||
+                        selectedSource.providerId === 's3-compatible' ||
+                        selectedSource.category === 'cloud') && (
+                        <>
+                          <div className="context-divider" />
+                          <button
+                            className="context-item"
+                            onClick={async () => {
+                              console.log('[FinderPage] Upload clicked');
+                              closeContextMenu();
+                              await handleUpload();
+                            }}
+                          >
+                            <svg
+                              className="context-icon"
+                              viewBox="0 0 16 16"
+                              fill="currentColor"
+                            >
+                              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                              <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+                            </svg>
+                            Upload Files or Folders
+                          </button>
+                        </>
+                      )}
+
+                    {/* New Folder - only on empty space, not when right-clicking on a folder */}
+                    {!contextMenu.targetFile && (
+                      <>
                         <div className="context-divider" />
                         <button
                           className="context-item"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            // Don't close menu immediately - wait for user selection
-                            if (contextMenu.targetFile) {
-                              try {
-                                const { open } =
-                                  await import('@tauri-apps/plugin-dialog');
-
-                                // Close the context menu before opening dialog
-                                closeContextMenu();
-
-                                // Open file picker to choose an application
-                                const selectedApp = await open({
-                                  title: 'Choose Application',
-                                  directory: false,
-                                  multiple: false,
-                                  filters: navigator.platform.includes('Mac')
-                                    ? [
-                                        {
-                                          name: 'Applications',
-                                          extensions: ['app'],
-                                        },
-                                      ]
-                                    : navigator.platform.includes('Win')
-                                      ? [
-                                          {
-                                            name: 'Executables',
-                                            extensions: ['exe'],
-                                          },
-                                        ]
-                                      : [],
-                                  defaultPath: navigator.platform.includes(
-                                    'Mac',
-                                  )
-                                    ? '/Applications'
-                                    : navigator.platform.includes('Win')
-                                      ? 'C:\\Program Files'
-                                      : '/usr/bin',
-                                });
-
-                                // Handle different return types from dialog
-                                let appPath: string | null = null;
-
-                                if (selectedApp === null) {
-                                  // User cancelled
-                                  return;
-                                } else if (typeof selectedApp === 'string') {
-                                  appPath = selectedApp;
-                                } else if (Array.isArray(selectedApp)) {
-                                  // Dialog might return an array (even with multiple: false)
-                                  const firstItem = selectedApp[0];
-                                  if (
-                                    typeof firstItem === 'string' &&
-                                    firstItem
-                                  ) {
-                                    appPath = firstItem;
-                                  }
-                                }
-
-                                if (appPath) {
-                                  await handleOpenFileWith(
-                                    contextMenu.targetFile,
-                                    appPath,
-                                  );
-                                }
-                              } catch (err) {
-                                console.error(
-                                  'Failed to open app picker:',
-                                  err,
-                                );
-                                DialogService.error(
-                                  `Failed to open application picker: ${err}`,
-                                  'Open With Error',
-                                );
-                              }
-                            } else {
-                              closeContextMenu();
-                            }
+                          onClick={() => {
+                            // Create folder in current directory
+                            handleNewFolder();
+                            closeContextMenu();
                           }}
                         >
-                          Other...
+                          <svg
+                            className="context-icon"
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                          >
+                            <path d="m.5 3 .04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2zm5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672z" />
+                            <path d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z" />
+                          </svg>
+                          New Folder
+                          <span className="context-shortcut">⌘⇧N</span>
                         </button>
+                      </>
+                    )}
+
+                    {/* Tier actions - only for cloud/remote storage with cold/archive files */}
+                    {!isMountedStorage() &&
+                      contextMenu.targetFile &&
+                      (contextMenu.targetFile.tierStatus === 'cold' ||
+                        contextMenu.targetFile.tierStatus === 'nearline' ||
+                        contextMenu.targetFile.tierStatus === 'archive' ||
+                        (contextMenu.targetFile.canWarm &&
+                          !contextMenu.targetFile.isWarmed)) && (
+                        <>
+                          <div className="context-divider" />
+                          <button
+                            className="context-item"
+                            onClick={async () => {
+                              if (!selectedSource || !contextMenu.targetFile) {
+                                closeContextMenu();
+                                return;
+                              }
+
+                              try {
+                                const { invoke } =
+                                  await import('@tauri-apps/api/core');
+                                await invoke('vfs_change_tier', {
+                                  sourceId: selectedSource.id,
+                                  paths: [contextMenu.targetFile.path],
+                                  targetTier: 'hot',
+                                });
+
+                                // Refresh the file list
+                                await loadFilesList(
+                                  selectedSource.id,
+                                  currentPath,
+                                );
+                              } catch (err) {
+                                console.error('Hydration failed:', err);
+                                DialogService.error(
+                                  `Failed to fetch file: ${err}`,
+                                  'Fetch Error',
+                                );
+                              }
+                              closeContextMenu();
+                            }}
+                          >
+                            <svg
+                              className="context-icon"
+                              viewBox="0 0 16 16"
+                              fill="currentColor"
+                            >
+                              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                              <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                            </svg>
+                            Make Available Offline
+                          </button>
+                        </>
+                      )}
+                  </>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Storage Context Menu - macOS Get Info style */}
+          {storageContextMenu &&
+            (() => {
+              // Calculate position to ensure popover stays within viewport
+              const popoverWidth = 320; // max-width from CSS
+              const popoverHeight = 400; // estimated max height
+              const padding = 16;
+
+              let left = storageContextMenu.x;
+              let top = storageContextMenu.y;
+
+              // Adjust horizontal position if popover would go off-screen
+              if (left + popoverWidth + padding > window.innerWidth) {
+                left = window.innerWidth - popoverWidth - padding;
+              }
+              if (left < padding) {
+                left = padding;
+              }
+
+              // Adjust vertical position if popover would go off-screen
+              if (top + popoverHeight + padding > window.innerHeight) {
+                top = window.innerHeight - popoverHeight - padding;
+              }
+              if (top < padding) {
+                top = padding;
+              }
+
+              return (
+                <div
+                  className="storage-info-popover"
+                  style={{
+                    position: 'fixed',
+                    left: `${left}px`,
+                    top: `${top}px`,
+                    maxHeight: `calc(100vh - ${top + padding}px)`,
+                    overflowY: 'auto',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header with icon and name */}
+                  <div className="storage-info-hero">
+                    <div
+                      className={`storage-info-icon ${storageContextMenu.source.category}`}
+                    >
+                      {storageContextMenu.source.category === 'local' && (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <rect x="4" y="2" width="16" height="20" rx="2" />
+                          <line x1="8" y1="6" x2="16" y2="6" />
+                          <line x1="8" y1="10" x2="16" y2="10" />
+                          <circle cx="12" cy="17" r="2" />
+                        </svg>
+                      )}
+                      {storageContextMenu.source.category === 'network' && (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M2 12h20" />
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                      )}
+                      {storageContextMenu.source.category === 'cloud' && (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+                        </svg>
+                      )}
+                      {(storageContextMenu.source.category === 'block' ||
+                        storageContextMenu.source.category === 'hybrid') && (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <rect x="2" y="4" width="20" height="6" rx="1" />
+                          <rect x="2" y="14" width="20" height="6" rx="1" />
+                          <circle cx="6" cy="7" r="1" fill="currentColor" />
+                          <circle cx="6" cy="17" r="1" fill="currentColor" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="storage-info-title-area">
+                      <h3 className="storage-info-name">
+                        {storageContextMenu.source.name}
+                      </h3>
+                      <span
+                        className={`storage-info-status ${storageContextMenu.source.status}`}
+                      >
+                        <span className="status-indicator" />
+                        {storageContextMenu.source.status === 'connected'
+                          ? 'Connected'
+                          : 'Offline'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Info Grid */}
+                  <div className="storage-info-grid">
+                    <div className="info-row">
+                      <span className="info-icon">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z" />
+                          <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z" />
+                        </svg>
+                      </span>
+                      <span className="info-label">Kind</span>
+                      <span className="info-value">
+                        {storageContextMenu.source.category === 'local'
+                          ? 'Local Volume'
+                          : storageContextMenu.source.category === 'cloud'
+                            ? 'Cloud Storage'
+                            : storageContextMenu.source.category === 'network'
+                              ? 'Network Volume'
+                              : storageContextMenu.source.category === 'block'
+                                ? 'Block Storage'
+                                : 'Hybrid Volume'}
+                      </span>
+                    </div>
+
+                    <div className="info-row">
+                      <span className="info-icon">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                        </svg>
+                      </span>
+                      <span className="info-label">Tier</span>
+                      <span
+                        className={`info-value tier-pill ${storageContextMenu.source.tierStatus || (storageContextMenu.source.category === 'cloud' ? 'cold' : 'hot')}`}
+                      >
+                        {(
+                          storageContextMenu.source.tierStatus ||
+                          (storageContextMenu.source.category === 'cloud'
+                            ? 'cold'
+                            : 'hot')
+                        )
+                          .charAt(0)
+                          .toUpperCase() +
+                          (
+                            storageContextMenu.source.tierStatus ||
+                            (storageContextMenu.source.category === 'cloud'
+                              ? 'cold'
+                              : 'hot')
+                          ).slice(1)}
+                      </span>
+                    </div>
+
+                    {storageContextMenu.source.path && (
+                      <div className="info-row path-row">
+                        <span className="info-icon">
+                          <svg viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM2 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H2z" />
+                            <path d="M2.5 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V4z" />
+                          </svg>
+                        </span>
+                        <span className="info-label">Path</span>
+                        <span className="info-value path-value">
+                          {storageContextMenu.source.path}
+                        </span>
+                      </div>
+                    )}
+
+                    {storageContextMenu.source.providerId && (
+                      <div className="info-row">
+                        <span className="info-icon">
+                          <svg viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M1 0a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5v-1H1V1h5V0H1zm9 0v1h5v14h-5v1h5a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1h-5zM8 7a.5.5 0 0 0 0 1h3.793l-1.147 1.146a.5.5 0 0 0 .708.708l2-2a.5.5 0 0 0 0-.708l-2-2a.5.5 0 1 0-.708.708L11.793 7H8z" />
+                          </svg>
+                        </span>
+                        <span className="info-label">Provider</span>
+                        <span className="info-value">
+                          {storageContextMenu.source.providerId.toUpperCase()}
+                        </span>
                       </div>
                     )}
                   </div>
-                )}
 
-              {/* Asset Details - Get Info */}
-              {contextMenu.targetFile && (
-                <>
-                  <div className="context-divider" />
-                  <button
-                    className="context-item"
-                    onClick={() => {
-                      if (contextMenu.targetFile) {
-                        setInfoModal({
-                          visible: true,
-                          file: contextMenu.targetFile,
-                        });
-                      }
-                      closeContextMenu();
-                    }}
-                  >
-                    <svg
-                      className="context-icon"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
+                  {/* Actions */}
+                  <div className="storage-info-actions">
+                    <button
+                      className="storage-action-btn primary"
+                      onClick={() => {
+                        selectSource(storageContextMenu.source);
+                        setStorageContextMenu(null);
+                      }}
                     >
-                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                      <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
-                    </svg>
-                    Asset Details
-                    <span className="context-shortcut">⌘I</span>
-                  </button>
-                </>
-              )}
-
-              {/* Move to Storage Tier - Available for files and folders */}
-              {contextMenu.targetFile && (
-                <>
-                  <div className="context-divider" />
-                  <button
-                    className="context-item"
-                    onClick={() => {
-                      toast.showToast({
-                        type: 'info',
-                        message:
-                          'Move to Storage Tier: This feature is under development and will be available soon.',
-                        duration: 4000,
-                      });
-                      closeContextMenu();
-                    }}
-                  >
-                    <svg
-                      className="context-icon storage-tier"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      <path d="M.5 3l.04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9.81a2 2 0 0 0 1.991-1.819l.637-7a1.99 1.99 0 0 0-.342-1.311L12.5 3H.5zm.217 1h11.566l-.166 2.894a.5.5 0 0 1-.421.45l-5.5.894a.5.5 0 0 1-.578-.45L1.717 4zM14 2H2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zM2 1a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2H2z" />
-                      <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-1z" />
-                    </svg>
-                    Move to Storage Tier
-                  </button>
-                </>
-              )}
-
-              <div className="context-divider" />
-            </>
-          )}
-
-          {/* Clipboard actions */}
-          {selectedFiles.size > 0 && (
-            <>
-              <button
-                className="context-item"
-                onClick={() => {
-                  handleCopy();
-                  closeContextMenu();
-                }}
-              >
-                <svg
-                  className="context-icon"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                >
-                  <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6z" />
-                  <path d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z" />
-                </svg>
-                Copy
-                <span className="context-shortcut">⌘C</span>
-              </button>
-            </>
-          )}
-
-          <button
-            className={`context-item ${!(clipboardHasFiles || nativeClipboardCount > 0) ? 'disabled' : ''}`}
-            onClick={() => {
-              if (clipboardHasFiles || nativeClipboardCount > 0) {
-                // If right-clicking on a folder, paste into it; otherwise paste into current directory
-                const isTargetFolder =
-                  contextMenu.targetFile &&
-                  (contextMenu.targetFile.mimeType === 'folder' ||
-                    contextMenu.targetFile.isDirectory);
-                handlePaste(
-                  isTargetFolder ? contextMenu.targetFile?.path : undefined,
-                );
-              }
-              closeContextMenu();
-            }}
-            disabled={!(clipboardHasFiles || nativeClipboardCount > 0)}
-          >
-            <svg
-              className="context-icon"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-            >
-              <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1zM3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z" />
-            </svg>
-            {nativeClipboardCount > 0
-              ? `Paste ${nativeClipboardCount} items`
-              : 'Paste'}
-            <span className="context-shortcut">⌘V</span>
-          </button>
-
-          {selectedFiles.size > 0 && (
-            <>
-              <div className="context-divider" />
-
-              {selectedFiles.size === 1 && contextMenu.targetFile && (
-                <>
-                  <button
-                    className="context-item"
-                    onClick={() => {
-                      if (contextMenu.targetFile)
-                        handleRename(contextMenu.targetFile);
-                      closeContextMenu();
-                    }}
-                  >
-                    <svg
-                      className="context-icon"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5z" />
-                    </svg>
-                    Rename
-                  </button>
-                  <button
-                    className="context-item"
-                    onClick={() => {
-                      if (contextMenu.targetFile)
-                        handleDuplicate(contextMenu.targetFile);
-                      closeContextMenu();
-                    }}
-                  >
-                    <svg
-                      className="context-icon"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
-                      <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
-                    </svg>
-                    Duplicate
-                  </button>
-                </>
-              )}
-
-              <div className="context-divider" />
-
-              <button
-                className="context-item danger"
-                onClick={() => {
-                  handleDelete();
-                  closeContextMenu();
-                }}
-              >
-                <svg
-                  className="context-icon"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                >
-                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
-                  />
-                </svg>
-                Move to Trash
-              </button>
-            </>
-          )}
-
-          {/* Upload to S3 - only when storage is S3 */}
-          {!contextMenu.targetFile &&
-            selectedSource &&
-            (selectedSource.providerId === 's3' ||
-              selectedSource.providerId === 'aws-s3' ||
-              selectedSource.providerId === 's3-compatible' ||
-              selectedSource.category === 'cloud') && (
-              <>
-                <div className="context-divider" />
-                <button
-                  className="context-item"
-                  onClick={async () => {
-                    console.log('[FinderPage] Upload Files to S3 clicked');
-                    closeContextMenu();
-                    await handleUploadToS3();
-                  }}
-                >
-                  <svg
-                    className="context-icon"
-                    viewBox="0 0 16 16"
-                    fill="currentColor"
-                  >
-                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
-                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
-                  </svg>
-                  Upload Files to S3
-                </button>
-              </>
-            )}
-
-          {/* New Folder - only on empty space, not when right-clicking on a folder */}
-          {!contextMenu.targetFile && (
-            <>
-              <div className="context-divider" />
-              <button
-                className="context-item"
-                onClick={() => {
-                  // Create folder in current directory
-                  handleNewFolder();
-                  closeContextMenu();
-                }}
-              >
-                <svg
-                  className="context-icon"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                >
-                  <path d="m.5 3 .04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2zm5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672z" />
-                  <path d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z" />
-                </svg>
-                New Folder
-                <span className="context-shortcut">⌘⇧N</span>
-              </button>
-            </>
-          )}
-
-          {/* Tier actions - only for cloud/remote storage with cold/archive files */}
-          {!isMountedStorage() &&
-            contextMenu.targetFile &&
-            (contextMenu.targetFile.tierStatus === 'cold' ||
-              contextMenu.targetFile.tierStatus === 'nearline' ||
-              contextMenu.targetFile.tierStatus === 'archive' ||
-              (contextMenu.targetFile.canWarm &&
-                !contextMenu.targetFile.isWarmed)) && (
-              <>
-                <div className="context-divider" />
-                <button
-                  className="context-item"
-                  onClick={async () => {
-                    if (!selectedSource || !contextMenu.targetFile) {
-                      closeContextMenu();
-                      return;
-                    }
-
-                    try {
-                      const { invoke } = await import('@tauri-apps/api/core');
-                      await invoke('vfs_change_tier', {
-                        sourceId: selectedSource.id,
-                        paths: [contextMenu.targetFile.path],
-                        targetTier: 'hot',
-                      });
-
-                      // Refresh the file list
-                      await loadFilesList(selectedSource.id, currentPath);
-                    } catch (err) {
-                      console.error('Hydration failed:', err);
-                      DialogService.error(
-                        `Failed to fetch file: ${err}`,
-                        'Fetch Error',
-                      );
-                    }
-                    closeContextMenu();
-                  }}
-                >
-                  <svg
-                    className="context-icon"
-                    viewBox="0 0 16 16"
-                    fill="currentColor"
-                  >
-                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
-                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
-                  </svg>
-                  Make Available Offline
-                </button>
-              </>
-            )}
-        </div>
-      )}
-
-      {/* Storage Context Menu - macOS Get Info style */}
-      {storageContextMenu &&
-        (() => {
-          // Calculate position to ensure popover stays within viewport
-          const popoverWidth = 320; // max-width from CSS
-          const popoverHeight = 400; // estimated max height
-          const padding = 16;
-
-          let left = storageContextMenu.x;
-          let top = storageContextMenu.y;
-
-          // Adjust horizontal position if popover would go off-screen
-          if (left + popoverWidth + padding > window.innerWidth) {
-            left = window.innerWidth - popoverWidth - padding;
-          }
-          if (left < padding) {
-            left = padding;
-          }
-
-          // Adjust vertical position if popover would go off-screen
-          if (top + popoverHeight + padding > window.innerHeight) {
-            top = window.innerHeight - popoverHeight - padding;
-          }
-          if (top < padding) {
-            top = padding;
-          }
-
-          return (
-            <div
-              className="storage-info-popover"
-              style={{
-                position: 'fixed',
-                left: `${left}px`,
-                top: `${top}px`,
-                maxHeight: `calc(100vh - ${top + padding}px)`,
-                overflowY: 'auto',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header with icon and name */}
-              <div className="storage-info-hero">
-                <div
-                  className={`storage-info-icon ${storageContextMenu.source.category}`}
-                >
-                  {storageContextMenu.source.category === 'local' && (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <rect x="4" y="2" width="16" height="20" rx="2" />
-                      <line x1="8" y1="6" x2="16" y2="6" />
-                      <line x1="8" y1="10" x2="16" y2="10" />
-                      <circle cx="12" cy="17" r="2" />
-                    </svg>
-                  )}
-                  {storageContextMenu.source.category === 'network' && (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M2 12h20" />
-                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                    </svg>
-                  )}
-                  {storageContextMenu.source.category === 'cloud' && (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
-                    </svg>
-                  )}
-                  {(storageContextMenu.source.category === 'block' ||
-                    storageContextMenu.source.category === 'hybrid') && (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <rect x="2" y="4" width="20" height="6" rx="1" />
-                      <rect x="2" y="14" width="20" height="6" rx="1" />
-                      <circle cx="6" cy="7" r="1" fill="currentColor" />
-                      <circle cx="6" cy="17" r="1" fill="currentColor" />
-                    </svg>
-                  )}
-                </div>
-                <div className="storage-info-title-area">
-                  <h3 className="storage-info-name">
-                    {storageContextMenu.source.name}
-                  </h3>
-                  <span
-                    className={`storage-info-status ${storageContextMenu.source.status}`}
-                  >
-                    <span className="status-indicator" />
-                    {storageContextMenu.source.status === 'connected'
-                      ? 'Connected'
-                      : 'Offline'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Info Grid */}
-              <div className="storage-info-grid">
-                <div className="info-row">
-                  <span className="info-icon">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z" />
-                      <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z" />
-                    </svg>
-                  </span>
-                  <span className="info-label">Kind</span>
-                  <span className="info-value">
-                    {storageContextMenu.source.category === 'local'
-                      ? 'Local Volume'
-                      : storageContextMenu.source.category === 'cloud'
-                        ? 'Cloud Storage'
-                        : storageContextMenu.source.category === 'network'
-                          ? 'Network Volume'
-                          : storageContextMenu.source.category === 'block'
-                            ? 'Block Storage'
-                            : 'Hybrid Volume'}
-                  </span>
-                </div>
-
-                <div className="info-row">
-                  <span className="info-icon">
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
-                    </svg>
-                  </span>
-                  <span className="info-label">Tier</span>
-                  <span
-                    className={`info-value tier-pill ${storageContextMenu.source.tierStatus || (storageContextMenu.source.category === 'cloud' ? 'cold' : 'hot')}`}
-                  >
-                    {(
-                      storageContextMenu.source.tierStatus ||
-                      (storageContextMenu.source.category === 'cloud'
-                        ? 'cold'
-                        : 'hot')
-                    )
-                      .charAt(0)
-                      .toUpperCase() +
-                      (
-                        storageContextMenu.source.tierStatus ||
-                        (storageContextMenu.source.category === 'cloud'
-                          ? 'cold'
-                          : 'hot')
-                      ).slice(1)}
-                  </span>
-                </div>
-
-                {storageContextMenu.source.path && (
-                  <div className="info-row path-row">
-                    <span className="info-icon">
                       <svg viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM2 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H2z" />
-                        <path d="M2.5 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V4z" />
+                        <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z" />
                       </svg>
-                    </span>
-                    <span className="info-label">Path</span>
-                    <span className="info-value path-value">
-                      {storageContextMenu.source.path}
-                    </span>
-                  </div>
-                )}
-
-                {storageContextMenu.source.providerId && (
-                  <div className="info-row">
-                    <span className="info-icon">
-                      <svg viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M1 0a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5v-1H1V1h5V0H1zm9 0v1h5v14h-5v1h5a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1h-5zM8 7a.5.5 0 0 0 0 1h3.793l-1.147 1.146a.5.5 0 0 0 .708.708l2-2a.5.5 0 0 0 0-.708l-2-2a.5.5 0 1 0-.708.708L11.793 7H8z" />
-                      </svg>
-                    </span>
-                    <span className="info-label">Provider</span>
-                    <span className="info-value">
-                      {storageContextMenu.source.providerId.toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="storage-info-actions">
-                <button
-                  className="storage-action-btn primary"
-                  onClick={() => {
-                    selectSource(storageContextMenu.source);
-                    setStorageContextMenu(null);
-                  }}
-                >
-                  <svg viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z" />
-                  </svg>
-                  Open
-                </button>
-                {/* Don't show edit/remove for system locations */}
-                {!storageContextMenu.source.isSystemLocation && (
-                  <button
-                    className="storage-action-btn"
-                    onClick={() => {
-                      handleEditStorage(storageContextMenu.source);
-                    }}
-                  >
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
-                    </svg>
-                    Edit
-                  </button>
-                )}
-                <button
-                  className="storage-action-btn"
-                  onClick={() => {
-                    if (storageContextMenu.source.path) {
-                      navigator.clipboard.writeText(
-                        storageContextMenu.source.path,
-                      );
-                      toast.showToast({
-                        type: 'success',
-                        message: 'Path copied to clipboard',
-                      });
-                    }
-                    setStorageContextMenu(null);
-                  }}
-                >
-                  <svg viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
-                    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
-                  </svg>
-                  Copy Path
-                </button>
-                {/* Don't show remove for system locations */}
-                {!storageContextMenu.source.isSystemLocation && (
-                  <button
-                    className="storage-action-btn danger"
-                    onClick={async () => {
-                      const source = storageContextMenu.source;
-                      setStorageContextMenu(null);
-                      await handleRemoveStorage(source.id);
-                    }}
-                  >
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
-                      <path
-                        fillRule="evenodd"
-                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
-                      />
-                    </svg>
-                    Remove Storage
-                  </button>
-                )}
-                {storageContextMenu.source.isEjectable && (
-                  <button
-                    className="storage-action-btn eject"
-                    onClick={async () => {
-                      const source = storageContextMenu.source;
-                      setStorageContextMenu(null);
-
-                      try {
-                        await StorageService.ejectSource(source.id);
-                        toast.showToast({
-                          type: 'success',
-                          message: `Ejected ${source.name}`,
-                        });
-                        // Refresh sources list
-                        await loadSourcesList();
-                        // If the ejected source was selected, clear selection
-                        if (selectedSource?.id === source.id) {
-                          setSelectedSource(null);
-                          setFiles([]);
-                          setCurrentPath('');
+                      Open
+                    </button>
+                    {/* Don't show edit/remove for system locations */}
+                    {!storageContextMenu.source.isSystemLocation && (
+                      <button
+                        className="storage-action-btn"
+                        onClick={() => {
+                          handleEditStorage(storageContextMenu.source);
+                        }}
+                      >
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                        </svg>
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      className="storage-action-btn"
+                      onClick={() => {
+                        if (storageContextMenu.source.path) {
+                          navigator.clipboard.writeText(
+                            storageContextMenu.source.path,
+                          );
+                          toast.showToast({
+                            type: 'success',
+                            message: 'Path copied to clipboard',
+                          });
                         }
-                      } catch (err) {
-                        toast.showToast({
-                          type: 'error',
-                          message: `Failed to eject: ${err}`,
-                        });
+                        setStorageContextMenu(null);
+                      }}
+                    >
+                      <svg viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
+                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
+                      </svg>
+                      Copy Path
+                    </button>
+                    {/* Don't show remove for system locations */}
+                    {!storageContextMenu.source.isSystemLocation && (
+                      <button
+                        className="storage-action-btn danger"
+                        onClick={async () => {
+                          const source = storageContextMenu.source;
+                          setStorageContextMenu(null);
+                          await handleRemoveStorage(source.id);
+                        }}
+                      >
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                          <path
+                            fillRule="evenodd"
+                            d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
+                          />
+                        </svg>
+                        Remove Storage
+                      </button>
+                    )}
+                    {storageContextMenu.source.isEjectable && (
+                      <button
+                        className="storage-action-btn eject"
+                        onClick={async () => {
+                          const source = storageContextMenu.source;
+                          setStorageContextMenu(null);
+
+                          try {
+                            await StorageService.ejectSource(source.id);
+                            toast.showToast({
+                              type: 'success',
+                              message: `Ejected ${source.name}`,
+                            });
+                            // Refresh sources list
+                            await loadSourcesList();
+                            // If the ejected source was selected, clear selection
+                            if (selectedSource?.id === source.id) {
+                              setSelectedSource(null);
+                              setFiles([]);
+                              setCurrentPath('');
+                            }
+                          } catch (err) {
+                            toast.showToast({
+                              type: 'error',
+                              message: `Failed to eject: ${err}`,
+                            });
+                          }
+                        }}
+                      >
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M7.27 1.047a1 1 0 0 1 1.46 0l6.345 6.77c.6.638.146 1.683-.73 1.683H11.5v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3H1.654C.78 9.5.326 8.455.924 7.816L7.27 1.047z" />
+                        </svg>
+                        Eject
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+          {/* Info Modal */}
+          {infoModal.visible && infoModal.file && (
+            <InfoModal
+              file={infoModal.file}
+              sourceId={selectedSource?.id}
+              onClose={() => setInfoModal({ visible: false, file: null })}
+              onToggleFavorite={(file) => handleToggleFavorite(file.path)}
+              isFavorite={isFileFavorite(infoModal.file.path)}
+              onAddTag={(file, tag) => {
+                // Update file tags
+                setFiles((prev) =>
+                  prev.map((f) =>
+                    f.id === file.id
+                      ? { ...f, tags: [...(f.tags || []), tag] }
+                      : f,
+                  ),
+                );
+                // Update modal file
+                setInfoModal((prev) =>
+                  prev.file
+                    ? {
+                        ...prev,
+                        file: {
+                          ...prev.file,
+                          tags: [...(prev.file.tags || []), tag],
+                        },
                       }
-                    }}
-                  >
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M7.27 1.047a1 1 0 0 1 1.46 0l6.345 6.77c.6.638.146 1.683-.73 1.683H11.5v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3H1.654C.78 9.5.326 8.455.924 7.816L7.27 1.047z" />
-                    </svg>
-                    Eject
-                  </button>
-                )}
-              </div>
+                    : prev,
+                );
+                // Add to global tags if new
+                if (!allTags.some((t) => t.name === tag)) {
+                  setAllTags((prev) => [...prev, { name: tag }]);
+                }
+              }}
+              onRemoveTag={(file, tag) => {
+                // Update file tags
+                setFiles((prev) =>
+                  prev.map((f) =>
+                    f.id === file.id
+                      ? { ...f, tags: (f.tags || []).filter((t) => t !== tag) }
+                      : f,
+                  ),
+                );
+                // Update modal file
+                setInfoModal((prev) =>
+                  prev.file
+                    ? {
+                        ...prev,
+                        file: {
+                          ...prev.file,
+                          tags: (prev.file.tags || []).filter((t) => t !== tag),
+                        },
+                      }
+                    : prev,
+                );
+              }}
+              onSetColorLabel={(file, color) => {
+                // Update file color label
+                setFiles((prev) =>
+                  prev.map((f) =>
+                    f.id === file.id
+                      ? { ...f, colorLabel: color || undefined }
+                      : f,
+                  ),
+                );
+                // Update modal file
+                setInfoModal((prev) =>
+                  prev.file
+                    ? {
+                        ...prev,
+                        file: { ...prev.file, colorLabel: color || undefined },
+                      }
+                    : prev,
+                );
+              }}
+              onUpdateComments={(file, comments) => {
+                // Update file comments
+                setFiles((prev) =>
+                  prev.map((f) => (f.id === file.id ? { ...f, comments } : f)),
+                );
+                // Update modal file
+                setInfoModal((prev) =>
+                  prev.file
+                    ? { ...prev, file: { ...prev.file, comments } }
+                    : prev,
+                );
+              }}
+            />
+          )}
+
+          {/* Add Storage Modal */}
+          {showAddStorage && (
+            <AddStorageModal
+              isOpen={showAddStorage}
+              onClose={() => {
+                console.log('[FinderPage] Closing Add Storage modal');
+                setShowAddStorage(false);
+                setEditingSource(null);
+              }}
+              onAdd={handleAddStorage}
+              editingSource={editingSource}
+            />
+          )}
+
+          {/* Spotlight Search */}
+          <SpotlightSearch
+            isOpen={spotlightOpen}
+            onClose={handleCloseSpotlight}
+            files={files}
+            sources={sources}
+            currentSourceId={selectedSource?.id}
+            onNavigateToFile={(file) => {
+              if (file.isDirectory) {
+                navigateTo(file.path);
+              } else {
+                // Select the file
+                setSelectedFiles(new Set([file.path]));
+                // Open info modal
+                setInfoModal({ visible: true, file });
+              }
+              handleCloseSpotlight();
+            }}
+            onNavigateToPath={(sourceId, path) => {
+              const source = sources.find((s) => s.id === sourceId);
+              if (source) {
+                selectSource(source);
+                navigateTo(path);
+              }
+              handleCloseSpotlight();
+            }}
+            onSearchSubmit={(query) => {
+              setSearchQuery(query);
+              handleCloseSpotlight();
+            }}
+          />
+
+          {/* File Operation Progress */}
+          {fileOperation?.inProgress && (
+            <div className="file-operation-toast">
+              <div className="operation-spinner" />
+              <span>{fileOperation.type}...</span>
             </div>
-          );
-        })()}
+          )}
 
-      {/* Info Modal */}
-      {infoModal.visible && infoModal.file && (
-        <InfoModal
-          file={infoModal.file}
-          sourceId={selectedSource?.id}
-          onClose={() => setInfoModal({ visible: false, file: null })}
-          onToggleFavorite={(file) => handleToggleFavorite(file.path)}
-          isFavorite={isFileFavorite(infoModal.file.path)}
-          onAddTag={(file, tag) => {
-            // Update file tags
-            setFiles((prev) =>
-              prev.map((f) =>
-                f.id === file.id ? { ...f, tags: [...(f.tags || []), tag] } : f,
-              ),
-            );
-            // Update modal file
-            setInfoModal((prev) =>
-              prev.file
-                ? {
-                    ...prev,
-                    file: {
-                      ...prev.file,
-                      tags: [...(prev.file.tags || []), tag],
-                    },
-                  }
-                : prev,
-            );
-            // Add to global tags if new
-            if (!allTags.some((t) => t.name === tag)) {
-              setAllTags((prev) => [...prev, { name: tag }]);
-            }
-          }}
-          onRemoveTag={(file, tag) => {
-            // Update file tags
-            setFiles((prev) =>
-              prev.map((f) =>
-                f.id === file.id
-                  ? { ...f, tags: (f.tags || []).filter((t) => t !== tag) }
-                  : f,
-              ),
-            );
-            // Update modal file
-            setInfoModal((prev) =>
-              prev.file
-                ? {
-                    ...prev,
-                    file: {
-                      ...prev.file,
-                      tags: (prev.file.tags || []).filter((t) => t !== tag),
-                    },
-                  }
-                : prev,
-            );
-          }}
-          onSetColorLabel={(file, color) => {
-            // Update file color label
-            setFiles((prev) =>
-              prev.map((f) =>
-                f.id === file.id ? { ...f, colorLabel: color || undefined } : f,
-              ),
-            );
-            // Update modal file
-            setInfoModal((prev) =>
-              prev.file
-                ? {
-                    ...prev,
-                    file: { ...prev.file, colorLabel: color || undefined },
-                  }
-                : prev,
-            );
-          }}
-          onUpdateComments={(file, comments) => {
-            // Update file comments
-            setFiles((prev) =>
-              prev.map((f) => (f.id === file.id ? { ...f, comments } : f)),
-            );
-            // Update modal file
-            setInfoModal((prev) =>
-              prev.file ? { ...prev, file: { ...prev.file, comments } } : prev,
-            );
-          }}
-        />
+          {/* Keyboard Shortcut Helper */}
+          <KeyboardShortcutHelper
+            isOpen={shortcutHelper.isOpen}
+            onClose={shortcutHelper.close}
+          />
+
+          {/* Keyboard Shortcut Settings */}
+          <ShortcutSettings
+            isOpen={showShortcutSettings}
+            onClose={() => setShowShortcutSettings(false)}
+          />
+
+          {/* Upload Progress Panel */}
+          {activeUploads.size > 0 && <UploadProgressPanel />}
+        </>
       )}
 
-      {/* Add Storage Modal */}
-      {showAddStorage && (
-        <AddStorageModal
-          isOpen={showAddStorage}
-          onClose={() => {
-            console.log('[FinderPage] Closing Add Storage modal');
-            setShowAddStorage(false);
-            setEditingSource(null);
-          }}
-          onAdd={handleAddStorage}
-          editingSource={editingSource}
-        />
-      )}
-
-      {/* Spotlight Search */}
-      <SpotlightSearch
-        isOpen={spotlightOpen}
-        onClose={handleCloseSpotlight}
-        files={files}
-        sources={sources}
-        currentSourceId={selectedSource?.id}
-        onNavigateToFile={(file) => {
-          if (file.isDirectory) {
-            navigateTo(file.path);
-          } else {
-            // Select the file
-            setSelectedFiles(new Set([file.path]));
-            // Open info modal
-            setInfoModal({ visible: true, file });
-          }
-          handleCloseSpotlight();
-        }}
-        onNavigateToPath={(sourceId, path) => {
-          const source = sources.find((s) => s.id === sourceId);
-          if (source) {
-            selectSource(source);
-            navigateTo(path);
-          }
-          handleCloseSpotlight();
-        }}
-        onSearchSubmit={(query) => {
-          setSearchQuery(query);
-          handleCloseSpotlight();
-        }}
-      />
-
-      {/* File Operation Progress */}
-      {fileOperation?.inProgress && (
-        <div className="file-operation-toast">
-          <div className="operation-spinner" />
-          <span>{fileOperation.type}...</span>
+      {/* Operations Tab Content */}
+      {activeTab === 'transfers' && (
+        <div className="finder-transfers-view">
+          <TransferPanel
+            isVisible={true}
+            filterSources={['network', 'cloud']}
+            sources={sources}
+          />
         </div>
       )}
-
-      {/* Keyboard Shortcut Helper */}
-      <KeyboardShortcutHelper
-        isOpen={shortcutHelper.isOpen}
-        onClose={shortcutHelper.close}
-      />
-
-      {/* Keyboard Shortcut Settings */}
-      <ShortcutSettings
-        isOpen={showShortcutSettings}
-        onClose={() => setShowShortcutSettings(false)}
-      />
-
-      {/* Upload Progress Panel */}
-      {activeUploads.size > 0 && <UploadProgressPanel />}
     </div>
   );
 }

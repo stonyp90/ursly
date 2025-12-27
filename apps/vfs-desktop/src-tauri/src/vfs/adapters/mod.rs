@@ -5,6 +5,8 @@
 
 pub mod local_storage;
 pub mod s3_storage;
+pub mod s3_tiering;
+pub mod object_storage_tiering;
 pub mod nvme_cache;
 pub mod tauri_event_bus;
 pub mod ffmpeg_media;

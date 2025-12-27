@@ -113,7 +113,7 @@ export function AutoUpdater() {
         setIsChecking(false);
         return;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const isProduction =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (globalThis as any).import?.meta?.env?.PROD === true ||

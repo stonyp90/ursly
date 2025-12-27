@@ -42,14 +42,18 @@ impl S3StorageAdapter {
         builder.bucket(&bucket);
         builder.region(&region);
         
-        if let Some(ak) = access_key {
-            builder.access_key_id(&ak);
+        // Use provided credentials, or fall back to environment variables
+        let access_key = access_key.or_else(|| std::env::var("AWS_ACCESS_KEY_ID").ok());
+        let secret_key = secret_key.or_else(|| std::env::var("AWS_SECRET_ACCESS_KEY").ok());
+        
+        if let Some(ref ak) = access_key {
+            builder.access_key_id(ak);
         }
-        if let Some(sk) = secret_key {
-            builder.secret_access_key(&sk);
+        if let Some(ref sk) = secret_key {
+            builder.secret_access_key(sk);
         }
-        if let Some(ep) = endpoint {
-            builder.endpoint(&ep);
+        if let Some(ref ep) = endpoint {
+            builder.endpoint(ep);
         }
         
         let operator = Operator::new(builder)
@@ -62,8 +66,10 @@ impl S3StorageAdapter {
             })?
             .finish();
         
+        let has_access_key = access_key.is_some();
+        let has_secret_key = secret_key.is_some();
         info!("S3 adapter initialized - bucket: {}, region: {}, has_access_key: {}, has_secret_key: {}, endpoint: {:?}", 
-            bucket, region, access_key.is_some(), secret_key.is_some(), endpoint);
+            bucket, region, has_access_key, has_secret_key, endpoint);
         
         Ok(Self {
             operator,
@@ -478,9 +484,21 @@ impl IFileOperations for S3StorageAdapter {
     }
     
     async fn rename(&self, from: &Path, to: &Path) -> Result<()> {
-        // S3 doesn't have rename - copy then delete
-        self.copy(from, to, CopyOptions::default()).await?;
+        let from_key = self.to_key(from);
+        let to_key = self.to_key(to);
+        info!("Renaming S3 object: {} -> {}", from_key, to_key);
+        
+        // S3 doesn't have atomic rename - copy then delete
+        // Use copy with overwrite enabled
+        let copy_opts = CopyOptions {
+            overwrite: true,
+            recursive: false,
+            preserve_attributes: false,
+            follow_symlinks: false,
+        };
+        self.copy(from, to, copy_opts).await?;
         self.rm(from).await?;
+        info!("Successfully renamed S3 object: {} -> {}", from_key, to_key);
         Ok(())
     }
     
@@ -488,32 +506,62 @@ impl IFileOperations for S3StorageAdapter {
         let from_key = self.to_key(from);
         let to_key = self.to_key(to);
         
+        info!("Copying S3 object: {} -> {}", from_key, to_key);
+        
         // Check if destination exists
         if !options.overwrite && self.operator.is_exist(&to_key).await? {
-            return Err(anyhow::anyhow!("Destination already exists"));
+            return Err(anyhow::anyhow!("Destination already exists: {}", to_key));
+        }
+        
+        // Check if source exists
+        if !self.operator.is_exist(&from_key).await? {
+            return Err(anyhow::anyhow!("Source does not exist: {}", from_key));
         }
         
         let metadata = self.operator.stat(&from_key).await?;
         
         if metadata.is_dir() && options.recursive {
             // Copy directory recursively
-            let entries = self.operator.list(&from_key).await?;
+            let prefix_with_slash = format!("{}/", from_key);
+            let entries = self.operator.list(&prefix_with_slash).await?;
+            info!("Copying directory with {} entries", entries.len());
+            
             for entry in entries {
                 let entry_name = entry.name();
-                let from_path = from.join(entry_name);
-                let to_path = to.join(entry_name);
+                // Get relative path from the source directory
+                let relative_path = entry_name.strip_prefix(&prefix_with_slash)
+                    .unwrap_or(entry_name);
+                
+                let from_path = from.join(relative_path);
+                let to_path = to.join(relative_path);
                 Box::pin(self.copy(&from_path, &to_path, options.clone())).await?;
             }
+            
+            // Copy directory marker if it exists
+            if self.operator.is_exist(&prefix_with_slash).await.unwrap_or(false) {
+                let marker_data = self.operator.read(&prefix_with_slash).await.ok();
+                if let Some(data) = marker_data {
+                    let _ = self.operator.write(&format!("{}/", to_key), data.to_vec()).await;
+                }
+            }
         } else {
-            // Copy single file
-            let data = self.operator.read(&from_key).await?;
-            self.operator.write(&to_key, data.to_vec()).await?;
+            // Copy single file - use read+write (OpenDAL handles S3 CopyObject internally when possible)
+            // For large files, this will be less efficient, but it's the most compatible approach
+            let data = self.operator.read(&from_key).await
+                .map_err(|e| anyhow::anyhow!("Failed to read source object '{}': {}", from_key, e))?;
+            self.operator.write(&to_key, data.to_vec()).await
+                .map_err(|e| anyhow::anyhow!("Failed to write destination object '{}': {}", to_key, e))?;
+            info!("Successfully copied S3 object: {} -> {}", from_key, to_key);
         }
         
         Ok(())
     }
     
     async fn mv(&self, from: &Path, to: &Path, options: MoveOptions) -> Result<()> {
+        let from_key = self.to_key(from);
+        let to_key = self.to_key(to);
+        info!("Moving S3 object: {} -> {}", from_key, to_key);
+        
         let copy_opts = CopyOptions {
             overwrite: options.overwrite,
             recursive: true,
@@ -522,28 +570,182 @@ impl IFileOperations for S3StorageAdapter {
         };
         self.copy(from, to, copy_opts).await?;
         self.rm_rf(from).await?;
+        info!("Successfully moved S3 object: {} -> {}", from_key, to_key);
         Ok(())
     }
     
     async fn rm(&self, path: &Path) -> Result<()> {
         let key = self.to_key(path);
-        self.operator.delete(&key).await?;
-        Ok(())
+        debug!("Deleting S3 object: {}", key);
+        
+        // Check if this looks like a multipart upload part file
+        let is_part_file = key.contains(".part") || key.ends_with(".part0") || key.ends_with(".part1");
+        
+        // Attempt to delete the object
+        // Note: GLACIER_IR objects can be deleted directly without restore
+        // For other Glacier classes (DEEP_ARCHIVE), objects may need to be restored first
+        match self.operator.delete(&key).await {
+            Ok(_) => {
+                info!("Successfully deleted S3 object: {}", key);
+                Ok(())
+            }
+            Err(e) => {
+                let error_msg = format!("Failed to delete S3 object '{}': {}", key, e);
+                error!("{}", error_msg);
+                
+                let error_str = e.to_string().to_lowercase();
+                let error_debug = format!("{:?}", e);
+                
+                // Check if this is likely an orphaned multipart upload part
+                if is_part_file {
+                    return Err(anyhow::anyhow!(
+                        "{} - This appears to be an orphaned multipart upload part. \
+                        Orphaned parts from failed uploads cannot be deleted with s3:DeleteObject. \
+                        They must be cleaned up by aborting the incomplete multipart upload using \
+                        s3:AbortMultipartUpload. Check for incomplete multipart uploads with: \
+                        aws s3api list-multipart-uploads --bucket {}. \
+                        Then abort them with: aws s3api abort-multipart-upload --bucket {} --key {} --upload-id <id>",
+                        error_msg, self.bucket, self.bucket, key
+                    ));
+                }
+                
+                // Check for specific AWS error codes
+                if error_str.contains("accessdenied") || error_str.contains("403") {
+                    return Err(anyhow::anyhow!(
+                        "{} - Access Denied. Check IAM permissions: \
+                        - s3:DeleteObject on the object \
+                        - s3:ListBucket on the bucket \
+                        - If bucket has versioning enabled, also need s3:DeleteObjectVersion \
+                        - If bucket has MFA delete enabled, MFA token is required",
+                        error_msg
+                    ));
+                }
+                
+                if error_str.contains("nosuchkey") || error_str.contains("404") {
+                    // Object doesn't exist - might have been deleted already or never existed
+                    warn!("Object '{}' not found - may have been deleted already", key);
+                    return Ok(()); // Treat as success if object doesn't exist
+                }
+                
+                // Check if error is related to Glacier storage class
+                if error_str.contains("glacier") || error_str.contains("restore") || error_str.contains("invalidobjectstate") {
+                    return Err(anyhow::anyhow!(
+                        "{} - Objects in Glacier storage classes (GLACIER, DEEP_ARCHIVE) must be restored before deletion. \
+                        GLACIER_IR objects should be deletable directly. \
+                        To restore: aws s3api restore-object --bucket {} --key {} --restore-request '{{\"Days\":1,\"GlacierJobParameters\":{{\"Tier\":\"Expedited\"}}}}' \
+                        Then wait for restore to complete before deleting. Check IAM permissions: s3:DeleteObject, s3:RestoreObject.",
+                        error_msg, self.bucket, key
+                    ));
+                }
+                
+                // Check for versioning-related errors
+                if error_str.contains("version") || error_str.contains("versionid") {
+                    return Err(anyhow::anyhow!(
+                        "{} - This bucket may have versioning enabled. \
+                        Try deleting with version ID or disable versioning. \
+                        Check IAM permissions: s3:DeleteObjectVersion.",
+                        error_msg
+                    ));
+                }
+                
+                // Generic error with helpful suggestions
+                Err(anyhow::anyhow!(
+                    "{} - Possible causes: \
+                    1. Insufficient IAM permissions (s3:DeleteObject, s3:ListBucket) \
+                    2. Object is in Glacier/DEEP_ARCHIVE and needs restore first \
+                    3. Bucket has versioning enabled (need s3:DeleteObjectVersion) \
+                    4. Bucket has MFA delete enabled (need MFA token) \
+                    5. Object is locked by Object Lock retention/legal hold \
+                    Error details: {}",
+                    error_msg, error_debug
+                ))
+            }
+        }
     }
     
     async fn rm_rf(&self, path: &Path) -> Result<()> {
         let key = self.to_key(path);
+        debug!("rm_rf: Deleting S3 object/directory: {}", key);
         
-        // Delete all objects with this prefix
-        let entries = self.operator.list(&format!("{}/", key)).await.unwrap_or_default();
-        for entry in entries {
-            let entry_path = path.join(entry.name());
-            Box::pin(self.rm_rf(&entry_path)).await?;
+        // First, check if it's a directory by trying to list objects with this prefix
+        let prefix_with_slash = format!("{}/", key);
+        let entries = self.operator.list(&prefix_with_slash).await.unwrap_or_default();
+        
+        if !entries.is_empty() {
+            // It's a directory - delete all objects with this prefix recursively
+            info!("rm_rf: Found {} entries under prefix '{}', deleting recursively", entries.len(), prefix_with_slash);
+            for entry in entries {
+                let entry_name = entry.name();
+                // Remove the prefix to get relative path
+                let relative_path = entry_name.strip_prefix(&prefix_with_slash)
+                    .unwrap_or(entry_name);
+                let entry_path = path.join(relative_path);
+                Box::pin(self.rm_rf(&entry_path)).await?;
+            }
+            // Delete the directory marker itself
+            let _ = self.operator.delete(&prefix_with_slash).await;
+            info!("rm_rf: Successfully deleted directory: {}", key);
+        } else {
+            // It's a single file - delete it directly
+            info!("rm_rf: Deleting single file: {}", key);
+            
+            // Check if this looks like a multipart upload part file
+            let is_part_file = key.contains(".part") || key.ends_with(".part0") || key.ends_with(".part1");
+            
+            match self.operator.delete(&key).await {
+                Ok(_) => {
+                    info!("rm_rf: Successfully deleted file: {}", key);
+                }
+                Err(e) => {
+                    let error_str = e.to_string().to_lowercase();
+                    let error_debug = format!("{:?}", e);
+                    
+                    // Check if this is likely an orphaned multipart upload part
+                    if is_part_file {
+                        return Err(anyhow::anyhow!(
+                            "Failed to delete S3 object '{}': {} - This appears to be an orphaned multipart upload part. \
+                            Orphaned parts from failed uploads cannot be deleted with s3:DeleteObject. \
+                            They must be cleaned up by aborting the incomplete multipart upload using \
+                            s3:AbortMultipartUpload. Use AWS CLI: aws s3api list-multipart-uploads --bucket {}",
+                            key, e, self.bucket
+                        ));
+                    }
+                    
+                    // Check for access denied
+                    if error_str.contains("accessdenied") || error_str.contains("403") {
+                        return Err(anyhow::anyhow!(
+                            "Failed to delete S3 object '{}': {} - Access Denied. \
+                            Check IAM permissions: s3:DeleteObject, s3:ListBucket, s3:DeleteObjectVersion (if versioning enabled)",
+                            key, e
+                        ));
+                    }
+                    
+                    // Check if object doesn't exist (treat as success)
+                    if error_str.contains("nosuchkey") || error_str.contains("404") {
+                        warn!("rm_rf: Object '{}' not found - may have been deleted already", key);
+                        return Ok(());
+                    }
+                    
+                    // Check for Glacier errors
+                    if error_str.contains("glacier") || error_str.contains("restore") || error_str.contains("invalidobjectstate") {
+                        return Err(anyhow::anyhow!(
+                            "Failed to delete S3 object '{}': {} - Objects in Glacier storage classes must be restored before deletion. \
+                            GLACIER_IR objects should be deletable directly. Restore command: \
+                            aws s3api restore-object --bucket {} --key {} --restore-request '{{\"Days\":1}}'",
+                            key, e, self.bucket, key
+                        ));
+                    }
+                    
+                    // Generic error
+                    return Err(anyhow::anyhow!(
+                        "Failed to delete S3 object '{}': {} - Check IAM permissions (s3:DeleteObject), \
+                        storage class (may need restore), versioning (may need DeleteObjectVersion), \
+                        or Object Lock settings. Error: {}",
+                        key, e, error_debug
+                    ));
+                }
+            }
         }
-        
-        // Delete the object/directory marker itself
-        self.operator.delete(&key).await.ok();
-        self.operator.delete(&format!("{}/", key)).await.ok();
         
         Ok(())
     }

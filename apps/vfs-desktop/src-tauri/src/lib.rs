@@ -153,6 +153,8 @@ pub fn run() {
             vfs::commands::vfs_touch,
             vfs::commands::vfs_exists,
             vfs::commands::vfs_read_text,
+            vfs::commands::vfs_read_file_bytes,
+            vfs::commands::vfs_download_file,
             vfs::commands::vfs_write_text,
             vfs::commands::vfs_append_text,
             // VFS Clipboard commands
@@ -206,11 +208,14 @@ pub fn run() {
             vfs::commands::vfs_get_transcription_segments,
             // Multipart upload commands
             vfs::commands::vfs_start_multipart_upload,
+            vfs::commands::vfs_upload_folder,
+            vfs::commands::vfs_is_directory,
             vfs::commands::vfs_get_upload_progress,
             vfs::commands::vfs_resume_upload,
             vfs::commands::vfs_pause_upload,
             vfs::commands::vfs_cancel_upload,
             vfs::commands::vfs_list_uploads,
+            vfs::commands::vfs_list_operations,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

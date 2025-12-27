@@ -22,6 +22,7 @@ export interface UploadProgressData {
   status: 'Pending' | 'InProgress' | 'Completed' | 'Failed' | 'Paused';
   speed_bytes_per_sec?: number;
   estimated_time_remaining_sec?: number;
+  error?: string;
 }
 
 interface UploadProgressProps {
@@ -213,8 +214,8 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
         />
       </div>
 
-      {progress.status === 'Failed' && (progress as any).error && (
-        <div className="upload-progress-error">{(progress as any).error}</div>
+      {progress.status === 'Failed' && progress.error && (
+        <div className="upload-progress-error">{progress.error}</div>
       )}
 
       {progress.status === 'Completed' && (

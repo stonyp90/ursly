@@ -146,7 +146,9 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  width: 100%;
   background: var(--finder-bg);
+  overflow: hidden;
   color: var(--finder-text-primary);
   font-family: var(--font-system);
   font-size: 13px;
@@ -162,6 +164,7 @@
 /* =========================================
    TOOLBAR - Native macOS Style
    ========================================= */
+/* Finder Toolbar - comes after tabs */
 .finder-toolbar {
   display: flex;
   align-items: center;
@@ -545,6 +548,68 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
+}
+
+.finder-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-right 0.3s ease;
+}
+
+/* Main Tab Navigation */
+.finder-tabs {
+  display: flex !important;
+  background: var(--finder-bg-secondary, #1a1a1a);
+  border-bottom: 1px solid var(--finder-border, #333);
+  padding: 0 20px;
+  gap: 8px;
+  flex-shrink: 0;
+  z-index: 10;
+  min-height: 48px;
+  align-items: center;
+}
+
+.finder-tab {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--finder-text-secondary, #a0a0a0);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.finder-tab:hover {
+  color: var(--finder-text-primary, #ffffff);
+  background: var(--finder-hover, rgba(255, 255, 255, 0.05));
+}
+
+.finder-tab.active {
+  color: var(--finder-accent, #6366f1);
+  border-bottom-color: var(--finder-accent, #6366f1);
+}
+
+.finder-tab svg {
+  flex-shrink: 0;
+}
+
+/* Transfers View */
+.finder-transfers-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
 }
 
 /* =========================================
@@ -554,13 +619,56 @@
   position: relative;
   width: 200px;
   min-width: 180px;
-  max-width: 280px;
+  max-width: 800px;
   background: var(--finder-bg-secondary);
   border-right: 1px solid var(--finder-border);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 8px;
   flex-shrink: 0;
+  transition: width 0.1s ease-out;
+}
+
+/* Sidebar Resizer */
+.sidebar-resizer {
+  position: relative;
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  flex-shrink: 0;
+  z-index: 10;
+  transition: background 0.15s ease;
+}
+
+.sidebar-resizer:hover {
+  background: var(--finder-accent);
+}
+
+.sidebar-resizer.resizing {
+  background: var(--finder-accent);
+}
+
+.sidebar-resizer .resizer-handle {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--finder-border);
+  transition: background 0.15s ease;
+}
+
+.sidebar-resizer:hover .resizer-handle,
+.sidebar-resizer.resizing .resizer-handle {
+  background: var(--finder-accent);
+  width: 3px;
+}
+
+/* Prevent text selection while resizing */
+.sidebar-resizer.resizing {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Sidebar Sections - Clean, consistent spacing */
@@ -792,6 +900,22 @@
   padding: 1px 4px;
 }
 
+/* Storage subgroup (nested groups within Local/Cloud) */
+.storage-subgroup {
+  margin-left: 8px;
+  margin-top: 2px;
+}
+
+.storage-subgroup .storage-group-items {
+  padding-left: 16px;
+}
+
+.storage-subgroup.collapsed .storage-group-items {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+}
+
 /* Chevron icon */
 .group-chevron {
   width: 12px;
@@ -810,6 +934,10 @@
 }
 
 .storage-group:not(.collapsed) .group-chevron {
+  transform: rotate(90deg);
+}
+
+.storage-subgroup:not(.collapsed) .group-chevron {
   transform: rotate(90deg);
 }
 
@@ -857,6 +985,21 @@
 .group-icon.block {
   color: var(--tier-cold, #3b82f6);
   background: rgba(59, 130, 246, 0.15);
+}
+
+.group-icon.aws {
+  color: #ff9900;
+  background: rgba(255, 153, 0, 0.15);
+}
+
+.group-icon.azure {
+  color: #0078d4;
+  background: rgba(0, 120, 212, 0.15);
+}
+
+.group-icon.gcp {
+  color: #4285f4;
+  background: rgba(66, 133, 244, 0.15);
 }
 
 .group-label {

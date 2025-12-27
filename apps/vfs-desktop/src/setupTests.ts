@@ -109,7 +109,6 @@ if (typeof DragEvent === 'undefined') {
       super(type, eventInitDict);
       this.dataTransfer = eventInitDict?.dataTransfer || null;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.effectAllowed =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (eventInitDict as any)?.effectAllowed || 'uninitialized';

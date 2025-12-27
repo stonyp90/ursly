@@ -19,6 +19,8 @@ export interface VfsFileCardProps {
   warmProgress?: number;
   transcodeProgress?: number;
   thumbnail?: string;
+  /** If true, show only limited features for object storage (download, tier management, delete) */
+  isObjectStorage?: boolean;
 }
 
 export function VfsFileCard({
@@ -31,6 +33,7 @@ export function VfsFileCard({
   warmProgress,
   transcodeProgress,
   thumbnail,
+  isObjectStorage = false,
 }: VfsFileCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -208,6 +211,7 @@ export function VfsFileCard({
             position={menuPosition}
             onAction={handleAction}
             onClose={() => setShowMenu(false)}
+            isObjectStorage={isObjectStorage}
           />
         )}
       </div>

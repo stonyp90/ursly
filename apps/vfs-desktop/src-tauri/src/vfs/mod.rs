@@ -64,6 +64,9 @@ pub mod mount;
 // Multipart upload support
 pub mod multipart_upload;
 
+// Operation tracker (uploads, downloads, deletes, etc.)
+pub mod operation_tracker;
+
 #[cfg(feature = "vfs")]
 pub use filesystem::UrslyFS;
 #[cfg(feature = "vfs")]

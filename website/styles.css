@@ -740,10 +740,9 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
   grid-template-columns: 1fr 1fr;
   gap: 40px;
   align-items: center;
-  padding: var(--section-padding) var(--container-padding);
   overflow: visible;
   position: relative;
-  padding: calc(var(--nav-height) + 40px) 24px 40px;
+  padding: calc(var(--nav-height) + 40px) 24px var(--section-padding);
   max-width: var(--container-max);
   margin: 0 auto;
   width: 100%;
@@ -3282,9 +3281,35 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
 /* Large tablets and small laptops */
 @media (max-width: 1024px) and (min-width: 769px) {
+  :root {
+    --section-padding: 56px;
+    --card-padding: 20px;
+    --grid-gap: 24px;
+    --element-gap: 16px;
+  }
+
   /* Show mobile menu button on tablets */
   .mobile-menu-btn {
     display: flex;
+  }
+
+  /* Optimize container padding for tablets */
+  .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  /* Better section spacing */
+  .section,
+  .what-is,
+  .features,
+  .product-section,
+  .open-source-section,
+  .download-section,
+  .getting-started,
+  .cta {
+    padding-top: var(--section-padding);
+    padding-bottom: var(--section-padding);
   }
 
   /* Hide theme toggle in header on tablets - it's in the mobile menu */
@@ -3294,7 +3319,7 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   /* Hide social icons in header on tablets - they're in the mobile menu */
   .nav-social-icons {
-    display: none;
+    display: none !important;
   }
 
   /* Hide nav links on tablets - they're in the mobile menu */
@@ -3339,12 +3364,31 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   .hero-actions {
     justify-content: center;
+    gap: var(--element-gap);
+    margin-top: 24px;
   }
   .hero-stats {
     justify-content: center;
+    margin-top: 32px;
+    padding-top: 24px;
   }
   .badge-container {
     justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  /* Better grid gaps */
+  .features-grid,
+  .features-grid-2,
+  .features-grid-3,
+  .product-features-grid {
+    gap: var(--grid-gap);
+  }
+
+  /* Improved card spacing */
+  .feature-card,
+  .product-feature-card {
+    padding: var(--card-padding);
   }
 
   .what-is-content {
@@ -3441,7 +3485,9 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 @media (max-width: 768px) {
   :root {
     --section-padding: 48px;
-    --card-padding: 16px;
+    --card-padding: 18px;
+    --grid-gap: 20px;
+    --element-gap: 16px;
   }
 
   /* Improved touch targets for tablets */
@@ -3475,6 +3521,34 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
     box-sizing: border-box;
   }
 
+  /* Optimize section spacing */
+  .section,
+  .what-is,
+  .features,
+  .product-section,
+  .open-source-section,
+  .download-section,
+  .getting-started,
+  .cta {
+    padding-top: var(--section-padding);
+    padding-bottom: var(--section-padding);
+  }
+
+  /* Better grid gaps */
+  .features-grid,
+  .features-grid-2,
+  .features-grid-3,
+  .product-features-grid {
+    gap: var(--grid-gap);
+  }
+
+  /* Improved card spacing */
+  .feature-card,
+  .product-feature-card,
+  .download-card {
+    margin-bottom: 0;
+  }
+
   .nav-links {
     display: flex;
     gap: 8px;
@@ -3493,7 +3567,7 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   /* Hide social icons on mobile - they're in the mobile menu */
   .nav-social-icons {
-    display: none;
+    display: none !important;
   }
 
   .btn-nav-icon {
@@ -3524,11 +3598,23 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   .hero-description {
     font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  /* Better text spacing for tablets */
+  .section-description {
+    line-height: 1.7;
+  }
+
+  p {
+    line-height: 1.7;
   }
 
   .hero-actions {
     flex-direction: column;
-    gap: 12px;
+    gap: var(--element-gap);
+    margin-top: 24px;
   }
 
   .hero-actions .btn-primary,
@@ -3589,12 +3675,16 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
   }
 
   .product-showcase {
-    gap: 32px;
+    gap: 40px;
   }
 
   .product-features-grid {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: var(--grid-gap);
+  }
+
+  .product-screenshot {
+    gap: 20px;
   }
 
   /* Single column on mobile - force all grids to single column */
@@ -3779,8 +3869,10 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 @media (max-width: 480px) {
   :root {
     --card-padding: 16px;
-    --section-padding: 32px;
+    --section-padding: 40px;
     --nav-height: 56px;
+    --grid-gap: 16px;
+    --element-gap: 12px;
   }
 
   /* Force single column on all grids for mobile */
@@ -3830,7 +3922,7 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   /* Social icons are hidden on mobile */
   .nav-social-icons {
-    display: none;
+    display: none !important;
   }
 
   .btn-nav-icon {
@@ -3842,17 +3934,55 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   .hero-description {
     font-size: 0.9rem;
-    line-height: 1.6;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  /* Better text spacing */
+  p {
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  h2,
+  h3,
+  h4 {
+    line-height: 1.3;
+    margin-bottom: 12px;
+  }
+
+  /* Improved section descriptions */
+  .section-description {
+    line-height: 1.7;
+    margin-bottom: 0;
   }
 
   /* Improved margins for hero section on mobile */
   .hero {
-    padding: calc(var(--nav-height) + 24px) 20px 32px !important;
-    margin-bottom: 24px;
+    padding: calc(var(--nav-height) + 32px) 16px var(--section-padding) !important;
+    margin-bottom: 0;
   }
 
   .hero-content {
-    padding: 0 4px; /* Add small horizontal padding for better spacing */
+    padding: 0;
+  }
+
+  /* Optimize section spacing for mobile */
+  .section,
+  .what-is,
+  .features,
+  .product-section,
+  .open-source-section,
+  .download-section,
+  .getting-started,
+  .cta {
+    padding-top: var(--section-padding);
+    padding-bottom: var(--section-padding);
+  }
+
+  /* Better section header spacing */
+  .section-header {
+    margin-bottom: 32px;
   }
 
   .section-title {
@@ -3878,7 +4008,8 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
   .hero-actions {
     flex-direction: column;
     width: 100%;
-    gap: 12px;
+    gap: var(--element-gap);
+    margin-top: 24px;
   }
 
   .btn-primary,
@@ -3892,7 +4023,7 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
   .cta-actions {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: var(--element-gap);
   }
 
   .cta-actions .btn-primary,
@@ -3932,8 +4063,34 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
     box-sizing: border-box;
   }
 
-  .section {
-    padding: var(--section-padding) 0;
+  /* Optimize grid gaps for mobile */
+  .features-grid,
+  .features-grid-2,
+  .features-grid-3,
+  .product-features-grid,
+  .download-options {
+    gap: var(--grid-gap);
+  }
+
+  /* Better card spacing */
+  .feature-card,
+  .product-feature-card {
+    padding: var(--card-padding);
+    margin-bottom: 0;
+  }
+
+  /* Improved element spacing */
+  .hero-stats {
+    margin-top: 32px;
+    padding-top: 24px;
+  }
+
+  .badge-container {
+    margin-bottom: 20px;
+  }
+
+  .hero-description {
+    margin-bottom: 24px;
   }
 
   /* Improved card spacing */
@@ -3953,7 +4110,15 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
   }
 
   .product-feature-card {
-    gap: 16px;
+    gap: var(--element-gap);
+  }
+
+  .product-showcase {
+    gap: 32px;
+  }
+
+  .product-screenshot {
+    gap: 20px;
   }
 
   .feature-info h4 {
@@ -3967,16 +4132,18 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   /* Improved mobile menu */
   .mobile-menu a {
-    padding: 16px 20px;
+    padding: 16px max(20px, env(safe-area-inset-left, 20px));
+    min-height: 48px;
   }
 
   .mobile-menu-theme-toggle {
-    padding: 16px 20px;
+    padding: 16px max(20px, env(safe-area-inset-left, 20px));
+    min-height: 48px;
   }
 
   .mobile-menu-social {
-    padding: 20px;
-    gap: 16px;
+    padding: 20px max(20px, env(safe-area-inset-left, 20px));
+    gap: 12px;
   }
 
   /* Better scrolling on mobile */
@@ -4055,11 +4222,59 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   /* Improved spacing between interactive elements */
   .hero-actions {
-    gap: 16px; /* Increased from 12px for better thumb spacing */
+    gap: var(--element-gap);
   }
 
   .cta-actions {
-    gap: 16px; /* Increased from 12px */
+    gap: var(--element-gap);
+  }
+
+  /* Better download section spacing */
+  .download-section {
+    padding-top: var(--section-padding);
+    padding-bottom: var(--section-padding);
+  }
+
+  .download-options {
+    gap: var(--grid-gap);
+    margin-bottom: 24px;
+  }
+
+  .download-card {
+    padding: 20px;
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  /* Better feature card spacing */
+  .feature-card {
+    padding: var(--card-padding);
+  }
+
+  .feature-icon {
+    margin-bottom: 16px;
+  }
+
+  .feature-title {
+    margin-bottom: 10px;
+  }
+
+  .feature-description {
+    margin-bottom: 16px;
+  }
+
+  /* Improved what-is section */
+  .what-is-content {
+    gap: 32px;
+  }
+
+  .what-is-highlights {
+    gap: 16px;
+  }
+
+  .highlight {
+    padding: 20px;
   }
 
   /* Better touch feedback */
@@ -4100,6 +4315,22 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
   p,
   li {
     line-height: 1.7;
+  }
+
+  /* Improved list spacing */
+  ul,
+  ol {
+    margin-bottom: 16px;
+  }
+
+  li {
+    margin-bottom: 8px;
+  }
+
+  /* Better feature list spacing */
+  .feature-list {
+    gap: 8px;
+    margin-top: 16px;
   }
 
   /* Improved code blocks */
@@ -4160,23 +4391,78 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   /* Better footer on mobile */
   .footer {
-    padding: 40px 0 24px;
+    padding: var(--section-padding) 0 24px;
   }
 
   .footer-content {
     gap: 32px;
+    margin-bottom: 32px;
   }
 
   .footer-links {
     gap: 24px;
+  }
+
+  /* Better CTA section */
+  .cta {
+    padding: var(--section-padding) 0;
+  }
+
+  .cta-content {
+    padding: 0;
+  }
+
+  .cta-content h2 {
+    margin-bottom: 16px;
+  }
+
+  .cta-content p {
+    margin-bottom: 24px;
+  }
+
+  /* Improved open source section */
+  .models-grid {
+    gap: var(--grid-gap);
+  }
+
+  .model-card {
+    padding: 20px;
+  }
+
+  /* Better getting started section */
+  .quick-start {
+    gap: 32px;
+  }
+
+  .quick-start-code {
+    margin-bottom: 0;
+  }
+
+  .quick-start-info {
+    padding: 0;
+  }
+
+  .quick-start-info h3 {
+    margin-bottom: 12px;
+  }
+
+  .quick-start-info p {
+    margin-bottom: 16px;
+  }
+
+  .quick-start-info ul {
+    margin-bottom: 24px;
+    gap: 10px;
   }
 }
 
 /* Tablet optimizations (between 481px and 1024px) */
 @media (min-width: 481px) and (max-width: 1024px) {
   :root {
-    --section-padding: 48px;
+    --section-padding: 52px;
     --card-padding: 20px;
+    --grid-gap: 22px;
+    --element-gap: 16px;
   }
 
   /* Touch-friendly targets for tablets */
@@ -4197,7 +4483,7 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
 
   /* Hide social icons on tablets - they're in the mobile menu */
   .nav-social-icons {
-    display: none;
+    display: none !important;
   }
 
   /* Better navigation spacing */
@@ -4209,7 +4495,33 @@ body.theme-light .mobile-menu-theme-toggle .theme-icon-dark {
   .features-grid,
   .product-features-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: var(--grid-gap);
+  }
+
+  /* Optimize section spacing */
+  .section,
+  .what-is,
+  .features,
+  .product-section,
+  .open-source-section,
+  .download-section,
+  .getting-started,
+  .cta {
+    padding-top: var(--section-padding);
+    padding-bottom: var(--section-padding);
+  }
+
+  /* Better container padding */
+  .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  /* Improved card spacing */
+  .feature-card,
+  .product-feature-card,
+  .download-card {
+    padding: var(--card-padding);
   }
 
   /* Improved typography */

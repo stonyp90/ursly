@@ -79,6 +79,7 @@ pub struct UploadProgress {
     pub status: UploadStatus,
     pub speed_bytes_per_sec: Option<u64>,
     pub estimated_time_remaining_sec: Option<u64>,
+    pub error: Option<String>,
 }
 
 /// Multipart upload manager
@@ -317,6 +318,7 @@ impl MultipartUploadManager {
             status: state.status.clone(),
             speed_bytes_per_sec: None, // Would be calculated from recent progress
             estimated_time_remaining_sec: None,
+            error: state.error.clone(),
         })
     }
     

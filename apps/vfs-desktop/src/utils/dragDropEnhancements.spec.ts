@@ -14,7 +14,9 @@ describe('dragDropEnhancements', () => {
     // Reset the module to allow re-initialization
     jest.resetModules();
     // Reset global flag
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const module = require('./dragDropEnhancements');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (module as any).globalDragHandlerInitialized = false;
   });
 
@@ -135,6 +137,7 @@ describe('dragDropEnhancements', () => {
       element.dispatchEvent(dragoverEvent);
 
       expect(preventDefaultSpy).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(dragoverEvent.dataTransfer!.dropEffect).toBe('move');
     });
 

@@ -64,7 +64,7 @@ pub async fn mount_virtual_drive(
     // Create filesystem
     let fs = UrslyFS::new(operator);
     
-    // Clone data for the mount thread
+    // Clone data for the mount threads
     let mount_point = config.mount_point.clone();
     let cache_path = config.local_cache.cache_path.clone();
     let status_clone = mount_state.status.clone();

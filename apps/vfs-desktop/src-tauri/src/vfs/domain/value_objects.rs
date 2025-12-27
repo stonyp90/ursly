@@ -49,6 +49,8 @@ pub enum StorageTier {
     Nearline,
     /// Data in archival storage (e.g., Glacier) - slowest
     Archive,
+    /// Data in instant retrieval tier (e.g., S3 Glacier Instant Retrieval) - millisecond access with lower cost
+    InstantRetrieval,
 }
 
 impl Default for StorageTier {
@@ -65,6 +67,7 @@ impl StorageTier {
             StorageTier::Cold => "cold",
             StorageTier::Nearline => "nearline",
             StorageTier::Archive => "archive",
+            StorageTier::InstantRetrieval => "instant-retrieval",
         }
     }
     
@@ -75,6 +78,7 @@ impl StorageTier {
             StorageTier::Cold => "snowflake",
             StorageTier::Nearline => "clock",
             StorageTier::Archive => "archive",
+            StorageTier::InstantRetrieval => "bolt",
         }
     }
 }

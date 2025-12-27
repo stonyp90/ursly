@@ -100,6 +100,72 @@ const TOUR_STEPS: Step[] = [
     disableOverlayClose: false,
   },
   {
+    target: '.finder-tab:nth-child(2)',
+    content: (
+      <div className="tour-step-content">
+        <h3>Operations Dashboard</h3>
+        <p>
+          Click the <strong>Operations</strong> tab to track all file operations
+          across your network and cloud storage. Monitor uploads, downloads,
+          deletes, moves, and copies in real-time.
+        </p>
+        <div className="tour-step-tip">
+          <strong>What's tracked:</strong> All operations from network storage
+          (NFS, SMB, SFTP) and cloud storage (S3, GCS, Azure) are automatically
+          tracked here.
+        </div>
+      </div>
+    ),
+    placement: 'bottom',
+    disableBeacon: true,
+    disableOverlayClose: false,
+  },
+  {
+    target: '.transfer-panel-tabs',
+    content: (
+      <div className="tour-step-content">
+        <h3>Active & History Tabs</h3>
+        <p>
+          The <strong>Active</strong> tab shows all ongoing operations with
+          real-time progress, speed, and estimated time remaining. The{' '}
+          <strong>History</strong> tab keeps a record of all completed
+          operations.
+        </p>
+        <div className="tour-step-tip">
+          <strong>Pro tip:</strong> Each operation shows the storage provider
+          badge (AWS S3, Google Cloud, etc.) so you know exactly where your
+          files are being transferred.
+        </div>
+      </div>
+    ),
+    placement: 'bottom',
+    disableBeacon: true,
+    disableOverlayClose: false,
+    disableScrolling: false,
+  },
+  {
+    target: '.transfer-panel-content',
+    content: (
+      <div className="tour-step-content">
+        <h3>Operation Details</h3>
+        <p>
+          Each operation displays in a compact format with storage provider
+          badges, file names, progress bars, and status indicators. You can
+          pause, resume, or cancel active uploads directly from here.
+        </p>
+        <div className="tour-step-tip">
+          <strong>Supported providers:</strong> AWS S3, Google Cloud Storage,
+          Azure Blob, NFS, SMB, SFTP, and more. All operations from network and
+          cloud storage are automatically tracked.
+        </div>
+      </div>
+    ),
+    placement: 'top',
+    disableBeacon: true,
+    disableOverlayClose: false,
+    disableScrolling: false,
+  },
+  {
     target: '.header-tab[data-tab="settings"]',
     content: (
       <div className="tour-step-content">
@@ -170,6 +236,9 @@ export function OnboardingTour({
         const alertThresholdsBtn = document.querySelector(
           '.metrics-header .settings-btn',
         );
+        const operationsTab =
+          document.querySelector('.finder-tab:nth-child(2)') ||
+          document.querySelector('.finder-tab:has-text("Operations")');
 
         // Check all required elements exist
         if (
@@ -178,7 +247,8 @@ export function OnboardingTour({
           fileBrowser &&
           metricsTab &&
           settingsTab &&
-          alertThresholdsBtn
+          alertThresholdsBtn &&
+          operationsTab
         ) {
           setRun(true);
         } else {
@@ -246,6 +316,7 @@ export function OnboardingTour({
           }
         }
       } else if (type === 'error:target_not_found') {
+        const step = TOUR_STEPS[index];
         // For Alert Thresholds step, wait longer and retry
         if (step?.target === '.metrics-header .settings-btn') {
           setTimeout(() => {
@@ -264,6 +335,44 @@ export function OnboardingTour({
                 localStorage.setItem(STORAGE_KEY, 'true');
                 onComplete?.();
               }
+            }
+          }, 1000);
+        } else if (step?.target === '.finder-tab:nth-child(2)') {
+          // Operations tab - wait and retry
+          setTimeout(() => {
+            const operationsTab = document.querySelector(
+              '.finder-tab:nth-child(2)',
+            );
+            if (operationsTab) {
+              setStepIndex(index);
+            } else if (index < TOUR_STEPS.length - 1) {
+              setStepIndex(index + 1);
+            } else {
+              setRun(false);
+              localStorage.setItem(STORAGE_KEY, 'true');
+              onComplete?.();
+            }
+          }, 1000);
+        } else if (
+          step?.target === '.transfer-panel-tabs' ||
+          step?.target === '.transfer-panel-content'
+        ) {
+          // Transfer panel elements - wait for panel to render
+          setTimeout(() => {
+            const transferPanel = document.querySelector('.transfer-panel');
+            const targetSelector = step?.target;
+            const targetElement =
+              targetSelector && typeof targetSelector === 'string'
+                ? document.querySelector(targetSelector)
+                : null;
+            if (transferPanel && targetElement) {
+              setStepIndex(index);
+            } else if (index < TOUR_STEPS.length - 1) {
+              setStepIndex(index + 1);
+            } else {
+              setRun(false);
+              localStorage.setItem(STORAGE_KEY, 'true');
+              onComplete?.();
             }
           }, 1000);
         } else {
@@ -322,6 +431,66 @@ export function OnboardingTour({
                 }, 200);
               }
             }, 800);
+          } else if (step?.target === '.finder-tab:nth-child(2)') {
+            // Navigate to Operations tab
+            const operationsTab = document.querySelector(
+              '.finder-tab:nth-child(2)',
+            ) as HTMLElement;
+            if (operationsTab && !operationsTab.classList.contains('active')) {
+              operationsTab.style.transition =
+                'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+              operationsTab.click();
+              // Wait for Operations panel to render
+              setTimeout(() => {
+                const transferPanel = document.querySelector('.transfer-panel');
+                if (transferPanel) {
+                  transferPanel.scrollIntoView({
+                    block: 'nearest',
+                    behavior: 'smooth',
+                  });
+                }
+              }, 300);
+            }
+          } else if (step?.target === '.transfer-panel-tabs') {
+            // Ensure we're on Operations tab first
+            const operationsTab = document.querySelector(
+              '.finder-tab:nth-child(2)',
+            ) as HTMLElement;
+            if (operationsTab && !operationsTab.classList.contains('active')) {
+              operationsTab.click();
+            }
+            // Wait for transfer panel to render
+            setTimeout(() => {
+              const transferTabs = document.querySelector(
+                '.transfer-panel-tabs',
+              ) as HTMLElement;
+              if (transferTabs) {
+                transferTabs.scrollIntoView({
+                  block: 'nearest',
+                  behavior: 'smooth',
+                });
+              }
+            }, 500);
+          } else if (step?.target === '.transfer-panel-content') {
+            // Ensure we're on Operations tab
+            const operationsTab = document.querySelector(
+              '.finder-tab:nth-child(2)',
+            ) as HTMLElement;
+            if (operationsTab && !operationsTab.classList.contains('active')) {
+              operationsTab.click();
+            }
+            // Wait for transfer panel to render
+            setTimeout(() => {
+              const transferContent = document.querySelector(
+                '.transfer-panel-content',
+              ) as HTMLElement;
+              if (transferContent) {
+                transferContent.scrollIntoView({
+                  block: 'center',
+                  behavior: 'smooth',
+                });
+              }
+            }, 500);
           } else if (step?.target === '.header-tab[data-tab="settings"]') {
             const settingsTab = document.querySelector(
               '.header-tab[data-tab="settings"]',
