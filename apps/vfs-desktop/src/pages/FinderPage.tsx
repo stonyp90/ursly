@@ -2488,7 +2488,9 @@ export function FinderPage({
   const renderStorageItem = (source: StorageSource) => {
     const StorageIcon = getStorageIcon(source);
     const isDropTarget = dropTarget === `source:${source.id}`;
-    const tierClass = source.tierStatus || 'hot';
+    // Cloud storage (S3, GCS, Azure) defaults to 'cold', others default to 'hot'
+    const tierClass =
+      source.tierStatus || (source.category === 'cloud' ? 'cold' : 'hot');
 
     // Determine storage type label
     const getTypeLabel = (cat: string) => {
@@ -4183,12 +4185,22 @@ export function FinderPage({
               </span>
               <span className="info-label">Tier</span>
               <span
-                className={`info-value tier-pill ${storageContextMenu.source.tierStatus || 'hot'}`}
+                className={`info-value tier-pill ${storageContextMenu.source.tierStatus || (storageContextMenu.source.category === 'cloud' ? 'cold' : 'hot')}`}
               >
-                {(storageContextMenu.source.tierStatus || 'hot')
+                {(
+                  storageContextMenu.source.tierStatus ||
+                  (storageContextMenu.source.category === 'cloud'
+                    ? 'cold'
+                    : 'hot')
+                )
                   .charAt(0)
                   .toUpperCase() +
-                  (storageContextMenu.source.tierStatus || 'hot').slice(1)}
+                  (
+                    storageContextMenu.source.tierStatus ||
+                    (storageContextMenu.source.category === 'cloud'
+                      ? 'cold'
+                      : 'hot')
+                  ).slice(1)}
               </span>
             </div>
 
