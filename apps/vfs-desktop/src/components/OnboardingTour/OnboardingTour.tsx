@@ -346,7 +346,7 @@ export function OnboardingTour({
             primaryColor: 'var(--primary, #0a84ff)',
             textColor: 'var(--text-primary, #f5f5f7)',
             backgroundColor: 'var(--surface, #1e1e1e)',
-            overlayColor: 'rgba(0, 0, 0, 0.15)',
+            overlayColor: 'rgba(0, 0, 0, 0.08)',
             arrowColor: 'var(--surface, #1e1e1e)',
             zIndex: 10002,
             beaconSize: 36,
