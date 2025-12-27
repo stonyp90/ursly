@@ -474,14 +474,6 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  onPaste={(e) => {
-                    handlePaste(e).catch((err) => {
-                      console.error(
-                        '[AddStorageModal] Paste handler error:',
-                        err,
-                      );
-                    });
-                  }}
                   placeholder={`My ${providerName}`}
                 />
               </div>
@@ -499,14 +491,6 @@ export const AddStorageModal: React.FC<AddStorageModalProps> = ({
                     onChange={(e) =>
                       setConfig({ ...config, [field.key]: e.target.value })
                     }
-                    onPaste={(e) => {
-                      handlePaste(e, field.key).catch((err) => {
-                        console.error(
-                          '[AddStorageModal] Paste handler error:',
-                          err,
-                        );
-                      });
-                    }}
                     placeholder={field.placeholder}
                   />
                 </div>
