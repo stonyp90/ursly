@@ -99,7 +99,6 @@ impl VfsService {
     }
     
     /// Register an S3 storage source
-    #[cfg(feature = "vfs")]
     pub async fn add_s3_source(
         &self,
         name: String,
@@ -141,6 +140,7 @@ impl VfsService {
         self.sources.write().insert(source.id.clone(), StorageSourceState {
             source: source.clone(),
             adapter,
+            file_ops: None, // S3 adapter doesn't implement IFileOperations yet
         });
         
         info!("Added S3 storage source: {}", name);

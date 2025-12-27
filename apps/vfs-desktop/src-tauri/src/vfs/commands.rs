@@ -306,7 +306,10 @@ pub async fn vfs_add_source(
         .and_then(|v| v.as_object())
         .ok_or_else(|| "Missing config".to_string())?;
     
-    let storage_source = match provider_id {
+    use crate::vfs::domain::StorageSource;
+    use std::path::PathBuf;
+    
+    let storage_source: StorageSource = match provider_id {
         "s3" | "aws-s3" => {
             let bucket = config.get("bucket")
                 .and_then(|v| v.as_str())
@@ -318,14 +321,18 @@ pub async fn vfs_add_source(
                 .to_string();
             let access_key = config.get("accessKeyId")
                 .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
                 .map(|s| s.to_string());
             let secret_key = config.get("secretAccessKey")
                 .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
                 .map(|s| s.to_string());
             let endpoint = config.get("endpoint")
                 .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
                 .map(|s| s.to_string());
             
+            // Call add_s3_source - the method exists and should be accessible
             service.add_s3_source(name, bucket.clone(), region.clone(), access_key, secret_key, endpoint)
                 .await
                 .map_err(|e| format!("Failed to add S3 source: {}", e))?
@@ -343,8 +350,8 @@ pub async fn vfs_add_source(
         source_type: format!("{:?}", storage_source.source_type),
         mounted: storage_source.mounted,
         status: format!("{:?}", storage_source.status),
-        path: storage_source.mount_point.map(|p| p.to_string_lossy().to_string()),
-        bucket: storage_source.config.path_or_bucket.clone().into(),
+        path: storage_source.mount_point.as_ref().map(|p: &PathBuf| p.to_string_lossy().to_string()),
+        bucket: Some(storage_source.config.path_or_bucket.clone()),
         region: storage_source.config.region.clone(),
         is_ejectable: false,
         is_system_location: false,
