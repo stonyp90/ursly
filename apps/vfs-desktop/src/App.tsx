@@ -83,7 +83,10 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="app loading">
+      <div
+        className="app loading"
+        style={{ background: 'var(--color-bg, #1c1c1e)' }}
+      >
         <div className="loader">
           <div className="loader-container">
             <div className="loader-ring loader-ring-outer"></div>
@@ -122,7 +125,10 @@ function App() {
     <ThemeProvider>
       <ToastProvider>
         <ErrorDialogProvider>
-          <div className="app">
+          <div
+            className="app"
+            style={{ background: 'var(--color-bg, #1c1c1e)' }}
+          >
             <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
             <main className="main-content full-height">
