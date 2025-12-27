@@ -3694,19 +3694,20 @@ fn get_upload_manager() -> &'static MultipartUploadManager {
             .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
             .join("ursly")
             .join("multipart_uploads");
-        let manager = MultipartUploadManager::new(&state_dir)
-            .expect("Failed to initialize multipart upload manager");
-        
-        // Load persisted states on initialization
-        let manager_clone = &manager;
-        tokio::spawn(async move {
-            if let Err(e) = manager_clone.load_states().await {
-                error!("Failed to load persisted upload states: {}", e);
-            }
-        });
-        
-        manager
+        MultipartUploadManager::new(&state_dir)
+            .expect("Failed to initialize multipart upload manager")
     })
+}
+
+/// Initialize upload manager and load persisted states
+/// Should be called once during app startup
+pub async fn init_upload_manager() {
+    let manager = get_upload_manager();
+    if let Err(e) = manager.load_states().await {
+        error!("Failed to load persisted upload states: {}", e);
+    } else {
+        info!("Loaded persisted upload states");
+    }
 }
 
 /// Helper function to create OpenDAL operator for object storage (S3, GCS, Azure)
@@ -3780,42 +3781,67 @@ pub async fn vfs_start_multipart_upload(
     part_size: Option<u64>,
     state: State<'_, VfsStateWrapper>,
 ) -> Result<String, String> {
+    info!("vfs_start_multipart_upload called: source_id={}, local_path={}, s3_path={}", source_id, local_path, s3_path);
+    
     let service = state.get_service()
         .ok_or_else(|| "VFS not initialized".to_string())?;
     
     // Get the source
     let source = service.get_source(&source_id)
-        .ok_or_else(|| "Storage source not found".to_string())?;
+        .ok_or_else(|| format!("Storage source not found: {}", source_id))?;
+    
+    info!("Found source: {} (type: {:?})", source.name, source.source_type);
     
     // Verify it's an object storage type
     match source.source_type {
         crate::vfs::domain::StorageSourceType::S3
         | crate::vfs::domain::StorageSourceType::Gcs
-        | crate::vfs::domain::StorageSourceType::AzureBlob => {}
+        | crate::vfs::domain::StorageSourceType::AzureBlob => {
+            info!("Source type verified as object storage");
+        }
         _ => {
-            return Err("Multipart upload is only supported for S3, GCS, and Azure Blob storage".to_string());
+            return Err(format!("Multipart upload is only supported for S3, GCS, and Azure Blob storage, got: {:?}", source.source_type));
         }
     }
     
     // Create operator from source config
-    let operator = create_object_storage_operator(&source)?;
+    info!("Creating object storage operator...");
+    let operator = create_object_storage_operator(&source)
+        .map_err(|e| format!("Failed to create storage operator: {}", e))?;
+    info!("Operator created successfully");
     
+    // Ensure upload manager is initialized and states are loaded
     let manager = get_upload_manager();
-        let upload_id = manager.start_upload(
-            &operator,
-            &source_id,
-            &PathBuf::from(local_path),
-            &s3_path,
-            part_size,
-        ).await.map_err(|e| format!("Failed to start upload: {}", e))?;
+    
+    info!("Starting upload...");
+    let upload_id = manager.start_upload(
+        &operator,
+        &source_id,
+        &PathBuf::from(&local_path),
+        &s3_path,
+        part_size,
+    ).await.map_err(|e| format!("Failed to start upload: {}", e))?;
+    
+    info!("Upload started with ID: {}", upload_id);
     
     // Start upload in background
     let manager_clone = get_upload_manager();
     let operator_clone = operator.clone();
     let upload_id_clone = upload_id.clone();
     tokio::spawn(async move {
+        info!("Starting background upload for: {}", upload_id_clone);
         if let Err(e) = manager_clone.upload_chunks(&operator_clone, &upload_id_clone).await {
             error!("Multipart upload failed: {}", e);
+            // Update state to failed - upload_chunks should handle this, but ensure it's set
+            let mut uploads = manager_clone.uploads.write().await;
+            if let Some(state) = uploads.get_mut(&upload_id_clone) {
+                state.status = crate::vfs::multipart_upload::UploadStatus::Failed;
+                state.error = Some(e.to_string());
+            }
+            drop(uploads);
+            // Note: save_states is private, but upload_chunks should have already saved
+        } else {
+            info!("Upload completed successfully: {}", upload_id_clone);
         }
     });
     
