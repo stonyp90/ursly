@@ -60,6 +60,27 @@ const TOUR_STEPS: Step[] = [
     disableOverlayClose: false,
   },
   {
+    target: '.metrics-header .settings-btn',
+    content: (
+      <div className="tour-step-content">
+        <h3>Alert Thresholds</h3>
+        <p>
+          Configure alert thresholds for CPU, memory, GPU, and temperature. Get
+          notified when metrics exceed your custom limits to stay on top of
+          system performance.
+        </p>
+        <div className="tour-step-tip">
+          <strong>Pro tip:</strong> Set thresholds based on your workload. Lower
+          thresholds for critical tasks, higher for general use.
+        </div>
+      </div>
+    ),
+    placement: 'bottom',
+    disableBeacon: true,
+    disableOverlayClose: false,
+    disableScrolling: false,
+  },
+  {
     target: '.action-pill.shortcuts',
     content: (
       <div className="tour-step-content">
@@ -97,27 +118,6 @@ const TOUR_STEPS: Step[] = [
     placement: 'bottom',
     disableBeacon: true,
     disableOverlayClose: false,
-  },
-  {
-    target: '.metrics-header .settings-btn',
-    content: (
-      <div className="tour-step-content">
-        <h3>Alert Thresholds</h3>
-        <p>
-          Configure alert thresholds for CPU, memory, GPU, and temperature. Get
-          notified when metrics exceed your custom limits to stay on top of
-          system performance.
-        </p>
-        <div className="tour-step-tip">
-          <strong>Pro tip:</strong> Set thresholds based on your workload. Lower
-          thresholds for critical tasks, higher for general use.
-        </div>
-      </div>
-    ),
-    placement: 'bottom',
-    disableBeacon: true,
-    disableOverlayClose: false,
-    disableScrolling: false,
   },
 ];
 
@@ -289,17 +289,8 @@ export function OnboardingTour({
                 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
               metricsTab.click();
             }
-          } else if (step?.target === '.header-tab[data-tab="settings"]') {
-            const settingsTab = document.querySelector(
-              '.header-tab[data-tab="settings"]',
-            ) as HTMLElement;
-            if (settingsTab && !settingsTab.classList.contains('active')) {
-              settingsTab.style.transition =
-                'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-              settingsTab.click();
-            }
           } else if (step?.target === '.metrics-header .settings-btn') {
-            // Ensure we're on the metrics tab first
+            // Ensure we're on the metrics tab first (should already be from previous step)
             const metricsTab = document.querySelector(
               '.header-tab[data-tab="metrics"]',
             ) as HTMLElement;
@@ -309,7 +300,6 @@ export function OnboardingTour({
               metricsTab.click();
             }
             // Wait for metrics page to fully render (including data loading)
-            // Use a longer delay to ensure page is visible and not in loading state
             setTimeout(() => {
               const metricsPage = document.querySelector('.metrics-page');
               const loadingState = document.querySelector('.metrics-loading');
@@ -330,7 +320,16 @@ export function OnboardingTour({
                   }
                 }, 200);
               }
-            }, 1200);
+            }, 800);
+          } else if (step?.target === '.header-tab[data-tab="settings"]') {
+            const settingsTab = document.querySelector(
+              '.header-tab[data-tab="settings"]',
+            ) as HTMLElement;
+            if (settingsTab && !settingsTab.classList.contains('active')) {
+              settingsTab.style.transition =
+                'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+              settingsTab.click();
+            }
           }
         });
       }
