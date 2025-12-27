@@ -61,6 +61,49 @@
 
 .upload-status-widget:has(.upload-status-item-failed) .upload-status-badge {
   background: var(--vfs-error, #ff453a);
+  animation: pulseError 2s infinite;
+}
+
+@keyframes pulseError {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Smooth progress bar transitions */
+.upload-status-progress-bar {
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-status-progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: progressGlow 2s infinite;
+  pointer-events: none;
+}
+
+@keyframes progressGlow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .upload-status-chevron {
@@ -130,10 +173,62 @@
 
 .upload-status-item-completed {
   opacity: 0.7;
+  animation: fadeInSuccess 0.3s ease-out;
+}
+
+@keyframes fadeInSuccess {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 0.7;
+    transform: translateY(0);
+  }
+}
+
+/* Success checkmark animation */
+.upload-status-success-icon {
+  animation: checkmarkPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .upload-status-item-failed {
   border-left: 3px solid var(--vfs-error, #ff453a);
+  animation: shakeError 0.5s ease-out;
+}
+
+@keyframes shakeError {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
 }
 
 .upload-status-error-message {
@@ -158,17 +253,41 @@
   border: 1px solid rgba(var(--vfs-primary-rgb, 99, 102, 241), 0.2);
   border-radius: var(--radius-sm, 4px);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-status-retry-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(var(--vfs-primary-rgb, 99, 102, 241), 0.2);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.3s,
+    height 0.3s;
 }
 
 .upload-status-retry-btn:hover {
   background: rgba(var(--vfs-primary-rgb, 99, 102, 241), 0.2);
   border-color: rgba(var(--vfs-primary-rgb, 99, 102, 241), 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(var(--vfs-primary-rgb, 99, 102, 241), 0.2);
 }
 
 .upload-status-retry-btn:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
+}
+
+.upload-status-retry-btn:active::before {
+  width: 200px;
+  height: 200px;
 }
 
 .upload-status-retry-icon {
@@ -231,7 +350,38 @@
     var(--vfs-primary-light, #818cf8)
   );
   border-radius: var(--radius-sm, 4px);
-  transition: width 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated shimmer effect for active uploads */
+.upload-status-item:not(.upload-status-item-completed):not(
+    .upload-status-item-failed
+  )
+  .upload-status-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 .upload-status-item-details {
